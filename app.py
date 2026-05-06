@@ -1,7 +1,3 @@
-# ==========================================
-# TARAZO BACKEND - COMPLETE WITH REDIS + RATE LIMITING
-# ==========================================
-
 import os
 import re
 import json
