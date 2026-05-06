@@ -2,16 +2,12 @@ import os
 import re
 import json
 import secrets
-import hashlib
 import logging
-import smtplib
-import hmac
 from datetime import datetime, timedelta
 from functools import wraps
 from collections import defaultdict
-from urllib.parse import urljoin
 
-from flask import Flask, request, jsonify, g, session
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_cors import CORS
@@ -22,8 +18,6 @@ from flask_jwt_extended import (
     set_refresh_cookies, unset_jwt_cookies
 )
 from flask_wtf.csrf import CSRFProtect
-from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
 from marshmallow import Schema, fields, validate, ValidationError
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
@@ -32,7 +26,6 @@ from cryptography.fernet import Fernet
 import google.generativeai as genai
 import cloudinary
 import cloudinary.uploader
-import cloudinary.api
 import requests
 from dotenv import load_dotenv
 
@@ -49,33 +42,40 @@ load_dotenv()
 # ==========================================
 app = Flask(__name__)
 
-# Security configurations
+# Security configurations - ALL from env with fallbacks for dev only
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', secrets.token_hex(32))
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=15)
 app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=7)
 app.config['JWT_TOKEN_LOCATION'] = ['cookies', 'headers']
-app.config['JWT_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
+app.config['JWT_COOKIE_SECURE'] = os.environ.get('JWT_COOKIE_SECURE', 'false').lower() == 'true'
 app.config['JWT_COOKIE_HTTPONLY'] = True
 app.config['JWT_COOKIE_SAMESITE'] = 'Lax'
 app.config['JWT_CSRF_IN_COOKIES'] = True
 
 # Session security
-app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('SESSION_COOKIE_SECURE', 'false').lower() == 'true'
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=2)
 
 # File upload limits
-app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB
-app.config['MAX_FORM_MEMORY_SIZE'] = 1024 * 1024  # 1MB
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
+app.config['MAX_FORM_MEMORY_SIZE'] = 1024 * 1024
 
-# Database - using SQLite for local development (change to PostgreSQL in production)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///tarazo.db')
+# Database - Hybrid (PostgreSQL or SQLite)
+database_url = os.environ.get('DATABASE_URL')
+if not database_url:
+    database_url = 'sqlite:///tarazo.db'
+    print("ℹ️ Using SQLite database (no DATABASE_URL in env)")
+elif database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    print("✅ Using PostgreSQL database")
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# CORS - Allow frontend to connect
-ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', 'http://localhost:5500,http://localhost:5000,http://127.0.0.1:5500,http://127.0.0.1:5000').split(',')
+# CORS - ALL from env
+ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', 'http://localhost:5500,http://localhost:5000').split(',')
 CORS(app, resources={r"/api/*": {
     "origins": ALLOWED_ORIGINS,
     "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -89,37 +89,29 @@ csrf = CSRFProtect()
 csrf.init_app(app)
 
 # ==========================================
-# REDIS CONFIGURATION (for rate limiting)
+# REDIS CONFIGURATION (optional - from env)
 # ==========================================
-# Redis connection settings
-REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
-REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
-REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD', None)
-REDIS_URL = os.environ.get('REDIS_URL', f'redis://{REDIS_HOST}:{REDIS_PORT}/0')
-
-# Initialize Redis client (optional - will be None if Redis not available)
+REDIS_URL = os.environ.get('REDIS_URL')
 redis_client = None
-try:
-    redis_client = redis.Redis(
-        host=REDIS_HOST,
-        port=REDIS_PORT,
-        password=REDIS_PASSWORD,
-        decode_responses=True,
-        socket_timeout=5
-    )
-    redis_client.ping()  # Test connection
-    print("✅ Redis connected successfully")
-except Exception as e:
-    print(f"⚠️ Redis not available: {e}. Rate limiting will use memory storage.")
-    redis_client = None
+
+if REDIS_URL:
+    try:
+        redis_client = redis.from_url(REDIS_URL, decode_responses=True)
+        redis_client.ping()
+        print("✅ Redis connected")
+    except Exception as e:
+        print(f"⚠️ Redis not available: {e}")
+        redis_client = None
+else:
+    print("ℹ️ No REDIS_URL, running without Redis")
 
 # ==========================================
-# RATE LIMITING (can be disabled via env var)
+# RATE LIMITING (optional - from env)
 # ==========================================
-ENABLE_RATE_LIMIT = os.environ.get('ENABLE_RATE_LIMIT', 'true').lower() == 'true'
+ENABLE_RATE_LIMIT = os.environ.get('ENABLE_RATE_LIMIT', 'false').lower() == 'true'
+limiter = None
 
 if ENABLE_RATE_LIMIT and redis_client:
-    # Use Redis storage if available
     limiter = Limiter(
         get_remote_address,
         app=app,
@@ -127,41 +119,27 @@ if ENABLE_RATE_LIMIT and redis_client:
         storage_uri=REDIS_URL,
         strategy="fixed-window"
     )
-    print("✅ Rate limiting enabled with Redis storage")
+    print("✅ Rate limiting enabled with Redis")
 elif ENABLE_RATE_LIMIT:
-    # Fallback to memory storage (not recommended for production with multiple workers)
     limiter = Limiter(
         get_remote_address,
         app=app,
         default_limits=["200 per day", "50 per hour", "5 per minute"],
         storage_uri="memory://"
     )
-    print("⚠️ Rate limiting enabled with memory storage (Redis not available)")
+    print("⚠️ Rate limiting with memory storage")
 else:
-    # Rate limiting disabled
-    limiter = None
-    print("ℹ️ Rate limiting disabled (set ENABLE_RATE_LIMIT=true to enable)")
+    print("ℹ️ Rate limiting disabled")
 
 # ==========================================
-# SECURITY HEADERS (Talisman)
+# SECURITY HEADERS (optional - from env)
 # ==========================================
-csp_policy = {
-    'default-src': "'self'",
-    'script-src': ["'self'", "'unsafe-inline'"],
-    'style-src': ["'self'", "'unsafe-inline'"],
-    'img-src': ["'self'", "data:", "https://res.cloudinary.com"],
-    'connect-src': ["'self'", "https://api.flutterwave.com", "https://generativelanguage.googleapis.com"],
-    'frame-ancestors': "'none'",
-}
-
-# Only enable Talisman in production
 if os.environ.get('FLASK_ENV') == 'production':
     Talisman(
         app,
         force_https=True,
         strict_transport_security=True,
         strict_transport_security_max_age=31536000,
-        content_security_policy=csp_policy,
         referrer_policy='strict-origin-when-cross-origin',
         session_cookie_secure=True,
         session_cookie_http_only=True
@@ -183,22 +161,28 @@ ph = PasswordHasher(time_cost=2, memory_cost=1024, parallelism=2)
 # Token serializer for email verification
 serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
-# Encryption for PII (Personal Identifiable Information)
+# Encryption for PII - ALL from env
 encryption_key = os.environ.get('ENCRYPTION_KEY')
 if encryption_key:
     cipher = Fernet(encryption_key.encode())
+    print("✅ Encryption enabled")
 else:
     cipher = Fernet(Fernet.generate_key())
+    print("⚠️ No ENCRYPTION_KEY, using generated key")
 
 # ==========================================
-# GEMINI AI CONFIGURATION
+# GEMINI AI CONFIGURATION - ALL from env
 # ==========================================
-GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', 'AIzaSyAJPvmtIO9tkO2DJvBh_gTpQvPvEu_ytY0')
-genai.configure(api_key=GEMINI_API_KEY)
-
-# AI Model for Customer Assistant
-customer_model = genai.GenerativeModel('gemini-1.5-flash')
-agent_model = genai.GenerativeModel('gemini-1.5-flash')
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    customer_model = genai.GenerativeModel('gemini-1.5-flash')
+    agent_model = genai.GenerativeModel('gemini-1.5-flash')
+    print("✅ Gemini AI enabled")
+else:
+    customer_model = None
+    agent_model = None
+    print("⚠️ No GEMINI_API_KEY, AI features disabled")
 
 # AI Prompts
 CUSTOMER_AI_PROMPT = """
@@ -227,21 +211,45 @@ Keep responses short, actionable, and professional.
 """
 
 # ==========================================
-# CLOUDINARY CONFIGURATION
+# CLOUDINARY CONFIGURATION - ALL from env
 # ==========================================
-cloudinary.config(
-    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
-    api_key=os.environ.get('CLOUDINARY_API_KEY'),
-    api_secret=os.environ.get('CLOUDINARY_API_SECRET')
-)
+CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME')
+CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY')
+CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET')
+
+if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
+    cloudinary.config(
+        cloud_name=CLOUDINARY_CLOUD_NAME,
+        api_key=CLOUDINARY_API_KEY,
+        api_secret=CLOUDINARY_API_SECRET
+    )
+    print("✅ Cloudinary enabled")
+else:
+    print("⚠️ Cloudinary not configured")
 
 # ==========================================
-# FLUTTERWAVE CONFIGURATION
+# FLUTTERWAVE CONFIGURATION - ALL from env
 # ==========================================
-FLUTTERWAVE_PUBLIC_KEY = os.environ.get('FLUTTERWAVE_PUBLIC_KEY', 'b514f9da-8c9c-4050-8098-17f491256688')
-FLUTTERWAVE_SECRET_KEY = os.environ.get('FLUTTERWAVE_SECRET_KEY', 'YmOzpj2TeN5EJjOlSiTy9sXPtS8SsCJy')
-FLUTTERWAVE_ENCRYPTION_KEY = os.environ.get('FLUTTERWAVE_ENCRYPTION_KEY', 'w2lCcH8V5UPVrLsJozrI0ziirRL78A1YvY19eqHddrw=')
+FLUTTERWAVE_PUBLIC_KEY = os.environ.get('FLUTTERWAVE_PUBLIC_KEY')
+FLUTTERWAVE_SECRET_KEY = os.environ.get('FLUTTERWAVE_SECRET_KEY')
+FLUTTERWAVE_ENCRYPTION_KEY = os.environ.get('FLUTTERWAVE_ENCRYPTION_KEY')
 FLUTTERWAVE_BASE_URL = 'https://api.flutterwave.com/v3'
+
+if FLUTTERWAVE_PUBLIC_KEY and FLUTTERWAVE_SECRET_KEY:
+    print("✅ Flutterwave enabled")
+else:
+    print("⚠️ Flutterwave not configured")
+
+# ==========================================
+# EMAIL CONFIGURATION - ALL from env
+# ==========================================
+SMTP_USER = os.environ.get('SMTP_USER')
+SMTP_PASS = os.environ.get('SMTP_PASS')
+
+if SMTP_USER and SMTP_PASS:
+    print("✅ Email service enabled")
+else:
+    print("⚠️ Email not configured")
 
 # ==========================================
 # DATABASE MODELS
@@ -277,7 +285,7 @@ class Product(db.Model):
     stock = db.Column(db.Integer, default=0)
     description = db.Column(db.Text)
     image_url = db.Column(db.String(500))
-    install_images = db.Column(db.Text)  # JSON array
+    install_images = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -286,12 +294,12 @@ class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     agent_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-    items = db.Column(db.Text, nullable=False)  # JSON
+    items = db.Column(db.Text, nullable=False)
     total = db.Column(db.Integer, nullable=False)
     status = db.Column(db.String(50), default='paid')
     payment_method = db.Column(db.String(50))
     payment_ref = db.Column(db.String(100))
-    payment_details = db.Column(db.Text)  # JSON
+    payment_details = db.Column(db.Text)
     rider_name = db.Column(db.String(100))
     rider_phone = db.Column(db.String(20))
     rider_vehicle = db.Column(db.String(100))
@@ -340,22 +348,77 @@ class TokenBlacklist(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 # ==========================================
+# AUTO-CREATE ADMIN & AGENTS FROM .env
+# ==========================================
+
+def create_default_accounts():
+    """Create admin and agent accounts from environment variables"""
+
+    # Create Admin from env
+    admin_email = os.environ.get('ADMIN_EMAIL')
+    admin_password = os.environ.get('ADMIN_PASSWORD')
+    admin_name = os.environ.get('ADMIN_NAME', 'Administrator')
+    admin_phone = os.environ.get('ADMIN_PHONE', '0771000000')
+
+    if admin_email and admin_password:
+        admin = User.query.filter_by(email=admin_email).first()
+        if not admin:
+            admin = User(
+                name=admin_name,
+                email=admin_email,
+                phone=admin_phone,
+                password_hash=ph.hash(admin_password),
+                role='admin',
+                status='online',
+                email_verified=True
+            )
+            db.session.add(admin)
+            print(f"✅ Admin account created: {admin_email}")
+        else:
+            print(f"ℹ️ Admin already exists: {admin_email}")
+    else:
+        print("ℹ️ No ADMIN_EMAIL/ADMIN_PASSWORD in env, skipping admin creation")
+
+    # Create Agents from env (supports up to 10 agents)
+    for i in range(1, 11):
+        agent_email = os.environ.get(f'AGENT{i}_EMAIL')
+        agent_password = os.environ.get(f'AGENT{i}_PASSWORD')
+
+        if agent_email and agent_password:
+            agent = User.query.filter_by(email=agent_email).first()
+            if not agent:
+                agent_name = os.environ.get(f'AGENT{i}_NAME', f'Agent {i}')
+                agent_phone = os.environ.get(f'AGENT{i}_PHONE', f'077{i}00000')
+
+                agent = User(
+                    name=agent_name,
+                    email=agent_email,
+                    phone=agent_phone,
+                    password_hash=ph.hash(agent_password),
+                    role='agent',
+                    status='online',
+                    email_verified=True
+                )
+                db.session.add(agent)
+                print(f"✅ Agent account created: {agent_email}")
+            else:
+                print(f"ℹ️ Agent already exists: {agent_email}")
+
+    db.session.commit()
+
+# ==========================================
 # SECURITY UTILITIES
 # ==========================================
 
 failed_attempts = defaultdict(list)
 
 def check_brute_force(ip):
-    """Check if IP is blocked due to too many failed attempts"""
     now = datetime.utcnow()
     failed_attempts[ip] = [t for t in failed_attempts[ip] if t > now - timedelta(hours=1)]
     return len(failed_attempts[ip]) < 10
 
 def record_failed_attempt(ip):
-    """Record a failed attempt from IP"""
     failed_attempts[ip].append(datetime.utcnow())
-    if len(failed_attempts[ip]) >= 20:
-        log_security_event('IP_BLACKLIST_CANDIDATE', None, ip, "20+ failed attempts")
 
 SQL_PATTERNS = [
     r"(\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER|CREATE|TRUNCATE)\b)",
@@ -365,7 +428,6 @@ SQL_PATTERNS = [
 ]
 
 def detect_sql_injection(data):
-    """Detect SQL injection patterns in input"""
     input_str = str(data).lower()
     for pattern in SQL_PATTERNS:
         if re.search(pattern, input_str, re.IGNORECASE):
@@ -373,7 +435,6 @@ def detect_sql_injection(data):
     return False
 
 def sanitize_input(text, max_length=5000):
-    """Sanitize user input to prevent XSS"""
     if not text or not isinstance(text, str):
         return ""
     from markupsafe import escape
@@ -381,7 +442,6 @@ def sanitize_input(text, max_length=5000):
     return text[:max_length]
 
 def log_security_event(event_type, user_id, ip, details):
-    """Log security events for monitoring"""
     app.logger.warning(f"SECURITY: {event_type} | User: {user_id} | IP: {ip} | {details}")
     if user_id:
         audit = AuditLog(
@@ -395,7 +455,6 @@ def log_security_event(event_type, user_id, ip, details):
         db.session.commit()
 
 def mask_email(email):
-    """Mask email for logging"""
     if not email or '@' not in email:
         return email
     local, domain = email.split('@')
@@ -403,19 +462,9 @@ def mask_email(email):
         return '*' * len(local) + '@' + domain
     return local[0] + '*' * (len(local)-2) + local[-1] + '@' + domain
 
-def mask_phone(phone):
-    """Mask phone number for logging"""
-    if not phone:
-        return phone
-    phone_str = str(phone)
-    if len(phone_str) <= 4:
-        return '*' * len(phone_str)
-    return phone_str[:3] + '*' * (len(phone_str)-6) + phone_str[-3:]
-
 ADMIN_IP_WHITELIST = os.environ.get('ADMIN_IP_WHITELIST', '').split(',')
 
 def admin_ip_required(f):
-    """Decorator to restrict admin endpoints to whitelisted IPs"""
     @wraps(f)
     def decorated(*args, **kwargs):
         if ADMIN_IP_WHITELIST and ADMIN_IP_WHITELIST[0]:
@@ -426,7 +475,6 @@ def admin_ip_required(f):
     return decorated
 
 def role_required(required_role):
-    """Decorator to require specific user role"""
     def wrapper(f):
         @wraps(f)
         @jwt_required()
@@ -442,7 +490,6 @@ def role_required(required_role):
     return wrapper
 
 def add_to_blacklist(jti):
-    """Add JWT token to blacklist for logout"""
     blacklist = TokenBlacklist(jti=jti)
     db.session.add(blacklist)
     db.session.commit()
@@ -453,9 +500,7 @@ def check_if_token_revoked(jwt_header, jwt_payload):
     token = TokenBlacklist.query.filter_by(jti=jti).first()
     return token is not None
 
-# Helper function to apply rate limiting if enabled
 def rate_limit(limits):
-    """Apply rate limit decorator only if rate limiting is enabled"""
     if limiter:
         return limiter.limit(limits)
     return lambda x: x
@@ -474,41 +519,28 @@ class LoginSchema(Schema):
     email = fields.Email(required=True)
     password = fields.Str(required=True)
 
-class ProductSchema(Schema):
-    name = fields.Str(required=True, validate=validate.Length(min=2, max=200))
-    type = fields.Str(required=True)
-    price = fields.Int(required=True, validate=validate.Range(min=0))
-    stock = fields.Int(validate=validate.Range(min=0))
-    description = fields.Str()
-
 # ==========================================
 # EMAIL FUNCTIONS
 # ==========================================
 
 def send_email(to_email, subject, html_content):
-    """Send email using Gmail SMTP"""
+    if not SMTP_USER or not SMTP_PASS:
+        app.logger.warning("SMTP not configured")
+        return False
+
     try:
-        smtp_user = os.environ.get('SMTP_USER')
-        smtp_pass = os.environ.get('SMTP_PASS')
-
-        if not smtp_user or not smtp_pass:
-            app.logger.warning("SMTP not configured")
-            return False
-
-        import smtplib
         from email.mime.text import MIMEText
         from email.mime.multipart import MIMEMultipart
 
         msg = MIMEMultipart('alternative')
         msg['Subject'] = subject
-        msg['From'] = smtp_user
+        msg['From'] = SMTP_USER
         msg['To'] = to_email
-
         msg.attach(MIMEText(html_content, 'html'))
 
         with smtplib.SMTP('smtp.gmail.com', 587) as server:
             server.starttls()
-            server.login(smtp_user, smtp_pass)
+            server.login(SMTP_USER, SMTP_PASS)
             server.send_message(msg)
 
         app.logger.info(f"Email sent to {mask_email(to_email)}")
@@ -518,9 +550,11 @@ def send_email(to_email, subject, html_content):
         return False
 
 def send_verification_email(user):
-    """Send email verification link"""
+    if not SMTP_USER:
+        return False
     token = serializer.dumps(user.email, salt='email-verify')
-    verification_url = f"{os.environ.get('FRONTEND_URL', 'http://localhost:5500')}/verify-email/{token}"
+    frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:5500')
+    verification_url = f"{frontend_url}/verify-email/{token}"
 
     html = f"""
     <html>
@@ -536,9 +570,11 @@ def send_verification_email(user):
     return send_email(user.email, "Verify Your Tarazo Account", html)
 
 def send_password_reset_email(user):
-    """Send password reset link"""
+    if not SMTP_USER:
+        return False
     token = serializer.dumps(user.email, salt='password-reset')
-    reset_url = f"{os.environ.get('FRONTEND_URL', 'http://localhost:5500')}/reset-password/{token}"
+    frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:5500')
+    reset_url = f"{frontend_url}/reset-password/{token}"
 
     html = f"""
     <html>
@@ -554,7 +590,6 @@ def send_password_reset_email(user):
     return send_email(user.email, "Reset Your Tarazo Password", html)
 
 def send_order_confirmation(order, user):
-    """Send order confirmation email"""
     html = f"""
     <html>
     <body style="font-family: Arial, sans-serif;">
@@ -579,7 +614,8 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def upload_to_cloudinary(file, folder='tarazo'):
-    """Upload file to Cloudinary and return URL"""
+    if not CLOUDINARY_CLOUD_NAME:
+        return None
     try:
         upload_result = cloudinary.uploader.upload(
             file,
@@ -597,18 +633,22 @@ def upload_to_cloudinary(file, folder='tarazo'):
 # ==========================================
 
 def initiate_flutterwave_payment(amount, email, phone, name, order_id):
-    """Initiate payment with Flutterwave"""
+    if not FLUTTERWAVE_SECRET_KEY:
+        return None
+
     headers = {
         'Authorization': f'Bearer {FLUTTERWAVE_SECRET_KEY}',
         'Content-Type': 'application/json'
     }
+
+    frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:5500')
 
     data = {
         'tx_ref': f'TX-{order_id}-{int(datetime.utcnow().timestamp())}',
         'amount': amount,
         'currency': 'UGX',
         'payment_options': 'card,mobilemoneyuganda',
-        'redirect_url': f"{os.environ.get('FRONTEND_URL')}/payment-callback",
+        'redirect_url': f"{frontend_url}/payment-callback",
         'customer': {
             'email': email,
             'phonenumber': phone,
@@ -629,7 +669,9 @@ def initiate_flutterwave_payment(amount, email, phone, name, order_id):
         return None
 
 def verify_flutterwave_payment(tx_ref, transaction_id):
-    """Verify payment with Flutterwave"""
+    if not FLUTTERWAVE_SECRET_KEY:
+        return None
+
     headers = {
         'Authorization': f'Bearer {FLUTTERWAVE_SECRET_KEY}'
     }
@@ -646,7 +688,9 @@ def verify_flutterwave_payment(tx_ref, transaction_id):
 # ==========================================
 
 def get_ai_response(message, user_type='customer'):
-    """Get AI response from Gemini"""
+    if not customer_model:
+        return "AI features are currently disabled. Please contact support."
+
     try:
         if user_type == 'customer':
             prompt = f"{CUSTOMER_AI_PROMPT}\n\nCustomer: {message}\nAssistant:"
@@ -665,8 +709,7 @@ def get_ai_response(message, user_type='customer'):
 
 @app.before_request
 def before_request():
-    """Run before each request - security checks"""
-    if request.is_json:
+    if request.is_json and request.get_json():
         if detect_sql_injection(request.get_json()):
             log_security_event('SQL_INJECTION_ATTEMPT', None, request.remote_addr, "Blocked JSON payload")
             return jsonify({'error': 'Invalid request'}), 400
@@ -677,7 +720,6 @@ def before_request():
 
 @app.after_request
 def after_request(response):
-    """Add security headers to every response"""
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-Frame-Options'] = 'DENY'
     response.headers['X-XSS-Protection'] = '1; mode=block'
@@ -699,9 +741,8 @@ def health():
     })
 
 @app.route('/api/register', methods=['POST'])
-@rate_limit("3 per minute")  # Only applied if rate limiting is enabled
+@rate_limit("3 per minute")
 def register():
-    """Register new user"""
     data = request.get_json()
 
     schema = RegisterSchema()
@@ -737,7 +778,6 @@ def register():
 
 @app.route('/api/verify-email/<token>', methods=['GET'])
 def verify_email(token):
-    """Verify email address"""
     try:
         email = serializer.loads(token, salt='email-verify', max_age=86400)
         user = User.query.filter_by(email=email).first()
@@ -755,7 +795,6 @@ def verify_email(token):
 @app.route('/api/login', methods=['POST'])
 @rate_limit("5 per minute")
 def login():
-    """Login user"""
     data = request.get_json()
 
     schema = LoginSchema()
@@ -769,13 +808,18 @@ def login():
     if user and user.locked_until and user.locked_until > datetime.utcnow():
         return jsonify({'error': 'Account locked. Try again later.'}), 403
 
-    if not user or not ph.verify(user.password_hash, validated['password']):
+    if not user:
         record_failed_attempt(request.remote_addr)
-        if user:
-            user.failed_login_attempts += 1
-            if user.failed_login_attempts >= 10:
-                user.locked_until = datetime.utcnow() + timedelta(minutes=30)
-            db.session.commit()
+        return jsonify({'error': 'Invalid email or password'}), 401
+
+    try:
+        ph.verify(user.password_hash, validated['password'])
+    except VerifyMismatchError:
+        record_failed_attempt(request.remote_addr)
+        user.failed_login_attempts += 1
+        if user.failed_login_attempts >= 10:
+            user.locked_until = datetime.utcnow() + timedelta(minutes=30)
+        db.session.commit()
         return jsonify({'error': 'Invalid email or password'}), 401
 
     user.failed_login_attempts = 0
@@ -810,7 +854,6 @@ def login():
 @app.route('/api/refresh', methods=['POST'])
 @jwt_required(refresh=True)
 def refresh():
-    """Refresh access token"""
     user_id = get_jwt_identity()
     access_token = create_access_token(identity=user_id)
 
@@ -821,7 +864,6 @@ def refresh():
 @app.route('/api/logout', methods=['POST'])
 @jwt_required()
 def logout():
-    """Logout user - blacklist token"""
     jti = get_jwt()['jti']
     add_to_blacklist(jti)
 
@@ -832,7 +874,6 @@ def logout():
 @app.route('/api/forgot-password', methods=['POST'])
 @rate_limit("3 per hour")
 def forgot_password():
-    """Request password reset"""
     data = request.get_json()
     email = data.get('email')
 
@@ -847,7 +888,6 @@ def forgot_password():
 @app.route('/api/reset-password', methods=['POST'])
 @rate_limit("3 per hour")
 def reset_password():
-    """Reset password with token"""
     data = request.get_json()
     token = data.get('token')
     new_password = data.get('password')
@@ -879,7 +919,6 @@ def reset_password():
 
 @app.route('/api/products', methods=['GET'])
 def get_products():
-    """Get all products"""
     products = Product.query.all()
     return jsonify([{
         'id': p.id,
@@ -897,7 +936,6 @@ def get_products():
 @role_required('admin')
 @rate_limit("10 per hour")
 def create_product():
-    """Create new product with image upload"""
     data = request.form
 
     if not data.get('name') or not data.get('price'):
@@ -941,7 +979,6 @@ def create_product():
 @app.route('/api/chat/customer', methods=['POST'])
 @rate_limit("30 per minute")
 def customer_chat():
-    """Customer AI chat endpoint"""
     data = request.get_json()
     message = data.get('message', '')
 
@@ -979,7 +1016,6 @@ def customer_chat():
 @jwt_required()
 @role_required('agent')
 def agent_chat():
-    """Agent AI assistant endpoint"""
     data = request.get_json()
     message = data.get('message', '')
 
@@ -993,7 +1029,6 @@ def agent_chat():
 @app.route('/api/chat/conversations', methods=['GET'])
 @jwt_required()
 def get_conversations():
-    """Get user's chat conversations"""
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
 
@@ -1022,7 +1057,6 @@ def get_conversations():
 @jwt_required()
 @rate_limit("10 per hour")
 def create_order():
-    """Create new order"""
     user_id = get_jwt_identity()
     data = request.get_json()
 
@@ -1083,7 +1117,6 @@ def create_order():
 @app.route('/api/orders', methods=['GET'])
 @jwt_required()
 def get_orders():
-    """Get orders based on role"""
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
 
@@ -1115,7 +1148,6 @@ def get_orders():
 @jwt_required()
 @role_required('agent')
 def assign_rider(order_id):
-    """Assign rider to order"""
     data = request.get_json()
     order = Order.query.get_or_404(order_id)
 
@@ -1145,7 +1177,6 @@ def assign_rider(order_id):
 @app.route('/api/orders/<int:order_id>/status', methods=['PUT'])
 @jwt_required()
 def update_order_status(order_id):
-    """Update order status"""
     data = request.get_json()
     new_status = data.get('status')
     order = Order.query.get_or_404(order_id)
@@ -1179,7 +1210,6 @@ def update_order_status(order_id):
 @app.route('/api/notifications', methods=['GET'])
 @jwt_required()
 def get_notifications():
-    """Get user notifications"""
     user_id = get_jwt_identity()
     notifications = Notification.query.filter_by(user_id=user_id).order_by(Notification.created_at.desc()).limit(50).all()
 
@@ -1196,7 +1226,6 @@ def get_notifications():
 @app.route('/api/notifications/<int:notif_id>/read', methods=['PUT'])
 @jwt_required()
 def mark_notification_read(notif_id):
-    """Mark notification as read"""
     user_id = get_jwt_identity()
     notif = Notification.query.get_or_404(notif_id)
 
@@ -1216,7 +1245,6 @@ def mark_notification_read(notif_id):
 @jwt_required()
 @rate_limit("5 per hour")
 def initiate_payment():
-    """Initiate Flutterwave payment"""
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
     data = request.get_json()
@@ -1243,7 +1271,6 @@ def initiate_payment():
 
 @app.route('/api/payment/webhook', methods=['POST'])
 def flutterwave_webhook():
-    """Flutterwave webhook for payment verification"""
     signature = request.headers.get('verif-hash')
     expected_signature = os.environ.get('FLUTTERWAVE_WEBHOOK_SECRET')
 
@@ -1290,7 +1317,6 @@ def flutterwave_webhook():
 @role_required('admin')
 @admin_ip_required
 def get_agents():
-    """Get all agents (admin only)"""
     agents = User.query.filter_by(role='agent').all()
 
     return jsonify([{
@@ -1307,7 +1333,6 @@ def get_agents():
 @role_required('admin')
 @admin_ip_required
 def update_agent_status(agent_id):
-    """Update agent status"""
     data = request.get_json()
     new_status = data.get('status')
 
@@ -1321,7 +1346,6 @@ def update_agent_status(agent_id):
 @jwt_required()
 @role_required('admin')
 def get_stats():
-    """Get admin dashboard stats"""
     today = datetime.utcnow().date()
 
     today_orders = Order.query.filter(
@@ -1365,6 +1389,7 @@ def server_error(e):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        create_default_accounts()  # Auto-create admin/agents from .env
         print("✅ Database tables created")
 
     port = int(os.environ.get('PORT', 5000))
