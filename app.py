@@ -86,7 +86,7 @@ CORS(app,
      resources={r"/api/*": {
          "origins": ["https://ravenj-png.github.io", "http://localhost:5500", "http://localhost:5000"],
          "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-         "allow_headers": ["Content-Type", "Authorization", "X-CSRFToken],
+         "allow_headers": ["Content-Type", "Authorization", "X-CSRFToken"],
          "supports_credentials": True,
          "expose_headers": ["Set-Cookie"]
      }})
