@@ -46,7 +46,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # ==================== CORS ====================
 FRONTEND_URL = os.environ.get('FRONTEND_URL', '*')
-CORS(app, origins=FRONTEND_URL, supports_credentials=False, methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+CORS(app, origins="*", supports_credentials=False, methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
 # ==================== EXTENSIONS ====================
 jwt = JWTManager(app)
