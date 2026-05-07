@@ -734,6 +734,17 @@ def after_request(response):
     return response
 
 # ==========================================
+# CSRF TOKEN ROUTE
+# ==========================================
+
+@app.route('/api/csrf-token', methods=['GET'])
+@csrf.exempt
+def get_csrf_token():
+    """Return a CSRF token for the frontend"""
+    from flask_wtf.csrf import generate_csrf
+    return jsonify({'csrf_token': generate_csrf()})
+
+# ==========================================
 # AUTHENTICATION ROUTES
 # ==========================================
 
