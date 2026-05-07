@@ -760,6 +760,7 @@ def health():
     })
 
 @app.route('/api/register', methods=['POST'])
+@csrf.exempt
 @rate_limit("3 per minute")
 def register():
     data = request.get_json()
@@ -812,6 +813,7 @@ def verify_email(token):
         return jsonify({'error': 'Invalid or expired token'}), 400
 
 @app.route('/api/login', methods=['POST'])
+@csrf.exempt
 @rate_limit("5 per minute")
 def login():
     data = request.get_json()
@@ -891,6 +893,7 @@ def logout():
     return response
 
 @app.route('/api/forgot-password', methods=['POST'])
+@csrf.exempt
 @rate_limit("3 per hour")
 def forgot_password():
     data = request.get_json()
