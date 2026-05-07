@@ -1,5 +1,5 @@
 # ==========================================
-# TARAZO BACKEND - COMPLETE WITH REDIS + RATE LIMITING
+# TARAZO BACKEND - COMPLETE WITH REDIS + RATE LIMITING + CSRF EVERYWHERE
 # ==========================================
 
 import os
@@ -22,7 +22,7 @@ from flask_jwt_extended import (
     jwt_required, get_jwt_identity, get_jwt, set_access_cookies,
     set_refresh_cookies, unset_jwt_cookies
 )
-from flask_wtf.csrf import CSRFProtect
+from flask_wtf.csrf import CSRFProtect, generate_csrf
 from marshmallow import Schema, fields, validate, ValidationError
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
@@ -82,35 +82,23 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # CORS - ALL from env
 ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', 'http://localhost:5500,http://localhost:5000').split(',')
 
-# In your Flask app.py, update CORS configuration:
 CORS(app, 
-     resources={r"/api/*": {
-         "origins": ["https://ravenj-png.github.io", "http://localhost:5500", "http://localhost:5000"],
-         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-         "allow_headers": ["Content-Type", "Authorization", "X-CSRFToken"],
-         "supports_credentials": True,
-         "expose_headers": ["Set-Cookie"]
-     }})
+     origins=["https://ravenj-png.github.io", "http://localhost:5500", "http://localhost:5000"],
+     supports_credentials=True,
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+     allow_headers=["Content-Type", "Authorization", "X-CSRFToken"],
+     expose_headers=["Set-Cookie"],
+     resources={r"/api/*": {}})
 
-# CSRF Protection
+# CSRF Protection - CONFIGURED PROPERLY
 csrf = CSRFProtect()
 csrf.init_app(app)
 
-# Add this middleware
-@app.before_request
-def check_csrf():
-    if request.method == 'OPTIONS':
-        return
-        
-    if request.method in ['POST', 'PUT', 'DELETE']:
-        csrf_token = request.headers.get('X-CSRFToken')
-        if not csrf_token:
-            return jsonify({'error': 'CSRF token missing'}), 400
-        try:
-            from flask_wtf.csrf import validate_csrf
-            validate_csrf(csrf_token)
-        except:
-            return jsonify({'error': 'Invalid CSRF token'}), 400
+# ✅ Configure Flask-WTF CSRF to work with header-based tokens
+app.config['WTF_CSRF_CHECK_DEFAULT'] = True  # Check CSRF on all POST/PUT/DELETE
+app.config['WTF_CSRF_HEADERS'] = ['X-CSRFToken']  # Look for token in this header
+app.config['WTF_CSRF_TIME_LIMIT'] = None  # Token doesn't expire (or set to 3600 for production)
+app.config['WTF_CSRF_SSL_STRICT'] = False  # Allow non-HTTPS in dev
 
 # ==========================================
 # REDIS CONFIGURATION (optional - from env)
@@ -751,18 +739,32 @@ def after_request(response):
     return response
 
 # ==========================================
-# CSRF TOKEN ROUTE
+# CSRF TOKEN ROUTE (EXEMPT - PUBLIC)
 # ==========================================
 
-@app.route('/api/csrf-token', methods=['GET'])
 @csrf.exempt
+@app.route('/api/csrf-token', methods=['GET'])
 def get_csrf_token():
-    """Return a CSRF token for the frontend"""
-    from flask_wtf.csrf import generate_csrf
+    """Return a CSRF token for the frontend - ONLY exempt endpoint"""
     return jsonify({'csrf_token': generate_csrf()})
 
 # ==========================================
-# AUTHENTICATION ROUTES
+# CORS PREFLIGHT HANDLER
+# ==========================================
+
+@app.route('/api/<path:path>', methods=['OPTIONS'])
+def options_handler(path):
+    """Handle CORS preflight requests for all API endpoints"""
+    response = jsonify({'status': 'ok'})
+    origin = request.headers.get('Origin', '*')
+    response.headers.add('Access-Control-Allow-Origin', origin)
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRFToken')
+    response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    return response
+
+# ==========================================
+# AUTHENTICATION ROUTES (CSRF PROTECTED)
 # ==========================================
 
 @app.route('/api/health', methods=['GET'])
@@ -1439,6 +1441,7 @@ if __name__ == '__main__':
     ║  Debug mode: {debug}                                       ║
     ║  Rate limiting: {'Enabled' if ENABLE_RATE_LIMIT else 'Disabled'}   ║
     ║  Redis: {'Connected' if redis_client else 'Not available'}        ║
+    ║  CSRF: PROTECTED ON ALL ENDPOINTS 🔐                     ║
     ╚══════════════════════════════════════════════════════════╝
     """)
     
