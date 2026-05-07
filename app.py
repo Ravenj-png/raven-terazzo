@@ -1,8 +1,6 @@
 # ==========================================
 # TARAZO BACKEND - PRODUCTION READY
 # Fixed: decode_token import, email_verified column, transaction safety
-# ==========================================
-
 import os
 import re
 import json
