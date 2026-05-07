@@ -1,508 +1,68 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tarazo - Premium Terrazzo Uganda</title>
+    <title>Tarazo Backend Test</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f6fa;
-            color: #2c3e50;
-        }
-
-        /* Auth Pages */
-        .auth-container {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #1a5276 0%, #154360 100%);
-            padding: 20px;
-        }
-
-        .auth-box {
-            background: white;
-            border-radius: 20px;
-            padding: 40px 30px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-
-        .logo {
-            text-align: center;
-            font-size: 32px;
-            font-weight: 800;
-            color: #1a5276;
-            margin-bottom: 5px;
-        }
-
-        .logo-sub {
-            text-align: center;
-            color: #27ae60;
-            font-size: 12px;
-            margin-bottom: 30px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            color: #7f8c8d;
-            margin-bottom: 5px;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 14px;
-            outline: none;
-        }
-
-        .form-group input:focus {
-            border-color: #1a5276;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        .btn-primary {
-            background: #1a5276;
-            color: white;
-        }
-
-        .btn-green {
-            background: #27ae60;
-            color: white;
-        }
-
-        .btn-red {
-            background: #e74c3c;
-            color: white;
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 2px solid #1a5276;
-            color: #1a5276;
-        }
-
-        .btn-sm {
-            padding: 8px 16px;
-            font-size: 12px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .toggle-text {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 14px;
-        }
-
-        .toggle-text span {
-            color: #1a5276;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        /* App Container */
-        .app-container {
-            min-height: 100vh;
-            padding-bottom: 70px;
-        }
-
-        .app-header {
-            background: #1a5276;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .nav-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            z-index: 100;
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-            color: #7f8c8d;
-            font-size: 12px;
-            cursor: pointer;
-            padding: 5px 15px;
-            border-radius: 10px;
-        }
-
-        .nav-item.active {
-            color: #1a5276;
-            background: rgba(26,82,118,0.1);
-        }
-
-        .page {
-            padding: 20px;
-        }
-
-        /* Cards */
-        .card {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: 800;
-            color: #1a5276;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: #7f8c8d;
-            margin-top: 5px;
-        }
-
-        /* Product Grid */
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 15px;
-        }
-
-        .product-card {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            cursor: pointer;
-        }
-
-        .product-card img {
-            width: 100%;
-            height: 140px;
-            object-fit: cover;
-        }
-
-        .product-info {
-            padding: 12px;
-        }
-
-        .product-name {
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-        .product-price {
-            color: #1a5276;
-            font-weight: 800;
-            font-size: 18px;
-            margin-bottom: 10px;
-        }
-
-        /* Order Items */
-        .order-item {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .status-paid { background: #d4edda; color: #155724; }
-        .status-processing { background: #fff3cd; color: #856404; }
-        .status-shipped { background: #cce5ff; color: #004085; }
-        .status-delivered { background: #d1ecf1; color: #0c5460; }
-
-        /* Receipt */
-        .receipt {
-            background: white;
-            border-radius: 16px;
-            overflow: hidden;
-        }
-
-        .receipt-header {
-            background: linear-gradient(135deg, #1a5276, #154360);
-            color: white;
-            padding: 30px 20px;
-            text-align: center;
-        }
-
-        .receipt-body {
-            padding: 20px;
-        }
-
-        .receipt-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
-        }
-
-        .receipt-total {
-            font-size: 18px;
-            font-weight: 800;
-            color: #1a5276;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 2px solid #1a5276;
-        }
-
-        .toast {
-            position: fixed;
-            top: 70px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #154360;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            z-index: 1000;
-            display: none;
-        }
-
-        .toast.show {
-            display: block;
-            animation: fadeInOut 3s ease;
-        }
-
-        @keyframes fadeInOut {
-            0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-            10% { opacity: 1; transform: translateX(-50%) translateY(0); }
-            90% { opacity: 1; transform: translateX(-50%) translateY(0); }
-            100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-        }
-
-        select {
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-            margin-top: 10px;
-        }
+        body { font-family: monospace; padding: 20px; background: #1a5276; }
+        .test-card { background: white; border-radius: 10px; padding: 20px; margin: 15px 0; }
+        button { background: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        pre { background: #f0f0f0; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        input { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 5px; width: 200px; }
     </style>
 </head>
 <body>
-    <div id="toast" class="toast"></div>
+    <div style="max-width: 600px; margin: 0 auto;">
+        <h1 style="color: white;">🧪 Tarazo Backend Test</h1>
 
-    <!-- Auth Page -->
-    <div id="authPage">
-        <div class="auth-container">
-            <div class="auth-box">
-                <div class="logo">🏛️ TARAZO</div>
-                <div class="logo-sub">Premium Terrazzo Uganda</div>
-
-                <div id="loginForm">
-                    <div class="form-group">
-                        <label>📧 Email</label>
-                        <input type="email" id="loginEmail" placeholder="Enter your email">
-                    </div>
-                    <div class="form-group">
-                        <label>🔒 Password</label>
-                        <input type="password" id="loginPassword" placeholder="Enter your password">
-                    </div>
-                    <button class="btn btn-primary" onclick="handleLogin()">🔐 Login</button>
-                    <div class="toggle-text">
-                        Don't have an account? <span onclick="showRegister()">📝 Register</span>
-                    </div>
-                </div>
-
-                <div id="registerForm" class="hidden">
-                    <div class="form-group">
-                        <label>👤 Full Name</label>
-                        <input type="text" id="regName">
-                    </div>
-                    <div class="form-group">
-                        <label>📱 Phone</label>
-                        <input type="tel" id="regPhone">
-                    </div>
-                    <div class="form-group">
-                        <label>📧 Email</label>
-                        <input type="email" id="regEmail">
-                    </div>
-                    <div class="form-group">
-                        <label>🔒 Password</label>
-                        <input type="password" id="regPassword">
-                    </div>
-                    <div class="form-group">
-                        <label>✅ Confirm</label>
-                        <input type="password" id="regConfirmPassword">
-                    </div>
-                    <button class="btn btn-green" onclick="handleRegister()">✅ Create Account</button>
-                    <div class="toggle-text">
-                        Have an account? <span onclick="showLogin()">🔐 Login</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main App -->
-    <div id="appPage" class="hidden">
-        <div class="app-header">
-            <h1>🏛️ TARAZO</h1>
+        <div class="test-card">
+            <h3>Test Login with .env Credentials</h3>
+            
             <div>
-                <span id="userGreeting"></span>
-                <button class="btn-sm" style="background:rgba(255,255,255,0.2); color:white; margin-left:10px;" onclick="logout()">Logout</button>
+                <input type="email" id="email" placeholder="Email" value="admin@tarazo.com">
+                <input type="password" id="password" placeholder="Password" value="admin123">
+                <button onclick="testLogin()">Test Login</button>
             </div>
+            
+            <div id="loginResult" style="margin-top: 10px;"></div>
         </div>
 
-        <!-- USER PANELS -->
-        <!-- User Shop -->
-        <div id="userShopPage" class="page hidden">
-            <h2>🏪 Shop Terrazzo</h2>
-            <div class="product-grid" id="productsGrid"></div>
-        </div>
-
-        <!-- User Cart -->
-        <div id="userCartPage" class="page hidden">
-            <h2>🛒 My Cart</h2>
-            <div id="cartItems"></div>
-            <div id="cartTotal" class="card" style="text-align:center;">
-                <h3>Total: UGX <span id="totalAmount">0</span></h3>
-                <button class="btn btn-green" onclick="checkout()">Proceed to Checkout</button>
+        <div class="test-card">
+            <h3>Test Register New User</h3>
+            <div>
+                <input type="text" id="regName" placeholder="Name" value="Test User">
+                <input type="email" id="regEmail" placeholder="Email" value="testuser@example.com">
+                <input type="tel" id="regPhone" placeholder="Phone" value="0771234567">
+                <input type="password" id="regPassword" placeholder="Password" value="test123">
+                <button onclick="testRegister()">Test Register</button>
             </div>
+            <div id="registerResult" style="margin-top: 10px;"></div>
         </div>
 
-        <!-- User Orders -->
-        <div id="userOrdersPage" class="page hidden">
-            <h2>📦 My Orders</h2>
-            <div id="ordersList"></div>
+        <div class="test-card">
+            <h3>Test Protected Routes (After Login)</h3>
+            <button onclick="testProducts()">1. Get Products</button>
+            <button onclick="testCart()">2. Get Cart</button>
+            <button onclick="testOrders()">3. Get Orders</button>
+            <button onclick="testAdminStats()">4. Admin Stats (admin only)</button>
+            <div id="protectedResult" style="margin-top: 10px;"></div>
         </div>
-
-        <!-- ADMIN PANELS -->
-        <!-- Admin Dashboard -->
-        <div id="adminDashboardPage" class="page hidden">
-            <h2>📊 Admin Dashboard</h2>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value" id="todaySales">UGX 0</div>
-                    <div class="stat-label">Today's Sales</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="pendingOrders">0</div>
-                    <div class="stat-label">Pending Orders</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="totalProducts">0</div>
-                    <div class="stat-label">Total Products</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="totalUsers">0</div>
-                    <div class="stat-label">Total Users</div>
-                </div>
-            </div>
-            <div class="card">
-                <h3>All Orders</h3>
-                <div id="adminOrdersList"></div>
-            </div>
-        </div>
-
-        <!-- AGENT PANELS -->
-        <!-- Agent Dashboard -->
-        <div id="agentDashboardPage" class="page hidden">
-            <h2>📦 Agent Dashboard</h2>
-            <div class="card">
-                <h3>Assigned Orders</h3>
-                <div id="agentOrdersList"></div>
-            </div>
-        </div>
-
-        <!-- Receipt Modal -->
-        <div id="receiptModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto;">
-            <div style="max-width: 500px; margin: 50px auto;">
-                <div id="receiptContent"></div>
-                <div style="text-align: center; margin-top: 10px;">
-                    <button class="btn-sm btn-outline" onclick="closeReceipt()">Close</button>
-                    <button class="btn-sm btn-primary" onclick="printReceipt()">Print Receipt</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Bottom Navigation -->
-        <div class="nav-bar" id="bottomNav"></div>
     </div>
 
     <script>
-        // ==================== CONFIG ====================
         const API_BASE = 'https://raven-terazzo.onrender.com/api';
-        let currentUser = null;
         let csrfToken = null;
-        let products = [];
-        let cart = [];
-        let orders = [];
-        let allOrders = [];
+        let currentUser = null;
 
-        // ==================== HELPERS ====================
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            toast.textContent = msg;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
+        function showResult(elementId, success, message, data = null) {
+            const el = document.getElementById(elementId);
+            el.innerHTML = `
+                <div class="${success ? 'success' : 'error'}">
+                    ${success ? '✅' : '❌'} ${message}
+                </div>
+                ${data ? `<pre>${JSON.stringify(data, null, 2)}</pre>` : ''}
+            `;
         }
 
         async function getCSRFToken() {
@@ -513,19 +73,19 @@
                 });
                 const data = await response.json();
                 csrfToken = data.csrf_token;
+                console.log('CSRF Token:', csrfToken);
                 return csrfToken;
-            } catch(e) { return null; }
+            } catch (error) {
+                console.error('CSRF error:', error);
+                return null;
+            }
         }
 
-        // ==================== AUTH ====================
-        async function handleLogin() {
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
+        async function testLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
 
-            if (!email || !password) {
-                showToast('Please enter email and password');
-                return;
-            }
+            showResult('loginResult', false, 'Logging in...');
 
             try {
                 await getCSRFToken();
@@ -544,33 +104,25 @@
 
                 if (response.ok && data.success) {
                     currentUser = data.user;
-                    showToast(`Welcome ${currentUser.name}!`);
-                    await loadInitialData();
-                    showApp();
+                    showResult('loginResult', true, 
+                        `Login successful! Welcome ${currentUser.name} (Role: ${currentUser.role})`, 
+                        data
+                    );
                 } else {
-                    showToast(data.error || 'Login failed');
+                    showResult('loginResult', false, `Login failed: ${data.error || 'Unknown error'}`, data);
                 }
             } catch (error) {
-                showToast('Login failed');
+                showResult('loginResult', false, `Login error: ${error.message}`);
             }
         }
 
-        async function handleRegister() {
+        async function testRegister() {
             const name = document.getElementById('regName').value;
-            const phone = document.getElementById('regPhone').value;
             const email = document.getElementById('regEmail').value;
+            const phone = document.getElementById('regPhone').value;
             const password = document.getElementById('regPassword').value;
-            const confirm = document.getElementById('regConfirmPassword').value;
 
-            if (!name || !email || !password) {
-                showToast('Please fill all fields');
-                return;
-            }
-
-            if (password !== confirm) {
-                showToast('Passwords do not match');
-                return;
-            }
+            showResult('registerResult', false, 'Creating account...');
 
             try {
                 await getCSRFToken();
@@ -588,469 +140,114 @@
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    showToast('Registration successful! Please login.');
-                    showLogin();
-                    document.getElementById('loginEmail').value = email;
+                    showResult('registerResult', true, 'Registration successful! You can now login.', data);
                 } else {
-                    showToast(data.error || 'Registration failed');
+                    showResult('registerResult', false, `Registration failed: ${data.error || 'Unknown error'}`, data);
                 }
             } catch (error) {
-                showToast('Registration failed');
+                showResult('registerResult', false, `Registration error: ${error.message}`);
             }
         }
 
-        async function logout() {
-            try {
-                await fetch(`${API_BASE}/logout`, { method: 'POST', credentials: 'include' });
-            } catch(e) {}
-            
-            currentUser = null;
-            document.getElementById('appPage').classList.add('hidden');
-            document.getElementById('authPage').classList.remove('hidden');
-            showToast('Logged out');
-        }
-
-        // ==================== DATA LOADING ====================
-        async function loadInitialData() {
-            await loadProducts();
-            await loadCart();
-            await loadOrders();
-            if (currentUser?.role === 'admin') {
-                await loadAdminStats();
-                await loadAllOrders();
-            }
-        }
-
-        async function loadProducts() {
-            try {
-                const response = await fetch(`${API_BASE}/products`);
-                products = await response.json();
-                renderProducts();
-            } catch(e) { console.error(e); }
-        }
-
-        async function loadCart() {
-            if (!currentUser) return;
-            try {
-                const response = await fetch(`${API_BASE}/cart`, { credentials: 'include' });
-                if (response.ok) cart = await response.json();
-                renderCart();
-            } catch(e) { cart = []; }
-        }
-
-        async function loadOrders() {
-            if (!currentUser) return;
-            try {
-                const response = await fetch(`${API_BASE}/orders`, { credentials: 'include' });
-                if (response.ok) orders = await response.json();
-                renderOrders();
-            } catch(e) { orders = []; }
-        }
-
-        async function loadAdminStats() {
-            try {
-                const response = await fetch(`${API_BASE}/admin/stats`, { credentials: 'include' });
-                if (response.ok) {
-                    const stats = await response.json();
-                    document.getElementById('todaySales').textContent = `UGX ${(stats.today_sales || 0).toLocaleString()}`;
-                    document.getElementById('pendingOrders').textContent = stats.pending_orders || 0;
-                    document.getElementById('totalProducts').textContent = stats.total_products || 0;
-                    document.getElementById('totalUsers').textContent = stats.total_users || 0;
-                }
-            } catch(e) { console.error(e); }
-        }
-
-        async function loadAllOrders() {
-            try {
-                const response = await fetch(`${API_BASE}/admin/orders`, { credentials: 'include' });
-                if (response.ok) {
-                    allOrders = await response.json();
-                    renderAdminOrders();
-                }
-            } catch(e) { console.error(e); }
-        }
-
-        // ==================== RENDER FUNCTIONS ====================
-        function renderProducts() {
-            const grid = document.getElementById('productsGrid');
-            if (!grid || !products) return;
-            
-            grid.innerHTML = products.map(p => `
-                <div class="product-card">
-                    <img src="${p.image_url || 'https://placehold.co/400x300/1a5276/white?text=TARAZO'}">
-                    <div class="product-info">
-                        <div class="product-name">${p.name}</div>
-                        <div class="product-price">UGX ${(p.price || 0).toLocaleString()}</div>
-                        <button class="btn-sm btn-green" onclick="addToCart(${p.id})">Add to Cart</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function renderCart() {
-            const container = document.getElementById('cartItems');
-            if (!container) return;
-            
-            if (!cart || cart.length === 0) {
-                container.innerHTML = '<div class="card">Cart is empty</div>';
-                document.getElementById('totalAmount').textContent = '0';
-                return;
-            }
-            
-            let total = 0;
-            let html = '';
-            for (let item of cart) {
-                const product = products.find(p => p.id === item.product_id);
-                if (product) {
-                    total += product.price * item.quantity;
-                    html += `
-                        <div class="order-item">
-                            <div><strong>${product.name}</strong> x ${item.quantity}</div>
-                            <div>UGX ${(product.price * item.quantity).toLocaleString()}</div>
-                            <button class="btn-sm btn-red" onclick="removeFromCart(${item.product_id})">Remove</button>
-                        </div>
-                    `;
-                }
-            }
-            container.innerHTML = html;
-            document.getElementById('totalAmount').textContent = total.toLocaleString();
-        }
-
-        function renderOrders() {
-            const container = document.getElementById('ordersList');
-            if (!container) return;
-            
-            if (!orders || orders.length === 0) {
-                container.innerHTML = '<div class="card">No orders yet</div>';
-                return;
-            }
-            
-            container.innerHTML = orders.map(o => `
-                <div class="order-item">
-                    <div><strong>Order #${o.id}</strong> - ${new Date(o.created_at).toLocaleDateString()}</div>
-                    <div>Total: UGX ${(o.total || 0).toLocaleString()}</div>
-                    <div><span class="status-badge status-${o.status}">${o.status}</span></div>
-                    ${o.rider_name ? `<div>Rider: ${o.rider_name} (${o.rider_phone})</div>` : ''}
-                    <button class="btn-sm btn-primary" style="margin-top:10px;" onclick="viewReceipt(${o.id})">View Receipt</button>
-                </div>
-            `).join('');
-        }
-
-        function renderAdminOrders() {
-            const container = document.getElementById('adminOrdersList');
-            if (!container) return;
-            
-            if (!allOrders || allOrders.length === 0) {
-                container.innerHTML = '<div class="card">No orders</div>';
-                return;
-            }
-            
-            container.innerHTML = allOrders.map(o => `
-                <div class="order-item">
-                    <div><strong>Order #${o.id}</strong> - User ID: ${o.user_id}</div>
-                    <div>Total: UGX ${(o.total || 0).toLocaleString()}</div>
-                    <div><span class="status-badge status-${o.status}">${o.status}</span></div>
-                    <select onchange="updateOrderStatus(${o.id}, this.value)">
-                        <option value="paid" ${o.status === 'paid' ? 'selected' : ''}>Paid</option>
-                        <option value="processing" ${o.status === 'processing' ? 'selected' : ''}>Processing</option>
-                        <option value="shipped" ${o.status === 'shipped' ? 'selected' : ''}>Shipped</option>
-                        <option value="delivered" ${o.status === 'delivered' ? 'selected' : ''}>Delivered</option>
-                    </select>
-                </div>
-            `).join('');
-        }
-
-        function renderAgentOrders() {
-            const container = document.getElementById('agentOrdersList');
-            if (!container) return;
-            
-            const myOrders = orders.filter(o => o.agent_id === currentUser?.id);
-            
-            if (myOrders.length === 0) {
-                container.innerHTML = '<div class="card">No orders assigned</div>';
-                return;
-            }
-            
-            container.innerHTML = myOrders.map(o => `
-                <div class="order-item">
-                    <div><strong>Order #${o.id}</strong></div>
-                    <div>Total: UGX ${(o.total || 0).toLocaleString()}</div>
-                    <div><span class="status-badge status-${o.status}">${o.status}</span></div>
-                    <select onchange="updateOrderStatus(${o.id}, this.value)">
-                        <option value="paid" ${o.status === 'paid' ? 'selected' : ''}>Paid</option>
-                        <option value="processing" ${o.status === 'processing' ? 'selected' : ''}>Processing</option>
-                        <option value="shipped" ${o.status === 'shipped' ? 'selected' : ''}>Shipped</option>
-                        <option value="delivered" ${o.status === 'delivered' ? 'selected' : ''}>Delivered</option>
-                    </select>
-                </div>
-            `).join('');
-        }
-
-        // ==================== ACTIONS ====================
-        async function addToCart(productId) {
-            if (!currentUser) {
-                showToast('Please login first');
-                return;
-            }
+        async function testProducts() {
+            showResult('protectedResult', false, 'Fetching products...');
             
             try {
-                await getCSRFToken();
-                const response = await fetch(`${API_BASE}/cart`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({ product_id: productId, quantity: 1 })
-                });
-                
-                if (response.ok) {
-                    showToast('Added to cart!');
-                    await loadCart();
-                }
-            } catch(e) { showToast('Failed to add'); }
-        }
-
-        async function removeFromCart(productId) {
-            try {
-                await getCSRFToken();
-                await fetch(`${API_BASE}/cart/${productId}`, {
-                    method: 'DELETE',
-                    headers: { 'X-CSRFToken': csrfToken },
+                const response = await fetch(`${API_BASE}/products`, {
                     credentials: 'include'
-                });
-                await loadCart();
-                showToast('Removed');
-            } catch(e) { showToast('Failed to remove'); }
-        }
-
-        async function checkout() {
-            if (!cart || cart.length === 0) {
-                showToast('Cart is empty');
-                return;
-            }
-            
-            let total = 0;
-            let items = [];
-            for (let item of cart) {
-                const product = products.find(p => p.id === item.product_id);
-                if (product) {
-                    total += product.price * item.quantity;
-                    items.push({
-                        productId: item.product_id,
-                        productName: product.name,
-                        quantity: item.quantity,
-                        price: product.price
-                    });
-                }
-            }
-            
-            try {
-                await getCSRFToken();
-                const response = await fetch(`${API_BASE}/orders`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({ items, total, payment_method: 'MTN Mobile Money' })
                 });
                 
                 const data = await response.json();
-                if (response.ok && data.success) {
-                    showToast('Order placed!');
-                    await loadCart();
-                    await loadOrders();
-                    viewReceipt(data.order_id);
-                    if (currentUser.role === 'user') showUserPage('orders');
-                }
-            } catch(e) { showToast('Order failed'); }
-        }
-
-        async function updateOrderStatus(orderId, status) {
-            try {
-                await getCSRFToken();
-                await fetch(`${API_BASE}/orders/${orderId}/status`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({ status })
-                });
-                showToast('Status updated');
-                if (currentUser.role === 'admin') {
-                    await loadAllOrders();
+                
+                if (response.ok) {
+                    showResult('protectedResult', true, `Products loaded: ${data.length} products`, data);
                 } else {
-                    await loadOrders();
-                    renderAgentOrders();
+                    showResult('protectedResult', false, `Failed: ${data.error || 'Unknown error'}`, data);
                 }
-            } catch(e) { showToast('Update failed'); }
-        }
-
-        // ==================== RECEIPT ====================
-        async function viewReceipt(orderId) {
-            const order = orders.find(o => o.id === orderId);
-            if (!order) return;
-            
-            let itemsHtml = '';
-            if (order.items) {
-                for (let item of order.items) {
-                    itemsHtml += `
-                        <div class="receipt-row">
-                            <span>${item.productName} x ${item.quantity}</span>
-                            <span>UGX ${(item.price * item.quantity).toLocaleString()}</span>
-                        </div>
-                    `;
-                }
-            }
-            
-            const receiptHtml = `
-                <div class="receipt">
-                    <div class="receipt-header">
-                        <h2>🏛️ TARAZO</h2>
-                        <p>Premium Terrazzo Uganda</p>
-                        <h3>RECEIPT</h3>
-                        <p>Order #${order.id}</p>
-                    </div>
-                    <div class="receipt-body">
-                        <div class="receipt-row">
-                            <span>Date:</span>
-                            <span>${new Date(order.created_at).toLocaleString()}</span>
-                        </div>
-                        <div class="receipt-row">
-                            <span>Customer:</span>
-                            <span>${currentUser.name}</span>
-                        </div>
-                        <div class="receipt-row">
-                            <span>Email:</span>
-                            <span>${currentUser.email}</span>
-                        </div>
-                        <div class="receipt-row">
-                            <span>Phone:</span>
-                            <span>${currentUser.phone || 'N/A'}</span>
-                        </div>
-                        ${itemsHtml}
-                        <div class="receipt-row receipt-total">
-                            <span><strong>TOTAL</strong></span>
-                            <span><strong>UGX ${(order.total || 0).toLocaleString()}</strong></span>
-                        </div>
-                        <div style="text-align:center; margin-top:20px;">
-                            <p>Thank you for shopping with Tarazo!</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('receiptContent').innerHTML = receiptHtml;
-            document.getElementById('receiptModal').style.display = 'block';
-        }
-
-        function closeReceipt() {
-            document.getElementById('receiptModal').style.display = 'none';
-        }
-
-        function printReceipt() {
-            const content = document.getElementById('receiptContent').innerHTML;
-            const win = window.open('', '_blank');
-            win.document.write(`
-                <html><head><title>Tarazo Receipt</title>
-                <style>
-                    body { font-family: Arial; padding: 20px; }
-                    .receipt { max-width: 400px; margin: 0 auto; }
-                    .receipt-header { text-align: center; background: #1a5276; color: white; padding: 20px; }
-                    .receipt-body { padding: 20px; }
-                    .receipt-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
-                    .receipt-total { font-size: 18px; font-weight: bold; margin-top: 15px; padding-top: 15px; border-top: 2px solid #000; }
-                </style>
-                </head><body>${content}</body></html>
-            `);
-            win.print();
-            win.close();
-        }
-
-        // ==================== NAVIGATION ====================
-        function showApp() {
-            document.getElementById('authPage').classList.add('hidden');
-            document.getElementById('appPage').classList.remove('hidden');
-            document.getElementById('userGreeting').innerHTML = `👋 ${currentUser.name.split(' ')[0]}`;
-            
-            // Setup navigation based on role
-            const nav = document.getElementById('bottomNav');
-            
-            if (currentUser.role === 'admin') {
-                nav.innerHTML = `
-                    <div class="nav-item" onclick="showAdminPage('dashboard')">📊 Dashboard</div>
-                    <div class="nav-item" onclick="logout()">🚪 Logout</div>
-                `;
-                showAdminPage('dashboard');
-            } 
-            else if (currentUser.role === 'agent') {
-                nav.innerHTML = `
-                    <div class="nav-item" onclick="showAgentPage('dashboard')">📦 Orders</div>
-                    <div class="nav-item" onclick="logout()">🚪 Logout</div>
-                `;
-                showAgentPage('dashboard');
-            } 
-            else {
-                nav.innerHTML = `
-                    <div class="nav-item" onclick="showUserPage('shop')">🏪 Shop</div>
-                    <div class="nav-item" onclick="showUserPage('cart')">🛒 Cart</div>
-                    <div class="nav-item" onclick="showUserPage('orders')">📦 Orders</div>
-                    <div class="nav-item" onclick="logout()">🚪 Logout</div>
-                `;
-                showUserPage('shop');
+            } catch (error) {
+                showResult('protectedResult', false, `Error: ${error.message}`);
             }
         }
 
-        function showUserPage(page) {
-            document.getElementById('userShopPage').classList.add('hidden');
-            document.getElementById('userCartPage').classList.add('hidden');
-            document.getElementById('userOrdersPage').classList.add('hidden');
-            document.getElementById('adminDashboardPage').classList.add('hidden');
-            document.getElementById('agentDashboardPage').classList.add('hidden');
+        async function testCart() {
+            if (!currentUser) {
+                showResult('protectedResult', false, 'Please login first to test cart');
+                return;
+            }
             
-            if (page === 'shop') document.getElementById('userShopPage').classList.remove('hidden');
-            if (page === 'cart') document.getElementById('userCartPage').classList.remove('hidden');
-            if (page === 'orders') document.getElementById('userOrdersPage').classList.remove('hidden');
+            showResult('protectedResult', false, 'Fetching cart...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/cart`, {
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('protectedResult', true, `Cart loaded: ${data.length} items`, data);
+                } else {
+                    showResult('protectedResult', false, `Failed: ${data.error || 'Unauthorized - please login'}`, data);
+                }
+            } catch (error) {
+                showResult('protectedResult', false, `Error: ${error.message}`);
+            }
         }
 
-        function showAdminPage(page) {
-            document.getElementById('userShopPage').classList.add('hidden');
-            document.getElementById('userCartPage').classList.add('hidden');
-            document.getElementById('userOrdersPage').classList.add('hidden');
-            document.getElementById('adminDashboardPage').classList.remove('hidden');
-            document.getElementById('agentDashboardPage').classList.add('hidden');
+        async function testOrders() {
+            if (!currentUser) {
+                showResult('protectedResult', false, 'Please login first to test orders');
+                return;
+            }
+            
+            showResult('protectedResult', false, 'Fetching orders...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/orders`, {
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('protectedResult', true, `Orders loaded: ${data.length} orders`, data);
+                } else {
+                    showResult('protectedResult', false, `Failed: ${data.error || 'Unauthorized - please login'}`, data);
+                }
+            } catch (error) {
+                showResult('protectedResult', false, `Error: ${error.message}`);
+            }
         }
 
-        function showAgentPage(page) {
-            document.getElementById('userShopPage').classList.add('hidden');
-            document.getElementById('userCartPage').classList.add('hidden');
-            document.getElementById('userOrdersPage').classList.add('hidden');
-            document.getElementById('adminDashboardPage').classList.add('hidden');
-            document.getElementById('agentDashboardPage').classList.remove('hidden');
-            renderAgentOrders();
+        async function testAdminStats() {
+            if (!currentUser) {
+                showResult('protectedResult', false, 'Please login first to test admin stats');
+                return;
+            }
+            
+            if (currentUser.role !== 'admin') {
+                showResult('protectedResult', false, `You are logged in as ${currentUser.role}. Admin stats require admin role.`);
+                return;
+            }
+            
+            showResult('protectedResult', false, 'Fetching admin stats...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin/stats`, {
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('protectedResult', true, 'Admin stats loaded', data);
+                } else {
+                    showResult('protectedResult', false, `Failed: ${data.error || 'Unauthorized'}`, data);
+                }
+            } catch (error) {
+                showResult('protectedResult', false, `Error: ${error.message}`);
+            }
         }
-
-        function showLogin() {
-            document.getElementById('loginForm').classList.remove('hidden');
-            document.getElementById('registerForm').classList.add('hidden');
-        }
-
-        function showRegister() {
-            document.getElementById('loginForm').classList.add('hidden');
-            document.getElementById('registerForm').classList.remove('hidden');
-        }
-
-        // ==================== INIT ====================
-        async function init() {
-            await getCSRFToken();
-        }
-        
-        init();
     </script>
 </body>
 </html>
