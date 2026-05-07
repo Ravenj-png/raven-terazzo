@@ -7,6 +7,7 @@ import re
 import json
 import secrets
 import logging
+import smtplib
 from datetime import datetime, timedelta
 from functools import wraps
 from collections import defaultdict
