@@ -215,25 +215,154 @@ tr:last-child td{border-bottom:none}
 <div id="modalOverlay" class="modal-overlay hidden" onclick="closeModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header" id="modalTitle">Title</div><div id="modalBody"></div><button class="btn btn-outline" style="margin-top:15px;" onclick="hideModal()">❌ Close</button></div></div>
 
 <script>
-// ======================== BACKEND CONFIGURATION ========================
-const API_BASE_URL = 'https://raven-terazzo.onrender.com/api';
+// ======================== APP STATE (Single Source of Truth) ========================
+const AppState = {
+    user: null,
+    products: [],
+    cart: [],
+    orders: [],
+    csrfToken: null,
+    notifications: [],
+    chatOpen: false,
+    pollInterval: null,
+    currentPage: '',
+    loading: false,
+    loadingCount: 0
+};
 
-// ======================== GLOBAL STATE ========================
-var currentUser = null;
-var currentPage = '';
-var chatOpen = false;
-var pollInterval = null;
-var notifications = [];
-var productsList = [];
-var cartList = [];
-var ordersList = [];
+// Loading state management
+function setLoading(isLoading) {
+    if (isLoading) {
+        AppState.loadingCount++;
+    } else {
+        AppState.loadingCount = Math.max(0, AppState.loadingCount - 1);
+    }
+    AppState.loading = AppState.loadingCount > 0;
+    
+    // Disable/enable buttons based on loading state
+    const buttons = document.querySelectorAll('button:not(.no-disable)');
+    buttons.forEach(btn => {
+        if (AppState.loading) {
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+        } else {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+        }
+    });
+}
+
+// ======================== API CONSTANTS ========================
+const API_BASE_URL = 'https://raven-terazzo.onrender.com/api';
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000;
+
+// ======================== CSRF TOKEN ========================
+async function getCSRFToken() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/csrf-token`, {
+            method: 'GET',
+            credentials: 'include'
+        });
+        const data = await response.json();
+        AppState.csrfToken = data.csrf_token;
+        return AppState.csrfToken;
+    } catch(e) {
+        console.error('CSRF fetch failed:', e);
+        return null;
+    }
+}
+
+// ======================== API CALLER WITH RETRY ========================
+async function apiCall(endpoint, options = {}, retryCount = 0) {
+    const mutatingMethods = ['POST', 'PUT', 'DELETE', 'PATCH'];
+    
+    if (options.method && mutatingMethods.includes(options.method.toUpperCase())) {
+        if (!AppState.csrfToken) {
+            await getCSRFToken();
+        }
+    }
+
+    const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers
+    };
+    
+    if (options.method && mutatingMethods.includes(options.method.toUpperCase()) && AppState.csrfToken) {
+        headers['X-CSRFToken'] = AppState.csrfToken;
+    }
+
+    try {
+        setLoading(true);
+        
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            ...options,
+            headers,
+            credentials: 'include',
+            mode: 'cors'
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            let errorMessage;
+            try {
+                const errorJson = JSON.parse(errorText);
+                errorMessage = errorJson.error || errorJson.message || `HTTP ${response.status}`;
+            } catch {
+                errorMessage = errorText || `HTTP ${response.status}`;
+            }
+            throw new Error(errorMessage);
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return await response.json();
+        }
+        
+        return { success: true };
+        
+    } catch (error) {
+        console.error('API Error:', error);
+        
+        // Retry logic for GET requests only
+        if (retryCount < MAX_RETRIES && (!options.method || options.method === 'GET')) {
+            console.log(`Retrying... (${retryCount + 1}/${MAX_RETRIES})`);
+            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+            return apiCall(endpoint, options, retryCount + 1);
+        }
+        
+        throw error;
+    } finally {
+        setLoading(false);
+    }
+}
 
 // ======================== HELPER FUNCTIONS ========================
-function showToast(msg) {
+function escapeHtml(text) {
+    if(!text) return '';
+    return String(text).replace(/[&<>]/g, function(m) {
+        if(m === '&') return '&amp;';
+        if(m === '<') return '&lt;';
+        if(m === '>') return '&gt;';
+        return m;
+    });
+}
+
+function safeJsonParse(data, defaultValue = []) {
+    try {
+        return JSON.parse(data || "[]");
+    } catch(e) {
+        console.warn('JSON parse failed:', e);
+        return defaultValue;
+    }
+}
+
+function showToast(msg, isError = false) {
     var toast = document.getElementById('toast');
     toast.textContent = msg;
+    toast.style.background = isError ? '#e74c3c' : '#154360';
     toast.classList.add('show');
-    setTimeout(function(){ toast.classList.remove('show'); }, 2500);
+    setTimeout(function(){ toast.classList.remove('show'); }, 3000);
 }
 
 function showModal(title, html){
@@ -250,6 +379,35 @@ function closeModal(e){
     if(e.target === document.getElementById('modalOverlay')) hideModal();
 }
 
+function detectNetwork(phone){ 
+    let p = String(phone).replace(/\D/g,''); 
+    if(/^(077|078|076|079|039)/.test(p)) return 'MTN'; 
+    if(/^(075|074|070|073|071|041)/.test(p)) return 'Airtel'; 
+    return null; 
+}
+
+function validateUgPhone(phone){ 
+    let p = String(phone).replace(/\D/g,''); 
+    return p.length >= 9 && p.length <= 12; 
+}
+
+// ======================== PRODUCT CARD RENDERER ========================
+function renderProductCard(product) {
+    var stockClass = ((product.stock || 0) < 5) ? 'low' : '';
+    var imageUrl = escapeHtml(product.image_url || 'https://placehold.co/600x400/1a5276/white?text=TARAZO');
+    
+    return '<div class="product-card" onclick="showProductDetail(' + (product.id || 0) + ')">' +
+        '<img src="' + imageUrl + '" alt="' + escapeHtml(product.name) + '" loading="lazy">' +
+        '<div class="product-info">' +
+            '<div class="product-name">' + escapeHtml(product.name) + '</div>' +
+            '<div class="product-type">' + escapeHtml(product.type) + '</div>' +
+            '<div class="product-price">UGX ' + (product.price || 0).toLocaleString() + '</div>' +
+            '<div class="product-stock ' + stockClass + '">' + (product.stock || 0) + ' in stock</div>' +
+            '<button class="btn-sm btn-green no-disable" style="margin-top:8px;" onclick="event.stopPropagation();addToCart(' + (product.id || 0) + ')">🛒 Add to Cart</button>' +
+        '</div>' +
+    '</div>';
+}
+
 // ======================== AUTHENTICATION ========================
 async function handleLogin() {
     const email = document.getElementById('loginEmail').value;
@@ -257,41 +415,31 @@ async function handleLogin() {
     const remember = document.getElementById('rememberMe').checked;
     
     if (!email || !password) {
-        showToast('❌ Please enter email and password');
+        showToast('❌ Please enter email and password', true);
         return;
     }
     
     try {
         showToast('🔄 Logging in...');
         
-        const response = await fetch(`${API_BASE_URL}/login`, {
+        const data = await apiCall('/login', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            mode: 'cors',
             body: JSON.stringify({ email, password })
         });
         
-        const data = await response.json();
-        
-        if (response.ok && data.success) {
-            currentUser = data.user;
-            
-            if (remember) {
-                localStorage.setItem('tarazo_email', email);
-            } else {
-                localStorage.removeItem('tarazo_email');
-            }
+        if (data.success) {
+            AppState.user = data.user;
+            if (remember) localStorage.setItem('tarazo_email', email);
+            else localStorage.removeItem('tarazo_email');
             
             showToast('✅ Login successful!');
-            await loadAllData();
+            await refreshData('login');
             enterApp();
         } else {
-            showToast(data.error || '❌ Login failed. Check your credentials.');
+            showToast(data.error || '❌ Login failed', true);
         }
     } catch (error) {
-        console.error('Login error:', error);
-        showToast('❌ Cannot connect to server. Please check if backend is running.');
+        showToast(error.message || '❌ Login failed', true);
     }
 }
 
@@ -303,84 +451,52 @@ async function handleRegister() {
     const confirmPassword = document.getElementById('regConfirmPassword').value;
     
     if (!name || !email || !password) {
-        showToast('Please fill all fields');
+        showToast('Please fill all fields', true);
         return;
     }
     if (password !== confirmPassword) {
-        showToast('Passwords do not match');
+        showToast('Passwords do not match', true);
         return;
     }
     
     try {
         showToast('🔄 Creating account...');
-        const response = await fetch(`${API_BASE_URL}/register`, {
+        
+        const data = await apiCall('/register', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            mode: 'cors',
             body: JSON.stringify({ name, email, phone, password })
         });
         
-        const data = await response.json();
-        
-        if (response.ok && data.success) {
-            showToast('✅ Registration successful! Please check your email for verification.');
+        if (data.success) {
+            showToast('✅ Registration successful! Please verify your email.');
             toggleAuth();
             document.getElementById('loginEmail').value = email;
         } else {
-            showToast(data.error || '❌ Registration failed');
+            showToast(data.error || '❌ Registration failed', true);
         }
     } catch (error) {
-        console.error('Register error:', error);
-        showToast('❌ Network error');
-    }
-}
-
-async function handleForgotPassword() {
-    const email = document.getElementById('forgotEmail').value;
-    if (!email) {
-        showToast('Please enter your email');
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/forgot-password`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            mode: 'cors',
-            body: JSON.stringify({ email })
-        });
-        
-        if (response.ok) {
-            showToast('✅ Reset link sent to your email');
-            showLoginForm();
-        } else {
-            showToast('❌ Failed to send reset link');
-        }
-    } catch (error) {
-        showToast('❌ Network error');
+        showToast(error.message || '❌ Network error', true);
     }
 }
 
 async function logout() {
     try {
-        await fetch(`${API_BASE_URL}/logout`, {
-            method: 'POST',
-            credentials: 'include',
-            mode: 'cors'
-        });
+        await apiCall('/logout', { method: 'POST' });
     } catch(e) {}
     
-    currentUser = null;
+    AppState.user = null;
+    AppState.csrfToken = null;
+    AppState.cart = [];
+    AppState.orders = [];
+    AppState.products = [];
+    
     localStorage.removeItem('tarazo_email');
     document.getElementById('appContainer').classList.add('hidden');
     document.getElementById('loginPage').classList.remove('hidden');
     document.getElementById('loginEmail').value = '';
     document.getElementById('loginPassword').value = '';
     showToast('👋 Logged out');
-    
-    if (pollInterval) clearInterval(pollInterval);
+    if (AppState.pollInterval) clearInterval(AppState.pollInterval);
 }
 
 function toggleAuth(){
@@ -401,289 +517,234 @@ function showLoginForm(){
     document.getElementById('forgotForm').classList.add('hidden');
 }
 
-// ======================== LOAD DATA FROM BACKEND ========================
-async function loadAllData() {
-    if (!currentUser) return;
+// ======================== DATA REFRESH (Optimized) ========================
+async function refreshData(reason = 'general') {
+    if (!AppState.user) return;
     
+    // Only refresh what's needed based on the action
     try {
-        // Load products
-        const productsRes = await fetch(`${API_BASE_URL}/products`, {
-            credentials: 'include',
-            mode: 'cors'
-        });
-        productsList = await productsRes.json();
+        // Always refresh products (cached but cheap)
+        AppState.products = await apiCall('/products');
         
-        // Load cart
-        const cartRes = await fetch(`${API_BASE_URL}/cart`, {
-            credentials: 'include',
-            mode: 'cors'
-        });
-        if (cartRes.ok) cartList = await cartRes.json();
-        
-        // Load orders
-        const ordersRes = await fetch(`${API_BASE_URL}/orders`, {
-            credentials: 'include',
-            mode: 'cors'
-        });
-        if (ordersRes.ok) ordersList = await ordersRes.json();
-        
-        updateCartBadge();
+        // Cart and orders only refresh on specific actions
+        if (reason === 'login' || reason === 'cart' || reason === 'order') {
+            try {
+                AppState.cart = await apiCall('/cart');
+            } catch(e) { AppState.cart = []; }
+            
+            try {
+                AppState.orders = await apiCall('/orders');
+            } catch(e) { AppState.orders = []; }
+            
+            updateCartBadge();
+        }
     } catch (error) {
-        console.error('Error loading data:', error);
+        console.error('Error refreshing data:', error);
     }
 }
 
 // ======================== SHOP FUNCTIONS ========================
-async function renderShop(filter) {
-    filter = filter || 'all';
-    
-    if (productsList.length === 0) {
+async function renderShop(filter = 'all') {
+    if (AppState.products.length === 0) {
         try {
-            const response = await fetch(`${API_BASE_URL}/products`, {
-                credentials: 'include',
-                mode: 'cors'
-            });
-            productsList = await response.json();
+            AppState.products = await apiCall('/products');
         } catch(error) {
-            console.error('Error fetching products:', error);
-            document.getElementById('shopGrid').innerHTML = '<div class="empty-state">❌ Failed to load products. Please refresh.</div>';
+            document.getElementById('shopGrid').innerHTML = '<div class="empty-state">❌ Failed to load products</div>';
             return;
         }
     }
     
-    let products = productsList;
+    let products = AppState.products;
     if (filter !== 'all') {
-        products = productsList.filter(p => p.type && p.type.toLowerCase().includes(filter.toLowerCase()));
+        products = AppState.products.filter(p => p.type && p.type.toLowerCase().includes(filter.toLowerCase()));
     }
     
     var html = '';
-    for(var j=0;j<products.length;j++) {
-        var p = products[j];
-        var stockClass = (p.stock < 5) ? 'low' : '';
-        var imageUrl = p.image_url || p.image || 'https://placehold.co/600x400/1a5276/white?text=TARAZO';
-        html += '<div class="product-card" onclick="showProductDetail('+p.id+')">' +
-                    '<img src="'+imageUrl+'" alt="'+p.name+'" loading="lazy">' +
-                    '<div class="product-info">' +
-                        '<div class="product-name">'+escapeHtml(p.name)+'</div>' +
-                        '<div class="product-type">'+escapeHtml(p.type)+'</div>' +
-                        '<div class="product-price">UGX '+(p.price || 0).toLocaleString()+'</div>' +
-                        '<div class="product-stock '+stockClass+'">'+(p.stock || 0)+' in stock</div>' +
-                        '<button class="btn-sm btn-green" style="margin-top:8px;" onclick="event.stopPropagation();addToCart('+p.id+')">🛒 Add to Cart</button>' +
-                    '</div>' +
-                '</div>';
+    for(var j = 0; j < products.length; j++) {
+        html += renderProductCard(products[j]);
     }
     document.getElementById('shopGrid').innerHTML = html || '<div class="empty-state">No products available</div>';
 }
 
 function searchProducts(query){
     if(!query){ renderShop(); return; }
-    var filtered = productsList.filter(function(p){ return p.name.toLowerCase().indexOf(query.toLowerCase())!==-1 || (p.type && p.type.toLowerCase().indexOf(query.toLowerCase())!==-1); });
+    var filtered = AppState.products.filter(function(p){ 
+        return p.name.toLowerCase().indexOf(query.toLowerCase()) !== -1; 
+    });
     var html = '';
-    for(var j=0;j<filtered.length;j++){
-        var p=filtered[j];
-        var stockClass=(p.stock<5)?'low':'';
-        var imageUrl = p.image_url || p.image || 'https://placehold.co/600x400/1a5276/white?text=TARAZO';
-        html+='<div class="product-card" onclick="showProductDetail('+p.id+')">' +
-                '<img src="'+imageUrl+'" alt="'+p.name+'" loading="lazy">' +
-                '<div class="product-info">' +
-                    '<div class="product-name">'+p.name+'</div>' +
-                    '<div class="product-type">'+p.type+'</div>' +
-                    '<div class="product-price">UGX '+p.price.toLocaleString()+'</div>' +
-                    '<div class="product-stock '+stockClass+'">'+p.stock+' in stock</div>' +
-                    '<button class="btn-sm btn-green" style="margin-top:8px;" onclick="event.stopPropagation();addToCart('+p.id+')">🛒 Add to Cart</button>' +
-                '</div>' +
-            '</div>';
+    for(var j = 0; j < filtered.length; j++){
+        html += renderProductCard(filtered[j]);
     }
-    document.getElementById('shopGrid').innerHTML=html;
+    document.getElementById('shopGrid').innerHTML = html;
 }
 
-function filterProducts(type,btn){
-    var btns=document.querySelectorAll('.filter-btn');
-    for(var i=0;i<btns.length;i++){ btns[i].classList.remove('active'); }
-    if(btn)btn.classList.add('active');
+function filterProducts(type, btn){
+    var btns = document.querySelectorAll('.filter-btn');
+    for(var i = 0; i < btns.length; i++){ btns[i].classList.remove('active'); }
+    if(btn) btn.classList.add('active');
     renderShop(type);
 }
 
 async function showProductDetail(id){
     try {
-        var p = productsList.find(function(pr){ return pr.id === id; });
+        var p = AppState.products.find(function(pr){ return pr.id === id; });
         if(!p) return;
         
-        var stockColor = (p.stock < 5) ? 'var(--red)' : 'var(--green)';
-        var stockMsg = (p.stock < 5) ? '⚠️ Only '+p.stock+' left!' : '✅ In Stock ('+p.stock+')';
+        var stockColor = ((p.stock || 0) < 5) ? 'var(--red)' : 'var(--green)';
+        var stockMsg = ((p.stock || 0) < 5) ? '⚠️ Only ' + (p.stock || 0) + ' left!' : '✅ In Stock (' + (p.stock || 0) + ')';
         
         var installHtml = '';
         if(p.install_images){
-            try {
-                var installs = JSON.parse(p.install_images);
-                if(installs && installs.length>0){
-                    installHtml = '<div class="card-title" style="font-size:16px;margin-bottom:10px;">🏠 Installation Gallery</div><div class="install-gallery">'+installs.map(function(img){ return'<img src="'+img+'" alt="Installation" loading="lazy" onclick="window.open(this.src)">'; }).join('')+'</div>';
+            var installs = safeJsonParse(p.install_images);
+            if(installs && installs.length > 0){
+                installHtml = '<div class="card-title" style="font-size:16px;margin-bottom:10px;">🏠 Installation Gallery</div><div class="install-gallery">';
+                for(var i = 0; i < installs.length; i++) {
+                    installHtml += '<img src="' + escapeHtml(installs[i]) + '" alt="Installation" onclick="window.open(this.src)">';
                 }
-            } catch(e) {}
+                installHtml += '</div>';
+            }
         }
         
         document.getElementById('detailContent').innerHTML = 
-            '<img src="'+(p.image_url || p.image || 'https://placehold.co/600x400/1a5276/white?text=TARAZO')+'" alt="'+p.name+'" class="detail-hero" loading="lazy">' +
+            '<img src="' + escapeHtml(p.image_url || 'https://placehold.co/600x400/1a5276/white?text=TARAZO') + '" class="detail-hero">' +
             '<div class="card">' +
-                '<div style="display:flex;justify-content:space-between;align-items:center;">' +
-                    '<div class="product-name" style="font-size:22px;">'+p.name+'</div>' +
-                '</div>' +
-                '<div class="product-type" style="font-size:14px;margin:8px 0;">'+p.type+'</div>' +
-                '<div class="product-price" style="font-size:28px;margin:10px 0;">UGX '+p.price.toLocaleString()+'</div>' +
-                '<div style="color:'+stockColor+';font-weight:700;margin-bottom:15px;">'+stockMsg+'</div>' +
-                '<p style="line-height:1.6;color:#555;margin-bottom:20px;">'+(p.description || p.desc || 'No description available')+'</p>' +
+                '<div class="product-name" style="font-size:22px;">' + escapeHtml(p.name) + '</div>' +
+                '<div class="product-type" style="font-size:14px;margin:8px 0;">' + escapeHtml(p.type) + '</div>' +
+                '<div class="product-price" style="font-size:28px;">UGX ' + (p.price || 0).toLocaleString() + '</div>' +
+                '<div style="color:' + stockColor + ';font-weight:700;margin:15px 0;">' + stockMsg + '</div>' +
+                '<p>' + escapeHtml(p.description || 'No description') + '</p>' +
                 installHtml +
-                '<div style="display:flex;gap:10px;margin-top:20px;">' +
-                    '<button class="btn btn-green" style="flex:1;" onclick="addToCart('+p.id+')">🛒 Add to Cart</button>' +
-                    '<button class="btn btn-outline" style="flex:1;" onclick="navigateTo(\'userShop\')">⬅️ Back</button>' +
-                '</div>' +
+                '<button class="btn btn-green no-disable" style="margin-top:20px;" onclick="addToCart(' + p.id + ')">🛒 Add to Cart</button>' +
+                '<button class="btn btn-outline no-disable" style="margin-top:10px;" onclick="navigateTo(\'userShop\')">⬅️ Back</button>' +
             '</div>';
         navigateTo('productDetail');
     } catch(error) {
-        showToast('Failed to load product details');
+        showToast('Failed to load product details', true);
     }
 }
 
 // ======================== CART FUNCTIONS ========================
 async function addToCart(productId) {
-    if (!currentUser) { showToast('Please login first'); return; }
+    if (!AppState.user) { showToast('Please login first', true); return; }
     
     try {
-        const response = await fetch(`${API_BASE_URL}/cart`, {
+        await apiCall('/cart', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            mode: 'cors',
             body: JSON.stringify({ product_id: productId, quantity: 1 })
         });
-        
-        if (response.ok) {
-            await loadAllData();
-            updateCartBadge();
-            showToast('✅ Added to cart!');
-            renderShop();
-        } else {
-            showToast('❌ Failed to add to cart');
-        }
+        await refreshData('cart');
+        showToast('✅ Added to cart!');
+        if (AppState.currentPage === 'userCart') renderCart();
     } catch(error) {
-        console.error('Add to cart error:', error);
-        showToast('❌ Network error');
+        showToast(error.message || '❌ Failed to add to cart', true);
     }
 }
 
-async function removeFromCart(productId) {
+async function removeFromCart(cartItemId) {
     try {
-        const response = await fetch(`${API_BASE_URL}/cart/${productId}`, {
-            method: 'DELETE',
-            credentials: 'include',
-            mode: 'cors'
-        });
-        if (response.ok) {
-            await loadAllData();
-            renderCart();
-            updateCartBadge();
-            showToast('✅ Removed from cart');
-        }
+        await apiCall(`/cart/${cartItemId}`, { method: 'DELETE' });
+        await refreshData('cart');
+        renderCart();
+        showToast('✅ Removed from cart');
     } catch(error) {
-        showToast('❌ Failed to remove');
+        showToast(error.message || '❌ Failed to remove', true);
     }
 }
-
-function removeItemFromCart(productId) { removeFromCart(productId); }
 
 async function renderCart() {
-    if (!currentUser) return;
+    if (!AppState.user) return;
     
-    await loadAllData();
-    
-    if(cartList.length === 0){
-        document.getElementById('cartItems').innerHTML='<div class="empty-state"><div class="icon">🛒</div>Your cart is empty</div>';
+    if(!AppState.cart || AppState.cart.length === 0){
+        document.getElementById('cartItems').innerHTML = '<div class="empty-state"><div class="icon">🛒</div>Your cart is empty</div>';
         document.getElementById('cartSummary').classList.add('hidden');
         return;
     }
     
-    var total=0, html='';
-    for(var i=0;i<cartList.length;i++){
-        var c = cartList[i];
-        var p = productsList.find(function(pr){ return pr.id === c.product_id; });
+    var total = 0, html = '';
+    for(var i = 0; i < AppState.cart.length; i++){
+        var c = AppState.cart[i];
+        var p = (AppState.products || []).find(function(pr){ return pr.id === c.product_id; });
         if(p){
-            total += p.price * c.quantity;
+            var itemTotal = (p.price || 0) * (c.quantity || 0);
+            total += itemTotal;
             html += '<div class="list-item">' +
                         '<div class="list-info">' +
-                            '<h4>'+p.name+'</h4>' +
-                            '<p>UGX '+p.price.toLocaleString()+' x '+c.quantity+' = UGX '+(p.price * c.quantity).toLocaleString()+'</p>' +
+                            '<h4>' + escapeHtml(p.name) + '</h4>' +
+                            '<p>UGX ' + (p.price || 0).toLocaleString() + ' x ' + (c.quantity || 0) + ' = UGX ' + itemTotal.toLocaleString() + '</p>' +
                         '</div>' +
-                        '<button class="btn-sm btn-red" onclick="removeItemFromCart('+c.product_id+')">Remove</button>' +
+                        '<button class="btn-sm btn-red no-disable" onclick="removeFromCart(' + (c.id || 0) + ')">Remove</button>' +
                     '</div>';
         }
     }
     document.getElementById('cartItems').innerHTML = html;
-    document.getElementById('cartTotal').textContent = 'UGX '+total.toLocaleString();
+    document.getElementById('cartTotal').textContent = 'UGX ' + total.toLocaleString();
     document.getElementById('cartSummary').classList.remove('hidden');
 }
 
 function showCart(){ navigateTo('userCart'); }
 
 function showCheckout(){
-    var total = cartList.reduce(function(s,c){ 
-        var p = productsList.find(function(pr){ return pr.id === c.product_id; }); 
-        return s + (p ? p.price * c.quantity : 0); 
+    if(!AppState.cart || AppState.cart.length === 0){
+        showToast('Your cart is empty', true);
+        return;
+    }
+    var total = AppState.cart.reduce(function(s,c){ 
+        var p = AppState.products.find(function(pr){ return pr.id === c.product_id; }); 
+        return s + (p ? (p.price || 0) * (c.quantity || 0) : 0); 
     }, 0);
-    document.getElementById('checkoutTotal').textContent = 'UGX '+total.toLocaleString();
+    document.getElementById('checkoutTotal').textContent = 'UGX ' + total.toLocaleString();
     navigateTo('checkoutPage');
 }
 
 function updateCartBadge(){
-    var total = cartList.reduce(function(s,c){ return s + c.quantity; }, 0);
+    var total = (AppState.cart || []).reduce(function(s,c){ return s + (c.quantity || 0); }, 0);
     var badge = document.getElementById('cartBadge');
     if(total > 0){ badge.textContent = total; badge.classList.remove('hidden'); }
     else{ badge.classList.add('hidden'); }
 }
 
-function detectNetwork(phone){ let p=phone.toString().replace(/\D/g,''); if(/^(077|078|076|079|039)/.test(p)) return'MTN'; if(/^(075|074|070|073|071|041)/.test(p)) return'Airtel'; return null; }
-function validateUgPhone(phone){ let p=phone.toString().replace(/\D/g,''); return p.length>=9&&p.length<=12; }
-
-async function processPayment(){
+// ======================== ORDER FUNCTIONS ========================
+async function processPayment() {
     var method = document.querySelector('input[name="payMethod"]:checked').value;
     var phone = document.getElementById('payPhone').value;
     
     if(method !== 'card'){
-        if(!phone || !validateUgPhone(phone)){ showToast('❌ Please enter a valid Ugandan phone number'); return; }
+        if(!phone || !validateUgPhone(phone)){ showToast('❌ Enter valid phone number', true); return; }
         var network = detectNetwork(phone);
-        if(method === 'mtn' && network !== 'MTN'){ showToast('❌ Please enter a valid MTN number'); return; }
-        if(method === 'airtel' && network !== 'Airtel'){ showToast('❌ Please enter a valid Airtel number'); return; }
+        if(method === 'mtn' && network !== 'MTN'){ showToast('❌ Enter MTN number', true); return; }
+        if(method === 'airtel' && network !== 'Airtel'){ showToast('❌ Enter Airtel number', true); return; }
+    }
+    
+    if(!AppState.cart || AppState.cart.length === 0){
+        showToast('Your cart is empty', true);
+        return;
     }
     
     var total = 0;
     var items = [];
-    for(var i=0;i<cartList.length;i++){ 
-        var p = productsList.find(function(pr){ return pr.id === cartList[i].product_id; }); 
+    for(var i = 0; i < AppState.cart.length; i++){ 
+        var p = AppState.products.find(function(pr){ return pr.id === AppState.cart[i].product_id; }); 
         if(p){
-            total += p.price * cartList[i].quantity;
-            items.push({ productId: cartList[i].product_id, qty: cartList[i].quantity });
+            total += (p.price || 0) * (AppState.cart[i].quantity || 0);
+            items.push({ productId: AppState.cart[i].product_id, quantity: AppState.cart[i].quantity || 1 });
         }
     }
     
     try {
         showToast('🔄 Processing order...');
-        const response = await fetch(`${API_BASE_URL}/orders`, {
+        
+        const data = await apiCall('/orders', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            mode: 'cors',
             body: JSON.stringify({ 
                 items: items, 
                 total: total, 
-                payment_method: method === 'mtn' ? 'MTN Mobile Money' : (method === 'airtel' ? 'Airtel Money' : 'Bank Card'),
-                payment_phone: phone
+                payment_method: method === 'mtn' ? 'MTN Mobile Money' : (method === 'airtel' ? 'Airtel Money' : 'Bank Card')
             })
         });
         
-        const data = await response.json();
-        
-        if(response.ok && data.success){
+        if(data.success){
             showToast('✅ Order placed successfully!');
-            await loadAllData();
+            await refreshData('order');
             navigateTo('userOrders');
             renderUserOrders();
             showModal('✅ Payment Successful', 
@@ -691,81 +752,41 @@ async function processPayment(){
                     '<div style="font-size:48px;">✅</div>' +
                     '<div style="font-size:20px;font-weight:800;">Order Placed!</div>' +
                     '<div>Your order will be processed shortly.</div>' +
-                    '<button class="btn btn-green" style="margin-top:15px;" onclick="hideModal();navigateTo(\'userOrders\')">View Orders</button>' +
+                    '<button class="btn btn-green no-disable" style="margin-top:15px;" onclick="hideModal();navigateTo(\'userOrders\')">View Orders</button>' +
                 '</div>');
         } else {
-            showToast(data.error || '❌ Order failed');
+            showToast(data.error || '❌ Order failed', true);
         }
     } catch(error) {
-        console.error('Payment error:', error);
-        showToast('❌ Network error');
+        showToast(error.message || '❌ Network error', true);
     }
 }
 
-function setupPaymentMethodListener(){
-    var radios = document.querySelectorAll('input[name="payMethod"]');
-    for(var i=0;i<radios.length;i++){
-        radios[i].addEventListener('change', function(){
-            var method = document.querySelector('input[name="payMethod"]:checked').value;
-            var cardFields = document.getElementById('cardFields');
-            var phoneDiv = document.getElementById('payPhone').parentElement;
-            if(method === 'card'){ 
-                if(cardFields) cardFields.classList.remove('hidden'); 
-                if(phoneDiv) phoneDiv.style.display = 'none';
-            } else { 
-                if(cardFields) cardFields.classList.add('hidden'); 
-                if(phoneDiv) phoneDiv.style.display = 'block';
-            }
-        });
-    }
-    var payPhone = document.getElementById('payPhone');
-    if(payPhone){
-        payPhone.addEventListener('input', function(){
-            var net = detectNetwork(payPhone.value);
-            var badge = document.getElementById('networkBadge');
-            if(badge){ 
-                if(net){ 
-                    badge.innerHTML = '<span class="network-badge network-'+net.toLowerCase()+'">'+net+'</span>'; 
-                    badge.classList.remove('hidden'); 
-                } else { 
-                    badge.classList.add('hidden'); 
-                } 
-            }
-        });
-    }
-}
-
-// ======================== ORDER FUNCTIONS ========================
 async function renderUserOrders() {
-    if (!currentUser) return;
+    if (!AppState.user) return;
     
-    await loadAllData();
-    
-    var myOrders = ordersList.filter(function(o){ return o.user_id === currentUser.id; });
+    var myOrders = (AppState.orders || []).filter(function(o){ return o.user_id === AppState.user.id; });
     
     var html = '';
     if(myOrders.length === 0) {
         html = '<div class="empty-state">📦 No orders yet</div>';
     } else {
-        for(var i=0;i<myOrders.length;i++){
+        for(var i = 0; i < myOrders.length; i++){
             var o = myOrders[i];
-            var deliveryPerson = o.rider_name ? o.rider_name : (o.agent_id ? 'Agent assigned' : 'Not assigned');
-            var deliveryPhone = o.rider_phone ? o.rider_phone : 'N/A';
-            var itemsCount = o.items ? (Array.isArray(o.items) ? o.items.length : JSON.parse(o.items).length) : 0;
+            var itemsArray = safeJsonParse(o.items);
             
             html += '<div class="card">' +
                         '<div style="display:flex; justify-content:space-between;">' +
-                            '<div><strong>📦 Order #'+o.id+'</strong></div>' +
-                            '<div class="status-badge status-'+o.status+'">'+o.status+'</div>' +
+                            '<div><strong>📦 Order #' + (o.id || 0) + '</strong></div>' +
+                            '<div class="status-badge status-' + escapeHtml(o.status || 'pending') + '">' + escapeHtml(o.status || 'pending') + '</div>' +
                         '</div>' +
-                        '<div>'+ (o.date || 'N/A') +' - '+itemsCount+' item(s)</div>' +
-                        '<div style="font-size:18px;font-weight:800;color:var(--blue);margin:10px 0;">UGX '+(o.total || 0).toLocaleString()+'</div>' +
+                        '<div>' + (o.date || 'N/A') + ' - ' + itemsArray.length + ' item(s)</div>' +
+                        '<div style="font-size:18px;font-weight:800;margin:10px 0;">UGX ' + ((o.total || 0).toLocaleString()) + '</div>' +
                         '<div style="background:#e8f5e9;padding:12px;border-radius:12px;">' +
-                            '<div style="font-weight:700;">🚚 DELIVERY PERSON</div>' +
-                            '<div><strong>Name:</strong> '+deliveryPerson+'</div>' +
-                            '<div><strong>Phone:</strong> <a href="tel:'+deliveryPhone+'" style="color:var(--blue);">'+deliveryPhone+'</a></div>' +
-                            '<div><strong>Vehicle:</strong> '+(o.rider_vehicle || 'N/A')+'</div>' +
-                            '<div><strong>Location:</strong> '+(o.delivery_location || 'Being assigned')+'</div>' +
+                            '<div style="font-weight:700;">🚚 DELIVERY</div>' +
+                            '<div><strong>Rider:</strong> ' + escapeHtml(o.rider_name || 'Not assigned') + '</div>' +
+                            '<div><strong>Phone:</strong> ' + escapeHtml(o.rider_phone || 'N/A') + '</div>' +
+                            '<div><strong>Location:</strong> ' + escapeHtml(o.delivery_location || 'Being assigned') + '</div>' +
                         '</div>' +
                     '</div>';
         }
@@ -775,426 +796,173 @@ async function renderUserOrders() {
 
 // ======================== PROFILE FUNCTIONS ========================
 function renderUserDashboard(){
-    if(!currentUser) return;
-    document.getElementById('userNameDisplay').textContent = currentUser.name;
-    document.getElementById('userEmailDisplay').textContent = currentUser.email;
-    document.getElementById('profileName').value = currentUser.name || '';
-    document.getElementById('profileEmail').value = currentUser.email || '';
-    document.getElementById('profilePhone').value = currentUser.phone || '';
-    document.getElementById('profileAddress').value = currentUser.address || '';
+    if(!AppState.user) return;
+    document.getElementById('userNameDisplay').textContent = AppState.user.name;
+    document.getElementById('userEmailDisplay').textContent = AppState.user.email;
+    document.getElementById('profileName').value = AppState.user.name || '';
+    document.getElementById('profileEmail').value = AppState.user.email || '';
+    document.getElementById('profilePhone').value = AppState.user.phone || '';
+    document.getElementById('profileAddress').value = AppState.user.address || '';
     
-    var myOrders = ordersList.filter(function(o){ return o.user_id === currentUser.id; });
+    var myOrders = (AppState.orders || []).filter(function(o){ return o.user_id === AppState.user.id; });
     var pending = myOrders.filter(function(o){ return o.status === 'paid' || o.status === 'processing'; }).length;
     document.getElementById('userTotalOrders').textContent = myOrders.length;
     document.getElementById('userPendingOrders').textContent = pending;
 }
 
 function saveUserProfile(){
-    showToast('Profile update will be available soon');
+    showToast('Profile update coming soon');
 }
 
 // ======================== ADMIN FUNCTIONS ========================
 async function renderAdminDashboard() {
-    if (!currentUser || currentUser.role !== 'admin') return;
+    if (!AppState.user || AppState.user.role !== 'admin') return;
     
     try {
-        const statsRes = await fetch(`${API_BASE_URL}/admin/stats`, {
-            credentials: 'include',
-            mode: 'cors'
-        });
-        const stats = await statsRes.json();
-        
+        const stats = await apiCall('/admin/stats');
         document.getElementById('adminTodaySales').textContent = 'UGX ' + (stats.today_sales || 0).toLocaleString();
         document.getElementById('adminPendingOrders').textContent = stats.pending_orders || 0;
         document.getElementById('adminTotalProducts').textContent = stats.total_products || 0;
         document.getElementById('adminLowStock').textContent = stats.low_stock || 0;
-        
-        renderBarChart('adminChart', [120, 200, 150, 300, 250], ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']);
     } catch(error) {
         console.error('Error loading admin stats:', error);
     }
 }
 
-function renderBarChart(containerId, data, labels){
-    var maxVal = Math.max.apply(null,data) || 1;
-    var svgHtml = '<svg class="bar-chart-svg" viewBox="0 0 100 100" preserveAspectRatio="none" style="background:#f8fafc;border-radius:12px;">';
-    for(var j=0;j<data.length;j++){
-        var h = (data[j]/maxVal)*75;
-        var x = 8 + j*(84/data.length);
-        var y = 100 - h - 15;
-        var w = (84/data.length)-4;
-        svgHtml += '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="#1a5276" rx="3" opacity="0.9"></rect>';
-    }
-    svgHtml += '</svg>';
-    var labelsHtml = '<div style="display:flex;justify-content:space-between;padding:0 8px;margin-top:5px;">';
-    for(var l=0;l<labels.length;l++){ labelsHtml += '<span style="font-size:9px;font-weight:600;color:var(--gray-dark);text-align:center;flex:1;">'+labels[l]+'</span>'; }
-    labelsHtml += '</div>';
-    document.getElementById(containerId).innerHTML = svgHtml + labelsHtml;
-}
-
 async function renderAdminOrders() {
-    if (!currentUser || currentUser.role !== 'admin') return;
-    
-    await loadAllData();
+    if (!AppState.user || AppState.user.role !== 'admin') return;
     
     var html = '';
-    for(var i=0;i<ordersList.length;i++){
-        var o = ordersList[i];
-        html += '<div class="list-item" onclick="viewTransactionDetails('+o.id+')">' +
+    for(var i = 0; i < (AppState.orders || []).length; i++){
+        var o = AppState.orders[i];
+        html += '<div class="list-item" onclick="viewTransactionDetails(' + (o.id || 0) + ')">' +
                     '<div class="list-info">' +
-                        '<h4>📦 Transaction #'+o.id+'</h4>' +
-                        '<p>UGX '+(o.total || 0).toLocaleString()+' - '+o.status+'</p>' +
+                        '<h4>📦 Transaction #' + (o.id || 0) + '</h4>' +
+                        '<p>UGX ' + ((o.total || 0).toLocaleString()) + ' - ' + escapeHtml(o.status || 'pending') + '</p>' +
                     '</div>' +
-                    '<div><div class="status-badge status-'+o.status+'">'+o.status+'</div></div>' +
+                    '<div class="status-badge status-' + escapeHtml(o.status || 'pending') + '">' + escapeHtml(o.status || 'pending') + '</div>' +
                 '</div>';
     }
     document.getElementById('adminOrdersList').innerHTML = html || '<div class="empty-state">No orders found</div>';
 }
 
 function viewTransactionDetails(orderId){
-    var order = ordersList.find(function(o){ return o.id === orderId; });
+    var order = (AppState.orders || []).find(function(o){ return o.id === orderId; });
     if(order){
-        showModal('Transaction Details', 
-            '<div><strong>Order #'+order.id+'</strong><br>' +
-            '<strong>Total:</strong> UGX '+(order.total || 0).toLocaleString()+'<br>' +
-            '<strong>Status:</strong> '+order.status+'<br>' +
-            '<strong>Date:</strong> '+order.date+'</div>');
+        showModal('Order Details', 
+            '<div><strong>Order #' + order.id + '</strong><br>' +
+            '<strong>Total:</strong> UGX ' + ((order.total || 0).toLocaleString()) + '<br>' +
+            '<strong>Status:</strong> ' + escapeHtml(order.status) + '<br>' +
+            '<strong>Date:</strong> ' + (order.date || 'N/A') + '</div>');
     }
 }
 
-function searchTransactionByPhone(){
-    showToast('Search by phone feature - will search all orders');
+async function renderAdminProducts() {
+    var html = '';
+    for(var i = 0; i < (AppState.products || []).length; i++){
+        var p = AppState.products[i];
+        html += '<div class="list-item">' +
+                    '<div class="list-info" onclick="editProduct(' + p.id + ')">' +
+                        '<h4>' + escapeHtml(p.name) + '</h4>' +
+                        '<p>' + escapeHtml(p.type) + ' - Stock: ' + (p.stock || 0) + '</p>' +
+                        '<p>UGX ' + (p.price || 0).toLocaleString() + '</p>' +
+                    '</div>' +
+                    '<button class="btn-sm btn-red no-disable" onclick="deleteProductItem(' + p.id + ')">Delete</button>' +
+                '</div>';
+    }
+    document.getElementById('adminProductList').innerHTML = html || '<div class="empty-state">No products</div>';
 }
-
-function resetTransactionSearch(){
-    renderAdminOrders();
-}
-
-function exportTransactionsCSV(){
-    showToast('CSV export coming soon');
-}
-
-function showSalesDetail(){ showModal('Sales Details', 'Today\'s sales data'); }
-function showPendingDetail(){ showModal('Pending Orders', 'List of pending orders'); }
-function showProductsDetail(){ showModal('Products', 'Total products: '+productsList.length); }
-function showLowStockDetail(){ showModal('Low Stock Alert', 'Products with low stock'); }
 
 // ======================== AGENT FUNCTIONS ========================
 async function renderAgentPanel() {
-    if (!currentUser || currentUser.role !== 'agent') return;
+    if (!AppState.user || AppState.user.role !== 'agent') return;
     
-    await loadAllData();
-    
-    var myOrders = ordersList.filter(function(o) { return o.agent_id === currentUser.id && o.status !== 'delivered'; });
+    var myOrders = (AppState.orders || []).filter(function(o) { 
+        return o.agent_id === AppState.user.id && o.status !== 'delivered'; 
+    });
     var html = '';
-    for(var i=0;i<myOrders.length;i++){
+    for(var i = 0; i < myOrders.length; i++){
         var o = myOrders[i];
         html += '<div class="card">' +
                     '<div style="display:flex;justify-content:space-between;">' +
-                        '<h4>📦 Order #'+o.id+'</h4>' +
-                        '<select id="orderStatus_'+o.id+'" onchange="updateOrderStatus('+o.id+', this.value)" class="status-badge status-'+o.status+'">' +
-                            '<option value="paid" '+(o.status==='paid'?'selected':'')+'>💰 Paid</option>' +
-                            '<option value="processing" '+(o.status==='processing'?'selected':'')+'>⚙️ Processing</option>' +
-                            '<option value="shipped" '+(o.status==='shipped'?'selected':'')+'>🚚 Shipped</option>' +
-                            '<option value="delivered" '+(o.status==='delivered'?'selected':'')+'>✅ Delivered</option>' +
+                        '<h4>📦 Order #' + (o.id || 0) + '</h4>' +
+                        '<select onchange="updateOrderStatus(' + (o.id || 0) + ', this.value)" class="status-badge status-' + escapeHtml(o.status || 'pending') + '">' +
+                            '<option value="paid" ' + (o.status === 'paid' ? 'selected' : '') + '>💰 Paid</option>' +
+                            '<option value="processing" ' + (o.status === 'processing' ? 'selected' : '') + '>⚙️ Processing</option>' +
+                            '<option value="shipped" ' + (o.status === 'shipped' ? 'selected' : '') + '>🚚 Shipped</option>' +
+                            '<option value="delivered" ' + (o.status === 'delivered' ? 'selected' : '') + '>✅ Delivered</option>' +
                         '</select>' +
                     '</div>' +
-                    '<p><strong>Total:</strong> UGX '+(o.total || 0).toLocaleString()+'</p>' +
-                    '<button class="btn-sm btn-primary" onclick="viewOrderDetailsForAgent('+o.id+')">👁️ Details</button>' +
+                    '<p>Total: UGX ' + ((o.total || 0).toLocaleString()) + '</p>' +
+                    '<button class="btn-sm btn-primary no-disable" onclick="viewTransactionDetails(' + (o.id || 0) + ')">👁️ Details</button>' +
                 '</div>';
     }
     document.getElementById('agentAssignedOrders').innerHTML = html || '<div class="empty-state">No assigned orders</div>';
-    
-    var availableOrders = ordersList.filter(function(o) { return o.status === 'paid' && !o.agent_id; });
-    var availHtml = '';
-    for(var j=0;j<availableOrders.length;j++){
-        var ao = availableOrders[j];
-        availHtml += '<div class="card">' +
-                        '<h4>📦 Order #'+ao.id+'</h4>' +
-                        '<p>Total: UGX '+(ao.total || 0).toLocaleString()+'</p>' +
-                        '<button class="btn-sm btn-add" onclick="claimOrderManually('+ao.id+')">➕ Claim This Order</button>' +
-                    '</div>';
-    }
-    document.getElementById('agentAvailableOrders').innerHTML = availHtml || '<div class="empty-state">No available orders</div>';
 }
 
 async function updateOrderStatus(orderId, newStatus){
     try {
-        const response = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
+        await apiCall(`/orders/${orderId}/status`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            mode: 'cors',
             body: JSON.stringify({ status: newStatus })
         });
-        if(response.ok){
-            showToast('✅ Order #'+orderId+' status: '+newStatus);
-            await loadAllData();
-            renderAgentPanel();
-        } else {
-            showToast('❌ Failed to update status');
-        }
+        showToast('✅ Order #' + orderId + ' status: ' + newStatus);
+        await refreshData('order');
+        renderAgentPanel();
     } catch(error) {
-        showToast('❌ Network error');
+        showToast(error.message || '❌ Failed to update status', true);
     }
 }
-
-function claimOrderManually(orderId){
-    showToast('Claim order - contact admin to assign orders');
-}
-
-function viewOrderDetailsForAgent(orderId){
-    var order = ordersList.find(function(o){ return o.id === orderId; });
-    if(order){
-        showModal('Order Details', 
-            '<div><strong>Order #'+order.id+'</strong><br>' +
-            '<strong>Customer ID:</strong> '+order.user_id+'<br>' +
-            '<strong>Total:</strong> UGX '+(order.total || 0).toLocaleString()+'<br>' +
-            '<strong>Status:</strong> '+order.status+'<br>' +
-            '<strong>Items:</strong> '+(order.items ? (Array.isArray(order.items) ? order.items.length : JSON.parse(order.items).length) : 0)+' items</div>');
-    }
-}
-
-function showAssignRiderForm(orderId){
-    showModal('Assign Rider', 
-        '<div>' +
-            '<input type="text" id="riderName" placeholder="Rider Name" style="width:100%;padding:10px;margin:5px 0;">' +
-            '<input type="tel" id="riderPhone" placeholder="Rider Phone" style="width:100%;padding:10px;margin:5px 0;">' +
-            '<input type="text" id="riderVehicle" placeholder="Vehicle" style="width:100%;padding:10px;margin:5px 0;">' +
-            '<input type="text" id="deliveryLocation" placeholder="Delivery Location" style="width:100%;padding:10px;margin:5px 0;">' +
-            '<textarea id="deliveryNotes" placeholder="Notes" style="width:100%;padding:10px;margin:5px 0;"></textarea>' +
-            '<button class="btn btn-green" onclick="saveRiderAssignment('+orderId+')">Save</button>' +
-        '</div>');
-}
-
-async function saveRiderAssignment(orderId){
-    var riderName = document.getElementById('riderName').value;
-    var riderPhone = document.getElementById('riderPhone').value;
-    var riderVehicle = document.getElementById('riderVehicle').value;
-    var deliveryLocation = document.getElementById('deliveryLocation').value;
-    var deliveryNotes = document.getElementById('deliveryNotes').value;
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/orders/${orderId}/assign`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            mode: 'cors',
-            body: JSON.stringify({ 
-                rider_name: riderName, 
-                rider_phone: riderPhone,
-                rider_vehicle: riderVehicle,
-                delivery_location: deliveryLocation,
-                delivery_notes: deliveryNotes
-            })
-        });
-        if(response.ok){
-            showToast('✅ Rider assigned successfully!');
-            hideModal();
-            await loadAllData();
-            renderAgentPanel();
-        } else {
-            showToast('❌ Failed to assign rider');
-        }
-    } catch(error) {
-        showToast('❌ Network error');
-    }
-}
-
-function renderAgentConversations(){ document.getElementById('agentChatList').innerHTML = '<div class="empty-state">No conversations yet</div>'; }
-function renderAgentChatRoom(){ document.getElementById('agentChatMessages').innerHTML = '<div class="empty-state">Team chat coming soon</div>'; }
-function sendAgentChat(){ showToast('Team chat feature coming soon'); }
-function openAgentToManagerChat(){ showToast('Message manager feature coming soon'); }
-function showAddRiderModal(){ showToast('Add rider feature coming soon'); }
-function renderAgentRiders(){ document.getElementById('agentRiderList').innerHTML = '<div class="empty-state">No riders added</div>'; }
 
 // ======================== CHAT FUNCTIONS ========================
 async function sendChat() {
-    var input = document.getElementById('chatInput'), text = input.value.trim();
+    var input = document.getElementById('chatInput');
+    var text = input.value.trim();
     if(!text) return;
+    
     addChatMessage('user', text);
     input.value = '';
     
     try {
-        const response = await fetch(`${API_BASE_URL}/chat/customer`, {
+        const data = await apiCall('/chat/customer', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            mode: 'cors',
             body: JSON.stringify({ message: text })
         });
-        const data = await response.json();
-        addChatMessage('bot', data.response || 'Sorry, I could not process that.');
+        addChatMessage('bot', data.response || 'Sorry, could not process.');
     } catch(error) {
-        console.error('Chat error:', error);
-        addChatMessage('bot', 'Network error. Please try again.');
+        addChatMessage('bot', 'Chat service unavailable right now. Please try again later.');
     }
 }
 
 function addChatMessage(sender, text){
     var container = document.getElementById('chatMessages');
     var div = document.createElement('div');
-    div.className = 'chat-msg '+sender;
+    div.className = 'chat-msg ' + sender;
     div.textContent = text;
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
 }
 
 function toggleChat(){
-    chatOpen = !chatOpen;
+    AppState.chatOpen = !AppState.chatOpen;
     var box = document.getElementById('chatBox');
-    if(chatOpen){
+    if(AppState.chatOpen){
         box.classList.remove('hidden');
         if(document.getElementById('chatMessages').children.length === 0){
-            addChatMessage('bot', '👋 Welcome to Tarazo! Ask me about terrazzo prices, types, or anything else!');
+            addChatMessage('bot', '👋 Welcome! Ask me about prices, delivery, or products!');
         }
     } else {
         box.classList.add('hidden');
     }
 }
 
-// ======================== NOTIFICATION FUNCTIONS ========================
-function addNotification(userId, title, message, type, link) {
-    var notif = { id: notifications.length+1, userId: userId, title: title, message: message, type: type, link: link, read: false, timestamp: new Date().toISOString() };
-    notifications.push(notif);
-    if(currentUser && currentUser.id === userId) {
-        showToast("🔔 "+title+": "+message);
-        updateNotificationBadge(userId);
-    }
-}
-
-function showNotifications() {
-    var myNotifs = notifications.filter(function(n){ return n.userId === currentUser.id; }).sort(function(a,b){ return new Date(b.timestamp) - new Date(a.timestamp); });
-    var html = '<div class="notifications-list">';
-    if(myNotifs.length===0) html += '<div class="empty-state">🔔 No notifications</div>';
-    else {
-        for(var i=0;i<myNotifs.length;i++) {
-            var n = myNotifs[i];
-            var unreadClass = n.read ? '' : 'unread';
-            html += '<div class="notification-item '+unreadClass+'" onclick="markNotificationRead('+n.id+'); hideModal();">' +
-                        '<div class="notif-icon">'+(n.type==='order'?'📦':(n.type==='chat'?'💬':'🚚'))+'</div>' +
-                        '<div class="notif-content">' +
-                            '<div class="notif-title">'+n.title+'</div>' +
-                            '<div class="notif-message">'+n.message+'</div>' +
-                            '<div class="notif-time">'+new Date(n.timestamp).toLocaleTimeString()+'</div>' +
-                        '</div>' +
-                    '</div>';
-        }
-    }
-    html += '</div><button class="btn btn-outline" style="margin-top:10px;" onclick="markAllNotificationsRead()">Mark all as read</button>';
-    showModal('🔔 Notifications', html);
-}
-
-function markNotificationRead(id) {
-    var n = notifications.find(function(n){ return n.id === id; });
-    if(n) { n.read = true; updateNotificationBadge(currentUser.id); }
-}
-
-function markAllNotificationsRead() {
-    for(var i=0;i<notifications.length;i++) { if(notifications[i].userId === currentUser.id) notifications[i].read = true; }
-    updateNotificationBadge(currentUser.id);
-}
-
-function updateNotificationBadge(userId) {
-    var unread = notifications.filter(function(n){ return n.userId === userId && !n.read; }).length;
-    var badge = document.getElementById('notificationBadge');
-    if(badge) { if(unread>0) { badge.textContent = unread; badge.classList.remove('hidden'); } else badge.classList.add('hidden'); }
-}
-
-// ======================== ADMIN PRODUCT MANAGEMENT ========================
-function resetProductForm(){
-    document.getElementById('editProductId').value = '';
-    document.getElementById('productFormTitle').textContent = '📤 Upload New Product';
-    document.getElementById('prodName').value = '';
-    document.getElementById('prodDesc').value = '';
-    document.getElementById('prodPrice').value = '';
-    document.getElementById('prodStock').value = '';
-    document.getElementById('saveProductBtn').textContent = '💾 Save Product';
-    document.getElementById('cancelEditBtn').classList.add('hidden');
-    document.getElementById('uploadPreview').classList.add('hidden');
-}
-
-function handleImageUpload(input){
-    if(input.files && input.files[0]){
-        var file = input.files[0];
-        document.getElementById('uploadPreview').classList.remove('hidden');
-        var reader = new FileReader();
-        reader.onload = function(e){ document.getElementById('previewImg').src = e.target.result; };
-        reader.readAsDataURL(file);
-        document.getElementById('aiStatus').textContent = '🤖 AI analyzing image...';
-        setTimeout(function(){
-            document.getElementById('aiStatus').innerHTML = '✅ AI: Premium terrazzo with marble chips, polished finish.';
-        }, 1500);
-    }
-}
-
-async function saveProduct(){
-    var editId = document.getElementById('editProductId').value;
-    var name = document.getElementById('prodName').value;
-    var type = document.getElementById('prodType').value;
-    var desc = document.getElementById('prodDesc').value;
-    var price = parseInt(document.getElementById('prodPrice').value) || 0;
-    var stock = parseInt(document.getElementById('prodStock').value) || 0;
-    
-    if(!name || !price){ showToast('Please fill product name and price'); return; }
-    
-    showToast('Product save - admin feature via backend API');
-}
-
-function editProduct(id){ showToast('Edit product feature coming soon'); }
-function deleteProductItem(id){ showToast('Delete product feature coming soon'); }
-function addStockToProduct(id){ showToast('Add stock feature coming soon'); }
-
-async function renderAdminProducts() {
-    await loadAllData();
-    var html = '';
-    for(var i=0;i<productsList.length;i++){
-        var p = productsList[i];
-        html += '<div class="list-item">' +
-                    '<div class="list-info" onclick="editProduct('+p.id+')">' +
-                        '<h4>'+p.name+'</h4>' +
-                        '<p>'+p.type+' - Stock: '+(p.stock || 0)+'</p>' +
-                    '</div>' +
-                    '<div style="text-align:right;">' +
-                        '<div style="font-weight:800;color:var(--blue);">UGX '+(p.price || 0).toLocaleString()+'</div>' +
-                        '<div style="display:flex;gap:5px;margin-top:8px;">' +
-                            '<input type="number" id="stockAdd_'+p.id+'" placeholder="+Qty" style="width:70px;padding:5px;border-radius:8px;border:1px solid #ddd;">' +
-                            '<button class="btn-sm btn-green" onclick="addStockToProduct('+p.id+')">➕ Add</button>' +
-                            '<button class="btn-sm btn-red" onclick="deleteProductItem('+p.id+')">🗑️ Delete</button>' +
-                        '</div>' +
-                    '</div>' +
-                '</div>';
-    }
-    document.getElementById('adminProductList').innerHTML = html || '<div class="empty-state">No products</div>';
-}
-
-// ======================== OTHER ADMIN FUNCTIONS ========================
-function renderAdminBooks(){ showToast('Books feature coming soon'); }
-function changeBookPeriod(){}
-function renderAdminMonitor(){ document.getElementById('monitorFeed').innerHTML = '<div class="empty-state">Agent monitoring coming soon</div>'; }
-function renderAdminChats(){ document.getElementById('allChatsList').innerHTML = '<div class="empty-state">Chat monitoring coming soon</div>'; }
-function renderAdminTeam(){ document.getElementById('teamList').innerHTML = '<div class="empty-state">Team management coming soon</div>'; }
-function renderAdminDelivery(){ document.getElementById('adminDeliveryList').innerHTML = '<div class="empty-state">Delivery management coming soon</div>'; }
-function renderManagerMessages(){ document.getElementById('managerMsgList').innerHTML = '<div class="empty-state">Messages coming soon</div>'; }
-function openManagerToAgentChat(agentId){ showToast('Chat with agent feature coming soon'); }
-function viewAgentChats(agentId){ showModal('Agent Chats', 'Chat history for agent'); }
-
 // ======================== NAVIGATION ========================
 function navigateTo(pageId){
     var pages = document.querySelectorAll('.page');
-    for(var i=0;i<pages.length;i++){ pages[i].classList.add('hidden'); }
+    for(var i = 0; i < pages.length; i++){ pages[i].classList.add('hidden'); }
     document.getElementById(pageId).classList.remove('hidden');
-    currentPage = pageId;
+    AppState.currentPage = pageId;
     
-    var navItems = document.querySelectorAll('.nav-item');
-    for(var j=0;j<navItems.length;j++){ navItems[j].classList.remove('active'); }
-    var navItem = document.querySelector('.nav-item[data-page="'+pageId+'"]');
-    if(navItem) navItem.classList.add('active');
-    
-    document.body.scrollTop = 0;
-    document.documentElement.scrollTop = 0;
-    
-    // Load data based on page
     if(pageId === 'userShop') renderShop();
     if(pageId === 'userCart') renderCart();
     if(pageId === 'userOrders') renderUserOrders();
@@ -1208,27 +976,25 @@ function navigateTo(pageId){
 function setupNav(){
     var nav = document.getElementById('bottomNav');
     var html = '';
-    if(currentUser && currentUser.role === 'admin'){
-        html = '<div class="nav-item active" onclick="navigateTo(\'adminDashboard\')" data-page="adminDashboard"><div class="nav-icon">🏠</div>Home</div>' +
-               '<div class="nav-item" onclick="navigateTo(\'adminProducts\')" data-page="adminProducts"><div class="nav-icon">📦</div>Products</div>' +
-               '<div class="nav-item" onclick="navigateTo(\'adminOrders\')" data-page="adminOrders"><div class="nav-icon">📋</div>Orders</div>' +
-               '<div class="nav-item" onclick="navigateTo(\'adminBooks\')" data-page="adminBooks"><div class="nav-icon">📚</div>Books</div>' +
-               '<div class="nav-item" onclick="showAdminMenu()" data-page="adminMenu"><div class="nav-icon">⚙️</div>More</div>';
-    } else if(currentUser && currentUser.role === 'agent'){
-        html = '<div class="nav-item active" onclick="navigateTo(\'agentPanel\')" data-page="agentPanel"><div class="nav-icon">💬</div>Chats</div>' +
-               '<div class="nav-item" onclick="navigateTo(\'agentPanel\')" data-page="agentPanel"><div class="nav-icon">🚚</div>Delivery</div>' +
-               '<div class="nav-item" onclick="logout()"><div class="nav-icon">🚪</div>Exit</div>';
-    } else if(currentUser && currentUser.role === 'user'){
-        html = '<div class="nav-item active" onclick="navigateTo(\'userShop\')" data-page="userShop"><div class="nav-icon">🏪</div>Shop</div>' +
-               '<div class="nav-item" onclick="navigateTo(\'userOrders\')" data-page="userOrders"><div class="nav-icon">📦</div>Orders</div>' +
-               '<div class="nav-item" onclick="navigateTo(\'userCart\')" data-page="userCart"><div class="nav-icon">🛒</div>Cart</div>' +
-               '<div class="nav-item" onclick="navigateTo(\'userDashboard\')" data-page="userDashboard"><div class="nav-icon">👤</div>Profile</div>';
+    if(AppState.user && AppState.user.role === 'admin'){
+        html = '<div class="nav-item" onclick="navigateTo(\'adminDashboard\')">📊 Dashboard</div>' +
+               '<div class="nav-item" onclick="navigateTo(\'adminProducts\')">📦 Products</div>' +
+               '<div class="nav-item" onclick="navigateTo(\'adminOrders\')">📋 Orders</div>' +
+               '<div class="nav-item" onclick="logout()">🚪 Exit</div>';
+    } else if(AppState.user && AppState.user.role === 'agent'){
+        html = '<div class="nav-item" onclick="navigateTo(\'agentPanel\')">📦 Orders</div>' +
+               '<div class="nav-item" onclick="logout()">🚪 Exit</div>';
+    } else if(AppState.user && AppState.user.role === 'user'){
+        html = '<div class="nav-item" onclick="navigateTo(\'userShop\')">🏪 Shop</div>' +
+               '<div class="nav-item" onclick="navigateTo(\'userOrders\')">📦 Orders</div>' +
+               '<div class="nav-item" onclick="navigateTo(\'userCart\')">🛒 Cart</div>' +
+               '<div class="nav-item" onclick="navigateTo(\'userDashboard\')">👤 Profile</div>';
     }
     nav.innerHTML = html;
     
     var chatWidget = document.getElementById('chatWidgetContainer');
     var whatsappWidget = document.getElementById('whatsappWidget');
-    if(currentUser && currentUser.role === 'user'){
+    if(AppState.user && AppState.user.role === 'user'){
         if(chatWidget) chatWidget.classList.remove('hidden');
         if(whatsappWidget) whatsappWidget.classList.remove('hidden');
     } else {
@@ -1237,41 +1003,67 @@ function setupNav(){
     }
 }
 
-function showAdminMenu(){
-    var items = [
-        {name:'Monitor Agents', page:'adminMonitor', icon:'👁️'},
-        {name:'All Chats', page:'adminChats', icon:'💬'},
-        {name:'Team Management', page:'adminTeam', icon:'👥'},
-        {name:'Delivery Mgmt', page:'adminDelivery', icon:'🚚'},
-        {name:'My Messages', page:'adminMessages', icon:'📨'}
-    ];
-    var html = '';
-    for(var i=0;i<items.length;i++){
-        html += '<div class="list-item" onclick="navigateTo(\''+items[i].page+'\');hideModal();">' +
-                    '<div class="list-info"><h4>'+items[i].icon+' '+items[i].name+'</h4></div>' +
-                    '<div>➡️</div>' +
-                '</div>';
+function setupPaymentMethodListener(){
+    var radios = document.querySelectorAll('input[name="payMethod"]');
+    for(var i = 0; i < radios.length; i++){
+        radios[i].addEventListener('change', function(){
+            var method = document.querySelector('input[name="payMethod"]:checked').value;
+            var cardFields = document.getElementById('cardFields');
+            if(method === 'card'){ 
+                if(cardFields) cardFields.classList.remove('hidden'); 
+            } else { 
+                if(cardFields) cardFields.classList.add('hidden'); 
+            }
+        });
     }
-    showModal('⚙️ Manager Tools', html);
+    var payPhone = document.getElementById('payPhone');
+    if(payPhone){
+        payPhone.addEventListener('input', function(){
+            var net = detectNetwork(payPhone.value);
+            var badge = document.getElementById('networkBadge');
+            if(badge){ 
+                if(net){ 
+                    badge.innerHTML = net; 
+                    badge.classList.remove('hidden'); 
+                } else { 
+                    badge.classList.add('hidden'); 
+                } 
+            }
+        });
+    }
 }
 
-function escapeHtml(text) {
-    if(!text) return '';
-    return text.replace(/[&<>]/g, function(m) {
-        if(m === '&') return '&amp;';
-        if(m === '<') return '&lt;';
-        if(m === '>') return '&gt;';
-        return m;
-    });
-}
-
+// ======================== STUB FUNCTIONS ========================
+function searchTransactionByPhone(){ showToast('Search feature coming soon'); }
+function resetTransactionSearch(){ renderAdminOrders(); }
+function exportTransactionsCSV(){ showToast('CSV export coming soon'); }
+function showSalesDetail(){ showModal('Sales Details', 'Today\'s sales data'); }
+function showPendingDetail(){ showModal('Pending Orders', 'List of pending orders'); }
+function showProductsDetail(){ showModal('Products', 'Total products: ' + (AppState.products || []).length); }
+function showLowStockDetail(){ showModal('Low Stock Alert', 'Products with low stock'); }
+function editProduct(id){ showToast('Edit product coming soon'); }
+function deleteProductItem(id){ showToast('Delete product coming soon'); }
+function resetProductForm(){ showToast('Reset form'); }
+function handleImageUpload(input){ showToast('Image upload coming soon'); }
+function saveProduct(){ showToast('Save product coming soon'); }
+function renderAdminBooks(){ showToast('Books feature coming soon'); }
+function changeBookPeriod(){}
+function renderAdminMonitor(){ document.getElementById('monitorFeed').innerHTML = '<div class="empty-state">Agent monitoring coming soon</div>'; }
+function renderAdminChats(){ document.getElementById('allChatsList').innerHTML = '<div class="empty-state">Chat monitoring coming soon</div>'; }
+function renderAdminTeam(){ document.getElementById('teamList').innerHTML = '<div class="empty-state">Team management coming soon</div>'; }
+function renderAdminDelivery(){ document.getElementById('adminDeliveryList').innerHTML = '<div class="empty-state">Delivery management coming soon</div>'; }
+function renderManagerMessages(){ document.getElementById('managerMsgList').innerHTML = '<div class="empty-state">Messages coming soon</div>'; }
+function claimOrderManually(orderId){ showToast('Contact admin to assign orders'); }
+function showAssignRiderForm(orderId){ showToast('Assign rider - coming soon'); }
+function saveRiderAssignment(orderId){ showToast('Save rider - coming soon'); }
+function renderAgentConversations(){ document.getElementById('agentChatList').innerHTML = '<div class="empty-state">No conversations yet</div>'; }
+function openAgentToManagerChat(){ showToast('Message manager coming soon'); }
+function showAddRiderModal(){ showToast('Add rider coming soon'); }
+function showAdminMenu(){ showModal('Admin Menu', '<div class="empty-state">Tools coming soon</div>'); }
 function startPolling(){
-    if(pollInterval) clearInterval(pollInterval);
-    pollInterval = setInterval(function(){
-        if(currentUser){
-            if(currentUser.role === 'agent'){ renderAgentConversations(); }
-            if(currentUser.role === 'admin'){ renderManagerMessages(); }
-        }
+    if(AppState.pollInterval) clearInterval(AppState.pollInterval);
+    AppState.pollInterval = setInterval(function(){
+        if(AppState.user && AppState.user.role === 'agent') renderAgentConversations();
     }, 3000);
 }
 
@@ -1279,16 +1071,16 @@ function startPolling(){
 async function enterApp(){
     document.getElementById('loginPage').classList.add('hidden');
     document.getElementById('appContainer').classList.remove('hidden');
-    document.getElementById('headerGreeting').textContent = 'Hi, '+currentUser.name.split(' ')[0];
+    document.getElementById('headerGreeting').textContent = 'Hi, ' + (AppState.user.name.split(' ')[0] || 'User');
     
     setupNav();
     startPolling();
-    await loadAllData();
+    await refreshData('login');
     
-    if(currentUser.role === 'admin'){
+    if(AppState.user.role === 'admin'){
         navigateTo('adminDashboard');
         renderAdminDashboard();
-    } else if(currentUser.role === 'agent'){
+    } else if(AppState.user.role === 'agent'){
         navigateTo('agentPanel');
         renderAgentPanel();
     } else {
@@ -1297,16 +1089,9 @@ async function enterApp(){
     }
 }
 
-function checkAutoLogin(){
-    var saved = localStorage.getItem('tarazo_email');
-    if(saved){
-        return false;
-    }
-    return false;
-}
-
-function initApp(){
+async function initApp(){
     setupPaymentMethodListener();
+    await getCSRFToken();
     
     var splash = document.getElementById('splashPage');
     setTimeout(function(){
