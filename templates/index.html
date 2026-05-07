@@ -118,23 +118,23 @@ body{background:var(--gray);color:#2c3e50;overflow-x:hidden;-webkit-tap-highligh
 <body>
 <div id="toast" class="toast"></div>
 <div id="splashPage"><div class="splash-logo">🏛️ TARAZO</div><div class="splash-sub">Premium Terrazzo Uganda</div><div class="splash-loader"></div></div>
-<div id="loginPage" class="hidden"><div class="login-box"><div class="logo-text">🏛️ TARAZO</div><div class="logo-sub">Premium Terrazzo Uganda</div>
+<div id="loginPage" class="hidden"><div class="login-box"><div class="logo-text">️ TARAZO</div><div class="logo-sub">Premium Terrazzo Uganda</div>
 <div id="loginForm"><div class="form-group"><label>📧 Email</label><input type="email" id="loginEmail" placeholder="Enter email"></div><div class="form-group"><label>🔒 Password</label><input type="password" id="loginPassword" placeholder="Enter password"></div><div class="remember-row"><input type="checkbox" id="rememberMe"><label for="rememberMe" style="margin:0;text-transform:none;font-size:13px;font-weight:400;color:var(--gray-dark);cursor:pointer;">Remember Me</label></div><button class="btn btn-primary" onclick="handleLogin()">🔐 Login</button><div class="forgot-link" onclick="showForgotPassword()">🔑 Forgot Password?</div><div class="toggle-text">No account? <span onclick="toggleAuth()">📝 Register</span></div></div>
-<div id="registerForm" class="hidden"><div class="form-group"><label>👤 Full Name</label><input type="text" id="regName" placeholder="Your name"></div><div class="form-group"><label>📱 Phone</label><input type="tel" id="regPhone" placeholder="07XX XXX XXX"></div><div class="form-group"><label>📧 Email</label><input type="email" id="regEmail" placeholder="Enter email"></div><div class="form-group"><label>🔒 Password</label><input type="password" id="regPassword" placeholder="Create password"></div><div class="form-group"><label>🔒 Confirm Password</label><input type="password" id="regConfirmPassword" placeholder="Confirm password"></div><button class="btn btn-green" onclick="handleRegister()">✅ Create Account</button><div class="toggle-text">Have an account? <span onclick="toggleAuth()">🔐 Login</span></div></div>
-<div id="forgotForm" class="hidden"><div class="form-group"><label>📧 Email</label><input type="email" id="forgotEmail" placeholder="Enter your registered email"></div><button class="btn btn-primary" onclick="handleForgotPassword()">🔄 Reset Password</button><div class="toggle-text">Remember your password? <span onclick="showLoginForm()">🔐 Login</span></div></div>
+<div id="registerForm" class="hidden"><div class="form-group"><label>👤 Full Name</label><input type="text" id="regName" placeholder="Your name"></div><div class="form-group"><label>📱 Phone</label><input type="tel" id="regPhone" placeholder="07XX XXX XXX"></div><div class="form-group"><label>📧 Email</label><input type="email" id="regEmail" placeholder="Enter email"></div><div class="form-group"><label>🔒 Password</label><input type="password" id="regPassword" placeholder="Create password"></div><div class="form-group"><label> Confirm Password</label><input type="password" id="regConfirmPassword" placeholder="Confirm password"></div><button class="btn btn-green" onclick="handleRegister()">✅ Create Account</button><div class="toggle-text">Have an account? <span onclick="toggleAuth()">🔐 Login</span></div></div>
+<div id="forgotForm" class="hidden"><div class="form-group"><label>📧 Email</label><input type="email" id="forgotEmail" placeholder="Enter your registered email"></div><button class="btn btn-primary" onclick="handleForgotPassword()">🔄 Reset Password</button><div class="toggle-text">Remember your password? <span onclick="showLoginForm()"> Login</span></div></div>
 </div></div>
 <div id="appContainer" class="hidden">
-<div class="app-header"><h1>🏛️ TARAZO</h1><div class="header-actions"><span class="user-greeting" id="headerGreeting"></span><button class="icon-btn" onclick="showCart()" id="cartBtn">🛒<span class="badge hidden" id="cartBadge">0</span></button><button class="icon-btn" onclick="showNotifications()">🔔<span class="badge hidden" id="notificationBadge">0</span></button><button class="icon-btn" onclick="logout()" title="Logout">🚪</button></div></div>
-<div id="adminDashboard" class="page hidden"><div class="section-title">📊 Manager Overview</div><div class="stats-grid"><div class="stat-card"><div class="stat-value" id="adminTodaySales">UGX 0</div><div class="stat-label">💰 Today's Sales</div></div><div class="stat-card orange"><div class="stat-value" id="adminPendingOrders">0</div><div class="stat-label">⏳ Pending Orders</div></div><div class="stat-card green"><div class="stat-value" id="adminTotalProducts">0</div><div class="stat-label">📦 Products</div></div><div class="stat-card red"><div class="stat-value" id="adminLowStock">0</div><div class="stat-label">⚠️ Low Stock</div></div></div><div class="card"><div class="card-title">📈 Sales Trend</div><div class="bar-chart-container" id="adminChart"></div></div><div class="card"><div class="card-title">👥 Agent Status</div><div id="adminAgentStatus"></div></div><div class="card"><div class="card-title">🛒 Recent Orders</div><div id="adminRecentOrders"></div></div></div>
-<div id="adminProducts" class="page hidden"><div class="section-title">📦 Manage Products</div><button class="btn btn-green" style="margin:0 15px 15px;" onclick="resetProductForm()">➕ Add New Terrazzo</button><div class="card"><div class="card-title" id="productFormTitle">📤 Upload New Product</div><div class="upload-area" onclick="document.getElementById('productImage').click()"><div style="font-size:48px;">📷</div><div style="font-weight:700;color:var(--blue);">Tap to Upload Photo</div></div><input type="file" id="productImage" class="hidden" accept="image/*" onchange="handleImageUpload(this)"><div id="uploadPreview" class="hidden" style="margin:15px;text-align:center;"><img id="previewImg" style="max-width:100%;border-radius:12px;max-height:200px;"><div id="aiStatus" style="margin-top:10px;padding:10px;background:#e8f5e9;border-radius:8px;">Analyzing...</div></div><div class="app-form" style="padding:15px;"><input type="hidden" id="editProductId"><div class="form-group"><label>🏷️ Product Name</label><input type="text" id="prodName"></div><div class="form-group"><label>📂 Type</label><select id="prodType"><option>Floor Terrazzo</option><option>Wall Terrazzo</option><option>Countertop Terrazzo</option></select></div><div class="form-group"><label>📝 Description</label><textarea id="prodDesc"></textarea></div><div class="form-group"><label>💵 Price (UGX)</label><input type="number" id="prodPrice"></div><div class="form-group"><label>📊 Stock</label><input type="number" id="prodStock"></div><button class="btn btn-primary" onclick="saveProduct()">💾 Save Product</button><button class="btn btn-outline hidden" id="cancelEditBtn" onclick="resetProductForm()">Cancel</button></div></div><div id="adminProductList"></div></div>
-<div id="adminOrders" class="page hidden"><div class="section-title">📋 All Orders</div><div class="search-transaction-box"><input type="text" id="transactionSearchPhone" placeholder="🔍 Search by phone"><button class="btn btn-primary" onclick="searchTransactionByPhone()">Search</button><button class="btn btn-outline" onclick="resetTransactionSearch()">Show All</button></div><div id="adminOrdersList"></div></div>
+<div class="app-header"><h1>🏛️ TARAZO</h1><div class="header-actions"><span class="user-greeting" id="headerGreeting"></span><button class="icon-btn" onclick="showCart()" id="cartBtn">🛒<span class="badge hidden" id="cartBadge">0</span></button><button class="icon-btn" onclick="showNotifications()"><span class="badge hidden" id="notificationBadge">0</span></button><button class="icon-btn" onclick="logout()" title="Logout"></button></div></div>
+<div id="adminDashboard" class="page hidden"><div class="section-title">📊 Manager Overview</div><div class="stats-grid"><div class="stat-card"><div class="stat-value" id="adminTodaySales">UGX 0</div><div class="stat-label">💰 Today's Sales</div></div><div class="stat-card orange"><div class="stat-value" id="adminPendingOrders">0</div><div class="stat-label">⏳ Pending Orders</div></div><div class="stat-card green"><div class="stat-value" id="adminTotalProducts">0</div><div class="stat-label">📦 Products</div></div><div class="stat-card red"><div class="stat-value" id="adminLowStock">0</div><div class="stat-label">️ Low Stock</div></div></div><div class="card"><div class="card-title"> Sales Trend</div><div class="bar-chart-container" id="adminChart"></div></div><div class="card"><div class="card-title"> Agent Status</div><div id="adminAgentStatus"></div></div><div class="card"><div class="card-title">🛒 Recent Orders</div><div id="adminRecentOrders"></div></div></div>
+<div id="adminProducts" class="page hidden"><div class="section-title"> Manage Products</div><button class="btn btn-green" style="margin:0 15px 15px;" onclick="resetProductForm()"> Add New Terrazzo</button><div class="card"><div class="card-title" id="productFormTitle">📤 Upload New Product</div><div class="upload-area" onclick="document.getElementById('productImage').click()"><div style="font-size:48px;">📷</div><div style="font-weight:700;color:var(--blue);">Tap to Upload Photo</div></div><input type="file" id="productImage" class="hidden" accept="image/*" onchange="handleImageUpload(this)"><div id="uploadPreview" class="hidden" style="margin:15px;text-align:center;"><img id="previewImg" style="max-width:100%;border-radius:12px;max-height:200px;"><div id="aiStatus" style="margin-top:10px;padding:10px;background:#e8f5e9;border-radius:8px;">Analyzing...</div></div><div class="app-form" style="padding:15px;"><input type="hidden" id="editProductId"><div class="form-group"><label>🏷️ Product Name</label><input type="text" id="prodName"></div><div class="form-group"><label>📂 Type</label><select id="prodType"><option>Floor Terrazzo</option><option>Wall Terrazzo</option><option>Countertop Terrazzo</option></select></div><div class="form-group"><label> Description</label><textarea id="prodDesc"></textarea></div><div class="form-group"><label>💵 Price (UGX)</label><input type="number" id="prodPrice"></div><div class="form-group"><label>📊 Stock</label><input type="number" id="prodStock"></div><button class="btn btn-primary" onclick="saveProduct()">💾 Save Product</button><button class="btn btn-outline hidden" id="cancelEditBtn" onclick="resetProductForm()">Cancel</button></div></div><div id="adminProductList"></div></div>
+<div id="adminOrders" class="page hidden"><div class="section-title">📋 All Orders</div><div class="search-transaction-box"><input type="text" id="transactionSearchPhone" placeholder=" Search by phone"><button class="btn btn-primary" onclick="searchTransactionByPhone()">Search</button><button class="btn btn-outline" onclick="resetTransactionSearch()">Show All</button></div><div id="adminOrdersList"></div></div>
 <div id="adminBooks" class="page hidden"><div class="section-title">📚 Balance Books</div><div class="date-filter-row"><select id="bookPeriod" onchange="changeBookPeriod()"><option value="today">Today</option><option value="week">This Week</option><option value="month">This Month</option></select><input type="date" id="bookStart" class="hidden"><input type="date" id="bookEnd" class="hidden"><button class="btn btn-primary" onclick="renderAdminBooks()">View</button></div><div class="stats-grid"><div class="stat-card"><div class="stat-value" id="bookSales">UGX 0</div><div class="stat-label">Sales</div></div><div class="stat-card"><div class="stat-value" id="bookOrders">0</div><div class="stat-label">Orders</div></div></div><div id="booksTransactions"></div></div>
-<div id="adminMonitor" class="page hidden"><div class="section-title">👁️ Live Agent Monitor</div><div id="monitorFeed"></div></div>
+<div id="adminMonitor" class="page hidden"><div class="section-title">️ Live Agent Monitor</div><div id="monitorFeed"></div></div>
 <div id="adminChats" class="page hidden"><div class="section-title">💬 All Conversations</div><div id="allChatsList"></div></div>
 <div id="adminTeam" class="page hidden"><div class="section-title">👥 Support Team</div><div id="teamList"></div></div>
 <div id="adminDelivery" class="page hidden"><div class="section-title">🚚 Delivery Management</div><div id="adminDeliveryList"></div></div>
 <div id="adminMessages" class="page hidden"><div class="section-title">💬 Manager Messages</div><div id="managerMsgList"></div></div>
-<div id="agentPanel" class="page hidden"><div class="section-title">📦 My Assigned Orders</div><div id="agentAssignedOrders"></div><div class="section-title">🆓 Available Orders</div><div id="agentAvailableOrders"></div><div class="section-title">🚚 My Deliveries</div><div id="agentDeliveryList"></div><div class="section-title">👥 Riders</div><div id="agentRiderList"></div><div class="section-title">💬 Customer Conversations</div><div id="agentChatList"></div><button class="btn btn-add" style="margin:15px;" onclick="showAddRiderModal()">➕ Add Rider</button><button class="btn btn-primary" style="margin:15px;" onclick="openAgentToManagerChat()">💬 Message Manager</button></div>
+<div id="agentPanel" class="page hidden"><div class="section-title">📦 My Assigned Orders</div><div id="agentAssignedOrders"></div><div class="section-title">🆓 Available Orders</div><div id="agentAvailableOrders"></div><div class="section-title">🚚 My Deliveries</div><div id="agentDeliveryList"></div><div class="section-title">👥 Riders</div><div id="agentRiderList"></div><div class="section-title">💬 Customer Conversations</div><div id="agentChatList"></div><button class="btn btn-add" style="margin:15px;" onclick="showAddRiderModal()"> Add Rider</button><button class="btn btn-primary" style="margin:15px;" onclick="openAgentToManagerChat()">💬 Message Manager</button></div>
 <div id="userShop" class="page hidden"><div style="padding:15px;"><input type="text" placeholder="🔍 Search terrazzo..." style="width:100%;padding:14px;border-radius:12px;border:1px solid #ddd;" onkeyup="searchProducts(this.value)"></div><div class="filter-row"><button class="filter-btn active" onclick="filterProducts('all',this)">All</button><button class="filter-btn" onclick="filterProducts('Floor',this)">Floor</button><button class="filter-btn" onclick="filterProducts('Wall',this)">Wall</button><button class="filter-btn" onclick="filterProducts('Countertop',this)">Countertop</button></div><div class="product-grid" id="shopGrid"></div></div>
 <div id="productDetail" class="page hidden"><div id="detailContent"></div></div>
 <div id="userCart" class="page hidden"><div class="section-title">🛒 My Cart</div><div id="cartItems"></div><div class="card" id="cartSummary"><div style="display:flex;justify-content:space-between;"><span>Total:</span><span id="cartTotal">UGX 0</span></div><button class="btn btn-green" style="margin-top:15px;" onclick="showCheckout()">Proceed to Checkout</button></div></div>
@@ -143,7 +143,7 @@ body{background:var(--gray);color:#2c3e50;overflow-x:hidden;-webkit-tap-highligh
 <div id="userDashboard" class="page hidden"><div class="section-title">👤 My Account</div><div class="card"><div style="display:flex;align-items:center;gap:15px;"><div style="width:60px;height:60px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:28px;">👤</div><div><div style="font-weight:800;font-size:18px;" id="userNameDisplay"></div><div style="color:var(--gray-dark);" id="userEmailDisplay"></div></div></div></div><div class="card"><div class="card-title">My Profile</div><div class="app-form"><div class="form-group"><label>Full Name</label><input type="text" id="profileName"></div><div class="form-group"><label>Email</label><input type="email" id="profileEmail" readonly></div><div class="form-group"><label>Phone</label><input type="tel" id="profilePhone"></div><div class="form-group"><label>Address</label><textarea id="profileAddress"></textarea></div><button class="btn btn-primary" onclick="saveUserProfile()">Save Profile</button></div></div></div>
 <div class="chat-widget hidden" id="chatWidgetContainer"><button class="chat-btn" onclick="toggleChat()">💬</button></div>
 <div id="chatBox" class="chat-box hidden"><div class="chat-header"><div>🤖 Tarazo Assistant</div><button class="chat-close" onclick="toggleChat()">✕</button></div><div class="chat-messages" id="chatMessages"></div><div class="chat-input-area"><input type="text" id="chatInput" placeholder="Type message..." onkeypress="if(event.key==='Enter')sendChat()"><button class="btn btn-green" style="width:auto;padding:10px 16px;" onclick="sendChat()">Send</button></div></div>
-<div class="whatsapp-widget hidden" id="whatsappWidget"><a href="https://wa.me/256772123456" class="whatsapp-btn" target="_blank">💬</a></div>
+<div class="whatsapp-widget hidden" id="whatsappWidget"><a href="https://wa.me/256772123456" class="whatsapp-btn" target="_blank"></a></div>
 <div class="bottom-nav" id="bottomNav"></div>
 </div>
 <div id="modalOverlay" class="modal-overlay hidden" onclick="closeModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header" id="modalTitle">Title</div><div id="modalBody"></div><button class="btn btn-outline" style="margin-top:15px;" onclick="hideModal()">Close</button></div></div>
@@ -167,50 +167,78 @@ async function fetchCSRFToken() {
         const response = await fetch(`${API_BASE_URL}/csrf-token`, {
             method: 'GET',
             credentials: 'include',
-            mode: 'cors'
+            mode: 'cors',
+            headers: { 'Content-Type': 'application/json' }
         });
+        if (!response.ok) throw new Error(`CSRF fetch failed: ${response.status}`);
         const data = await response.json();
         csrfToken = data.csrf_token;
-        console.log('✅ CSRF token obtained:', csrfToken);
+        console.log('✅ CSRF token obtained');
         return csrfToken;
     } catch (error) {
-        console.error('Failed to fetch CSRF token:', error);
+        console.error('❌ Failed to fetch CSRF token:', error);
         return null;
     }
 }
 
-// ======================== DIRECT LOGIN (NO CSRF FOR LOGIN) ========================
+// ======================== UNIFIED API CALLER ========================
+async function apiCall(endpoint, options = {}) {
+    const mutatingMethods = ['POST', 'PUT', 'DELETE', 'PATCH'];
+    // Always ensure we have a fresh CSRF token for mutating requests
+    if (options.method && mutatingMethods.includes(options.method)) {
+        if (!csrfToken) await fetchCSRFToken();
+    }
+
+    const headers = { 'Content-Type': 'application/json', ...options.headers };
+    if (options.method && mutatingMethods.includes(options.method) && csrfToken) {
+        headers['X-CSRFToken'] = csrfToken;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            ...options,
+            headers,
+            credentials: 'include',
+            mode: 'cors'
+        });
+
+        // Catch HTML error pages (500/404 from backend misconfiguration)
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('text/html')) {
+            const text = await response.text();
+            console.error('⚠️ Backend returned HTML:', text.substring(0, 150));
+            throw new Error('Server error - check backend logs');
+        }
+        if (response.status === 204) return { ok: true, status: 204 };
+        return response;
+    } catch (error) {
+        console.error('API Error:', error);
+        throw error;
+    }
+}
+
+// ======================== AUTH FUNCTIONS ========================
 async function handleLogin() {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     const remember = document.getElementById('rememberMe').checked;
 
-    if (!email || !password) {
-        showToast('❌ Please enter email and password');
-        return;
-    }
+    if (!email || !password) { showToast('❌ Please enter email and password'); return; }
 
     try {
-        showToast('🔄 Logging in...');
-
-        // DIRECT FETCH - no CSRF token for login
-        const response = await fetch(`${API_BASE_URL}/login`, {
+        showToast(' Logging in...');
+        // 🔐 Fetch CSRF token first, then login
+        await fetchCSRFToken();
+        const response = await apiCall('/login', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            mode: 'cors',
             body: JSON.stringify({ email, password })
         });
 
         const data = await response.json();
-
         if (response.ok && data.success) {
             currentUser = data.user;
-            if (remember) {
-                localStorage.setItem('tarazo_email', email);
-            } else {
-                localStorage.removeItem('tarazo_email');
-            }
+            if (remember) localStorage.setItem('tarazo_email', email);
+            else localStorage.removeItem('tarazo_email');
             showToast('✅ Login successful!');
             await loadAllData();
             enterApp();
@@ -223,7 +251,6 @@ async function handleLogin() {
     }
 }
 
-// ======================== DIRECT REGISTER (NO CSRF) ========================
 async function handleRegister() {
     const name = document.getElementById('regName').value;
     const phone = document.getElementById('regPhone').value;
@@ -231,28 +258,17 @@ async function handleRegister() {
     const password = document.getElementById('regPassword').value;
     const confirmPassword = document.getElementById('regConfirmPassword').value;
 
-    if (!name || !email || !password) {
-        showToast('Please fill all fields');
-        return;
-    }
-    if (password !== confirmPassword) {
-        showToast('Passwords do not match');
-        return;
-    }
+    if (!name || !email || !password) { showToast('Please fill all fields'); return; }
+    if (password !== confirmPassword) { showToast('Passwords do not match'); return; }
 
     try {
         showToast('🔄 Creating account...');
-
-        const response = await fetch(`${API_BASE_URL}/register`, {
+        await fetchCSRFToken();
+        const response = await apiCall('/register', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            mode: 'cors',
             body: JSON.stringify({ name, email, phone, password })
         });
-
         const data = await response.json();
-
         if (response.ok && data.success) {
             showToast('✅ Registration successful! Please login.');
             toggleAuth();
@@ -265,101 +281,22 @@ async function handleRegister() {
     }
 }
 
-// ======================== API CALL WITH CSRF (FOR PROTECTED ROUTES) ========================
-async function apiCall(endpoint, options = {}) {
-    if (options.method && options.method !== 'GET' && !csrfToken) {
-        await fetchCSRFToken();
-    }
-
-    const headers = {
-        'Content-Type': 'application/json',
-        ...options.headers
-    };
-
-    if (options.method && options.method !== 'GET' && csrfToken) {
-        headers['X-CSRFToken'] = csrfToken;
-    }
-
-    try {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-            ...options,
-            headers: headers,
-            credentials: 'include',
-            mode: 'cors'
-        });
-        return response;
-    } catch (error) {
-        console.error('API Error:', error);
-        throw error;
-    }
-}
-
-// ======================== HELPER FUNCTIONS ========================
-function showToast(msg) {
-    const toast = document.getElementById('toast');
-    toast.textContent = msg;
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 2500);
-}
-
-function showModal(title, html) {
-    document.getElementById('modalTitle').textContent = title;
-    document.getElementById('modalBody').innerHTML = html;
-    document.getElementById('modalOverlay').classList.remove('hidden');
-}
-
-function hideModal() {
-    document.getElementById('modalOverlay').classList.add('hidden');
-}
-
-function closeModal(e) {
-    if (e.target === document.getElementById('modalOverlay')) hideModal();
-}
-
-function escapeHtml(text) {
-    if (!text) return '';
-    return text.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
-}
-
-function detectNetwork(phone) { 
-    let p = phone.toString().replace(/\D/g,''); 
-    if(/^(077|078|076|079|039)/.test(p)) return 'MTN'; 
-    if(/^(075|074|070|073|071|041)/.test(p)) return 'Airtel'; 
-    return null; 
-}
-
-function validateUgPhone(phone) { 
-    let p = phone.toString().replace(/\D/g,''); 
-    return p.length >= 9 && p.length <= 12; 
-}
-
-// ======================== FORGOT PASSWORD ========================
 async function handleForgotPassword() {
     const email = document.getElementById('forgotEmail').value;
-    if (!email) {
-        showToast('Please enter your email');
-        return;
-    }
+    if (!email) { showToast('Please enter your email'); return; }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/forgot-password`, {
+        await fetchCSRFToken();
+        const response = await apiCall('/forgot-password', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            mode: 'cors',
             body: JSON.stringify({ email })
         });
-
         if (response.ok) {
             showToast('✅ Reset link sent to your email');
             showLoginForm();
         } else {
-            showToast('❌ Failed to send reset link');
+            const data = await response.json();
+            showToast(data.error || '❌ Failed to send reset link');
         }
     } catch (error) {
         showToast('❌ Network error');
@@ -369,10 +306,10 @@ async function handleForgotPassword() {
 // ======================== LOGOUT ========================
 async function logout() {
     try {
-        await fetchCSRFToken();
-        await apiCall('/logout', { method: 'POST' });
-    } catch(e) {}
-
+        if (csrfToken) {
+            await apiCall('/logout', { method: 'POST' });
+        }
+    } catch(e) { console.warn('Logout error:', e); }
     currentUser = null;
     csrfToken = null;
     localStorage.removeItem('tarazo_email');
@@ -383,36 +320,62 @@ async function logout() {
 }
 
 function toggleAuth() {
-    const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
-    const forgotForm = document.getElementById('forgotForm');
-    if (!loginForm.classList.contains('hidden')) {
-        loginForm.classList.add('hidden');
-        registerForm.classList.remove('hidden');
-        forgotForm.classList.add('hidden');
-    } else {
-        loginForm.classList.remove('hidden');
-        registerForm.classList.add('hidden');
-        forgotForm.classList.add('hidden');
-    }
+    document.getElementById('loginForm').classList.toggle('hidden');
+    document.getElementById('registerForm').classList.toggle('hidden');
+    document.getElementById('forgotForm').classList.add('hidden');
 }
-
 function showForgotPassword() {
     document.getElementById('loginForm').classList.add('hidden');
     document.getElementById('registerForm').classList.add('hidden');
     document.getElementById('forgotForm').classList.remove('hidden');
 }
-
 function showLoginForm() {
     document.getElementById('loginForm').classList.remove('hidden');
     document.getElementById('registerForm').classList.add('hidden');
     document.getElementById('forgotForm').classList.add('hidden');
 }
 
-// ======================== LOAD DATA ========================
+// ======================== HELPER FUNCTIONS ========================
+function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+}
+function showModal(title, html) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalBody').innerHTML = html;
+    document.getElementById('modalOverlay').classList.remove('hidden');
+}
+function hideModal() {
+    document.getElementById('modalOverlay').classList.add('hidden');
+}
+function closeModal(e) {
+    if (e.target === document.getElementById('modalOverlay')) hideModal();
+}
+function escapeHtml(text) {
+    if (!text) return '';
+    return text.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+function detectNetwork(phone) { 
+    let p = phone.toString().replace(/\D/g,''); 
+    if(/^(077|078|076|079|039)/.test(p)) return 'MTN'; 
+    if(/^(075|074|070|073|071|041)/.test(p)) return 'Airtel'; 
+    return null; 
+}
+function validateUgPhone(phone) { 
+    let p = phone.toString().replace(/\D/g,''); 
+    return p.length >= 9 && p.length <= 12; 
+}
+
+// ======================== DATA LOADING ========================
 async function loadAllData() {
     if (!currentUser) return;
-
     try {
         const productsRes = await fetch(`${API_BASE_URL}/products`, { credentials: 'include', mode: 'cors' });
         productsList = await productsRes.json();
@@ -432,12 +395,10 @@ async function loadAllData() {
 // ======================== SHOP FUNCTIONS ========================
 async function renderShop(filter = 'all') {
     if (productsList.length === 0) await loadAllData();
-
     let products = productsList;
     if (filter !== 'all') {
         products = productsList.filter(p => p.type && p.type.toLowerCase().includes(filter.toLowerCase()));
     }
-
     let html = '';
     for (let p of products) {
         let imageUrl = p.image_url || p.image || 'https://placehold.co/600x400/1a5276/white?text=TARAZO';
@@ -481,7 +442,6 @@ function filterProducts(type, btn) {
 async function showProductDetail(id) {
     let p = productsList.find(pr => pr.id === id);
     if (!p) return;
-
     let installHtml = '';
     if (p.install_images) {
         try {
@@ -491,7 +451,6 @@ async function showProductDetail(id) {
             }
         } catch(e) {}
     }
-
     document.getElementById('detailContent').innerHTML = `
         <img src="${p.image_url || 'https://placehold.co/600x400/1a5276/white?text=TARAZO'}" class="detail-hero">
         <div class="card">
@@ -508,14 +467,11 @@ async function showProductDetail(id) {
 // ======================== CART FUNCTIONS ========================
 async function addToCart(productId) {
     if (!currentUser) { showToast('Please login first'); return; }
-
     try {
-        await fetchCSRFToken();
         const response = await apiCall('/cart', {
             method: 'POST',
             body: JSON.stringify({ product_id: productId, quantity: 1 })
         });
-
         if (response.ok) {
             await loadAllData();
             updateCartBadge();
@@ -523,14 +479,11 @@ async function addToCart(productId) {
         } else {
             showToast('❌ Failed to add to cart');
         }
-    } catch(error) {
-        showToast('❌ Network error');
-    }
+    } catch(error) { showToast('❌ Network error'); }
 }
 
 async function removeFromCart(productId) {
     try {
-        await fetchCSRFToken();
         const response = await apiCall(`/cart/${productId}`, { method: 'DELETE' });
         if (response.ok) {
             await loadAllData();
@@ -538,9 +491,7 @@ async function removeFromCart(productId) {
             updateCartBadge();
             showToast('✅ Removed from cart');
         }
-    } catch(error) {
-        showToast('❌ Failed to remove');
-    }
+    } catch(error) { showToast('❌ Failed to remove'); }
 }
 
 function removeItemFromCart(productId) { removeFromCart(productId); }
@@ -548,13 +499,11 @@ function removeItemFromCart(productId) { removeFromCart(productId); }
 async function renderCart() {
     if (!currentUser) return;
     await loadAllData();
-
     if (cartList.length === 0) {
         document.getElementById('cartItems').innerHTML = '<div class="empty-state">Cart is empty</div>';
         document.getElementById('cartSummary').classList.add('hidden');
         return;
     }
-
     let total = 0, html = '';
     for (let c of cartList) {
         let p = productsList.find(pr => pr.id === c.product_id);
@@ -616,8 +565,6 @@ async function processPayment() {
 
     try {
         showToast('Processing order...');
-        await fetchCSRFToken();
-
         const response = await apiCall('/orders', {
             method: 'POST',
             body: JSON.stringify({
@@ -626,9 +573,7 @@ async function processPayment() {
                 payment_method: method === 'mtn' ? 'MTN Mobile Money' : 'Airtel Money'
             })
         });
-
         const data = await response.json();
-
         if (response.ok && data.success) {
             showToast('Order placed!');
             await loadAllData();
@@ -646,7 +591,6 @@ async function processPayment() {
 async function renderUserOrders() {
     await loadAllData();
     let myOrders = ordersList.filter(o => o.user_id === currentUser?.id);
-
     let html = '';
     for (let o of myOrders) {
         html += `<div class="card">
@@ -670,7 +614,6 @@ function renderUserDashboard() {
     document.getElementById('profilePhone').value = currentUser.phone || '';
     document.getElementById('profileAddress').value = currentUser.address || '';
 }
-
 function saveUserProfile() { showToast('Profile update coming soon'); }
 
 // ======================== ADMIN FUNCTIONS ========================
@@ -710,13 +653,8 @@ function changeBookPeriod() {
     let period = document.getElementById('bookPeriod').value;
     let start = document.getElementById('bookStart');
     let end = document.getElementById('bookEnd');
-    if (period === 'custom') {
-        start.classList.remove('hidden');
-        end.classList.remove('hidden');
-    } else {
-        start.classList.add('hidden');
-        end.classList.add('hidden');
-    }
+    if (period === 'custom') { start.classList.remove('hidden'); end.classList.remove('hidden'); } 
+    else { start.classList.add('hidden'); end.classList.add('hidden'); }
 }
 
 // ======================== AGENT FUNCTIONS ========================
@@ -742,15 +680,11 @@ async function renderAgentPanel() {
 
 async function updateOrderStatus(orderId, newStatus) {
     try {
-        await fetchCSRFToken();
         const response = await apiCall(`/orders/${orderId}/status`, {
             method: 'PUT',
             body: JSON.stringify({ status: newStatus })
         });
-        if (response.ok) {
-            showToast('Status updated');
-            renderAgentPanel();
-        }
+        if (response.ok) { showToast('Status updated'); renderAgentPanel(); }
     } catch(e) { showToast('Failed to update'); }
 }
 
@@ -766,7 +700,6 @@ function showAssignRiderForm(orderId) {
 
 async function saveRiderAssignment(orderId) {
     try {
-        await fetchCSRFToken();
         const response = await apiCall(`/orders/${orderId}/assign`, {
             method: 'PUT',
             body: JSON.stringify({
@@ -776,11 +709,7 @@ async function saveRiderAssignment(orderId) {
                 delivery_location: document.getElementById('deliveryLocation').value
             })
         });
-        if (response.ok) {
-            showToast('Rider assigned');
-            hideModal();
-            renderAgentPanel();
-        }
+        if (response.ok) { showToast('Rider assigned'); hideModal(); renderAgentPanel(); }
     } catch(e) { showToast('Failed'); }
 }
 
@@ -798,17 +727,14 @@ async function sendChat() {
     input.value = '';
 
     try {
-        const response = await fetch(`${API_BASE_URL}/chat/customer`, {
+        const response = await apiCall('/chat/customer', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            mode: 'cors',
             body: JSON.stringify({ message: text })
         });
         const data = await response.json();
         addChatMessage('bot', data.response);
     } catch(error) {
-        addChatMessage('bot', 'Network error');
+        addChatMessage('bot', 'Network error. Please try again.');
     }
 }
 
@@ -839,7 +765,6 @@ function addNotification(userId, title, message, type, link) {
     notifications.push({ id: notifications.length + 1, userId, title, message, type, link, read: false, timestamp: new Date().toISOString() });
     if (currentUser && currentUser.id === userId) showToast(`🔔 ${title}`);
 }
-
 function showNotifications() {
     let myNotifs = notifications.filter(n => n.userId === currentUser?.id);
     let html = '<div class="notifications-list">';
@@ -859,7 +784,6 @@ function resetProductForm() {
     document.getElementById('prodStock').value = '';
     document.getElementById('uploadPreview').classList.add('hidden');
 }
-
 function handleImageUpload(input) {
     if (input.files && input.files[0]) {
         document.getElementById('uploadPreview').classList.remove('hidden');
@@ -868,14 +792,12 @@ function handleImageUpload(input) {
         reader.readAsDataURL(input.files[0]);
     }
 }
-
 async function saveProduct() {
     let name = document.getElementById('prodName').value;
     let price = document.getElementById('prodPrice').value;
     if (!name || !price) { showToast('Fill all fields'); return; }
     showToast('Product save feature coming soon');
 }
-
 async function renderAdminProducts() {
     await loadAllData();
     let html = '';
@@ -884,7 +806,6 @@ async function renderAdminProducts() {
     }
     document.getElementById('adminProductList').innerHTML = html || '<div class="empty-state">No products</div>';
 }
-
 function editProduct(id) { showToast('Edit feature coming soon'); }
 
 // ======================== NAVIGATION ========================
@@ -892,7 +813,6 @@ function navigateTo(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
     document.getElementById(pageId).classList.remove('hidden');
     currentPage = pageId;
-
     if (pageId === 'userShop') renderShop();
     if (pageId === 'userCart') renderCart();
     if (pageId === 'userOrders') renderUserOrders();
@@ -953,7 +873,6 @@ async function enterApp() {
     document.getElementById('headerGreeting').textContent = `Hi, ${currentUser.name.split(' ')[0]}`;
     setupNav();
     await loadAllData();
-
     if (currentUser.role === 'admin') navigateTo('adminDashboard');
     else if (currentUser.role === 'agent') navigateTo('agentPanel');
     else navigateTo('userShop');
@@ -961,8 +880,9 @@ async function enterApp() {
 
 async function initApp() {
     setupPaymentMethodListener();
+    // 🔐 Fetch CSRF token immediately on app start
     await fetchCSRFToken();
-
+    
     let splash = document.getElementById('splashPage');
     setTimeout(() => {
         splash.style.opacity = '0';
