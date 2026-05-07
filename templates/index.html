@@ -171,7 +171,7 @@ async function fetchCSRFToken() {
         });
         const data = await response.json();
         csrfToken = data.csrf_token;
-        console.log('✅ CSRF token obtained');
+        console.log('✅ CSRF token obtained:', csrfToken);
         return csrfToken;
     } catch (error) {
         console.error('Failed to fetch CSRF token:', error);
@@ -179,20 +179,107 @@ async function fetchCSRFToken() {
     }
 }
 
+// ======================== DIRECT LOGIN (NO CSRF FOR LOGIN) ========================
+async function handleLogin() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    const remember = document.getElementById('rememberMe').checked;
+
+    if (!email || !password) {
+        showToast('❌ Please enter email and password');
+        return;
+    }
+
+    try {
+        showToast('🔄 Logging in...');
+
+        // DIRECT FETCH - no CSRF token for login
+        const response = await fetch(`${API_BASE_URL}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            mode: 'cors',
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            currentUser = data.user;
+            if (remember) {
+                localStorage.setItem('tarazo_email', email);
+            } else {
+                localStorage.removeItem('tarazo_email');
+            }
+            showToast('✅ Login successful!');
+            await loadAllData();
+            enterApp();
+        } else {
+            showToast(data.error || '❌ Login failed');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        showToast('❌ Login failed. Please try again.');
+    }
+}
+
+// ======================== DIRECT REGISTER (NO CSRF) ========================
+async function handleRegister() {
+    const name = document.getElementById('regName').value;
+    const phone = document.getElementById('regPhone').value;
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPassword').value;
+    const confirmPassword = document.getElementById('regConfirmPassword').value;
+
+    if (!name || !email || !password) {
+        showToast('Please fill all fields');
+        return;
+    }
+    if (password !== confirmPassword) {
+        showToast('Passwords do not match');
+        return;
+    }
+
+    try {
+        showToast('🔄 Creating account...');
+
+        const response = await fetch(`${API_BASE_URL}/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            mode: 'cors',
+            body: JSON.stringify({ name, email, phone, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            showToast('✅ Registration successful! Please login.');
+            toggleAuth();
+            document.getElementById('loginEmail').value = email;
+        } else {
+            showToast(data.error || '❌ Registration failed');
+        }
+    } catch (error) {
+        showToast('❌ Network error');
+    }
+}
+
+// ======================== API CALL WITH CSRF (FOR PROTECTED ROUTES) ========================
 async function apiCall(endpoint, options = {}) {
     if (options.method && options.method !== 'GET' && !csrfToken) {
         await fetchCSRFToken();
     }
-    
+
     const headers = {
         'Content-Type': 'application/json',
         ...options.headers
     };
-    
+
     if (options.method && options.method !== 'GET' && csrfToken) {
         headers['X-CSRFToken'] = csrfToken;
     }
-    
+
     try {
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             ...options,
@@ -251,98 +338,23 @@ function validateUgPhone(phone) {
     return p.length >= 9 && p.length <= 12; 
 }
 
-// ======================== AUTHENTICATION ========================
-async function handleLogin() {
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-    const remember = document.getElementById('rememberMe').checked;
-    
-    if (!email || !password) {
-        showToast('❌ Please enter email and password');
-        return;
-    }
-    
-    try {
-        showToast('🔄 Logging in...');
-        await fetchCSRFToken();
-        
-        const response = await apiCall('/login', {
-            method: 'POST',
-            body: JSON.stringify({ email, password })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok && data.success) {
-            currentUser = data.user;
-            if (remember) localStorage.setItem('tarazo_email', email);
-            else localStorage.removeItem('tarazo_email');
-            
-            showToast('✅ Login successful!');
-            await loadAllData();
-            enterApp();
-        } else {
-            showToast(data.error || '❌ Login failed');
-        }
-    } catch (error) {
-        console.error('Login error:', error);
-        showToast('❌ Login failed. Please try again.');
-    }
-}
-
-async function handleRegister() {
-    const name = document.getElementById('regName').value;
-    const phone = document.getElementById('regPhone').value;
-    const email = document.getElementById('regEmail').value;
-    const password = document.getElementById('regPassword').value;
-    const confirmPassword = document.getElementById('regConfirmPassword').value;
-    
-    if (!name || !email || !password) {
-        showToast('Please fill all fields');
-        return;
-    }
-    if (password !== confirmPassword) {
-        showToast('Passwords do not match');
-        return;
-    }
-    
-    try {
-        showToast('🔄 Creating account...');
-        await fetchCSRFToken();
-        
-        const response = await apiCall('/register', {
-            method: 'POST',
-            body: JSON.stringify({ name, email, phone, password })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok && data.success) {
-            showToast('✅ Registration successful! Please login.');
-            toggleAuth();
-            document.getElementById('loginEmail').value = email;
-        } else {
-            showToast(data.error || '❌ Registration failed');
-        }
-    } catch (error) {
-        showToast('❌ Network error');
-    }
-}
-
+// ======================== FORGOT PASSWORD ========================
 async function handleForgotPassword() {
     const email = document.getElementById('forgotEmail').value;
     if (!email) {
         showToast('Please enter your email');
         return;
     }
-    
+
     try {
-        await fetchCSRFToken();
-        const response = await apiCall('/forgot-password', {
+        const response = await fetch(`${API_BASE_URL}/forgot-password`, {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            mode: 'cors',
             body: JSON.stringify({ email })
         });
-        
+
         if (response.ok) {
             showToast('✅ Reset link sent to your email');
             showLoginForm();
@@ -354,12 +366,13 @@ async function handleForgotPassword() {
     }
 }
 
+// ======================== LOGOUT ========================
 async function logout() {
     try {
         await fetchCSRFToken();
         await apiCall('/logout', { method: 'POST' });
     } catch(e) {}
-    
+
     currentUser = null;
     csrfToken = null;
     localStorage.removeItem('tarazo_email');
@@ -399,17 +412,17 @@ function showLoginForm() {
 // ======================== LOAD DATA ========================
 async function loadAllData() {
     if (!currentUser) return;
-    
+
     try {
         const productsRes = await fetch(`${API_BASE_URL}/products`, { credentials: 'include', mode: 'cors' });
         productsList = await productsRes.json();
-        
+
         const cartRes = await fetch(`${API_BASE_URL}/cart`, { credentials: 'include', mode: 'cors' });
         if (cartRes.ok) cartList = await cartRes.json();
-        
+
         const ordersRes = await fetch(`${API_BASE_URL}/orders`, { credentials: 'include', mode: 'cors' });
         if (ordersRes.ok) ordersList = await ordersRes.json();
-        
+
         updateCartBadge();
     } catch (error) {
         console.error('Error loading data:', error);
@@ -419,12 +432,12 @@ async function loadAllData() {
 // ======================== SHOP FUNCTIONS ========================
 async function renderShop(filter = 'all') {
     if (productsList.length === 0) await loadAllData();
-    
+
     let products = productsList;
     if (filter !== 'all') {
         products = productsList.filter(p => p.type && p.type.toLowerCase().includes(filter.toLowerCase()));
     }
-    
+
     let html = '';
     for (let p of products) {
         let imageUrl = p.image_url || p.image || 'https://placehold.co/600x400/1a5276/white?text=TARAZO';
@@ -468,7 +481,7 @@ function filterProducts(type, btn) {
 async function showProductDetail(id) {
     let p = productsList.find(pr => pr.id === id);
     if (!p) return;
-    
+
     let installHtml = '';
     if (p.install_images) {
         try {
@@ -478,7 +491,7 @@ async function showProductDetail(id) {
             }
         } catch(e) {}
     }
-    
+
     document.getElementById('detailContent').innerHTML = `
         <img src="${p.image_url || 'https://placehold.co/600x400/1a5276/white?text=TARAZO'}" class="detail-hero">
         <div class="card">
@@ -495,14 +508,14 @@ async function showProductDetail(id) {
 // ======================== CART FUNCTIONS ========================
 async function addToCart(productId) {
     if (!currentUser) { showToast('Please login first'); return; }
-    
+
     try {
         await fetchCSRFToken();
         const response = await apiCall('/cart', {
             method: 'POST',
             body: JSON.stringify({ product_id: productId, quantity: 1 })
         });
-        
+
         if (response.ok) {
             await loadAllData();
             updateCartBadge();
@@ -535,13 +548,13 @@ function removeItemFromCart(productId) { removeFromCart(productId); }
 async function renderCart() {
     if (!currentUser) return;
     await loadAllData();
-    
+
     if (cartList.length === 0) {
         document.getElementById('cartItems').innerHTML = '<div class="empty-state">Cart is empty</div>';
         document.getElementById('cartSummary').classList.add('hidden');
         return;
     }
-    
+
     let total = 0, html = '';
     for (let c of cartList) {
         let p = productsList.find(pr => pr.id === c.product_id);
@@ -584,14 +597,14 @@ function updateCartBadge() {
 async function processPayment() {
     let method = document.querySelector('input[name="payMethod"]:checked').value;
     let phone = document.getElementById('payPhone').value;
-    
+
     if (method !== 'card') {
         if (!phone || !validateUgPhone(phone)) { showToast('Enter valid phone number'); return; }
         let network = detectNetwork(phone);
         if (method === 'mtn' && network !== 'MTN') { showToast('Enter MTN number'); return; }
         if (method === 'airtel' && network !== 'Airtel') { showToast('Enter Airtel number'); return; }
     }
-    
+
     let total = 0, items = [];
     for (let c of cartList) {
         let p = productsList.find(pr => pr.id === c.product_id);
@@ -600,11 +613,11 @@ async function processPayment() {
             items.push({ productId: c.product_id, qty: c.quantity });
         }
     }
-    
+
     try {
         showToast('Processing order...');
         await fetchCSRFToken();
-        
+
         const response = await apiCall('/orders', {
             method: 'POST',
             body: JSON.stringify({
@@ -613,9 +626,9 @@ async function processPayment() {
                 payment_method: method === 'mtn' ? 'MTN Mobile Money' : 'Airtel Money'
             })
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok && data.success) {
             showToast('Order placed!');
             await loadAllData();
@@ -633,7 +646,7 @@ async function processPayment() {
 async function renderUserOrders() {
     await loadAllData();
     let myOrders = ordersList.filter(o => o.user_id === currentUser?.id);
-    
+
     let html = '';
     for (let o of myOrders) {
         html += `<div class="card">
@@ -780,10 +793,10 @@ async function sendChat() {
     let input = document.getElementById('chatInput');
     let text = input.value.trim();
     if (!text) return;
-    
+
     addChatMessage('user', text);
     input.value = '';
-    
+
     try {
         const response = await fetch(`${API_BASE_URL}/chat/customer`, {
             method: 'POST',
@@ -879,7 +892,7 @@ function navigateTo(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
     document.getElementById(pageId).classList.remove('hidden');
     currentPage = pageId;
-    
+
     if (pageId === 'userShop') renderShop();
     if (pageId === 'userCart') renderCart();
     if (pageId === 'userOrders') renderUserOrders();
@@ -908,7 +921,7 @@ function setupNav() {
                 <div class="nav-item" onclick="navigateTo('userDashboard')">👤 Profile</div>`;
     }
     nav.innerHTML = html;
-    
+
     let chatWidget = document.getElementById('chatWidgetContainer');
     let whatsappWidget = document.getElementById('whatsappWidget');
     if (currentUser?.role === 'user') {
@@ -940,7 +953,7 @@ async function enterApp() {
     document.getElementById('headerGreeting').textContent = `Hi, ${currentUser.name.split(' ')[0]}`;
     setupNav();
     await loadAllData();
-    
+
     if (currentUser.role === 'admin') navigateTo('adminDashboard');
     else if (currentUser.role === 'agent') navigateTo('agentPanel');
     else navigateTo('userShop');
@@ -949,7 +962,7 @@ async function enterApp() {
 async function initApp() {
     setupPaymentMethodListener();
     await fetchCSRFToken();
-    
+
     let splash = document.getElementById('splashPage');
     setTimeout(() => {
         splash.style.opacity = '0';
