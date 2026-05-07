@@ -285,7 +285,22 @@ function clearTokens() {
     localStorage.removeItem('refresh_token');
 }
 
-// ======================== API CALLER WITH RETRY (No CSRF) ========================
+// ======================== REFRESH TOKEN LOCK ========================
+let isRefreshing = false;
+let failedQueue = [];
+
+function processQueue(error, token = null) {
+    failedQueue.forEach(prom => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve(token);
+        }
+    });
+    failedQueue = [];
+}
+
+// ======================== API CALLER WITH TIMEOUT ========================
 async function apiCall(endpoint, options = {}, retryCount = 0) {
     const token = getAccessToken();
     
@@ -298,23 +313,26 @@ async function apiCall(endpoint, options = {}, retryCount = 0) {
         headers['Authorization'] = `Bearer ${token}`;
     }
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
     try {
         setLoading(true);
 
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             ...options,
             headers,
-            credentials: 'omit'  // No cookies needed
+            credentials: 'omit',
+            signal: controller.signal
         });
 
-        // Handle token expiry
+        clearTimeout(timeoutId);
+
         if (response.status === 401) {
             const refreshed = await refreshToken();
             if (refreshed) {
-                // Retry the original request with new token
                 return apiCall(endpoint, options, retryCount + 1);
             } else {
-                // Token refresh failed, redirect to login
                 showToast('Session expired. Please login again.', true);
                 logout();
                 throw new Error('Session expired');
@@ -341,6 +359,13 @@ async function apiCall(endpoint, options = {}, retryCount = 0) {
         return { success: true };
 
     } catch (error) {
+        clearTimeout(timeoutId);
+        
+        if (error.name === 'AbortError') {
+            showToast('Request timeout. Please try again.', true);
+            throw new Error('Request timeout');
+        }
+        
         console.error('API Error:', error);
         
         if (retryCount < MAX_RETRIES && (!options.method || options.method === 'GET')) {
@@ -355,10 +380,18 @@ async function apiCall(endpoint, options = {}, retryCount = 0) {
     }
 }
 
-// ======================== TOKEN REFRESH ========================
+// ======================== TOKEN REFRESH WITH LOCK ========================
 async function refreshToken() {
     const refreshTokenValue = getRefreshToken();
     if (!refreshTokenValue) return false;
+    
+    if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+        });
+    }
+    
+    isRefreshing = true;
     
     try {
         const response = await fetch(`${API_BASE_URL}/refresh`, {
@@ -374,13 +407,17 @@ async function refreshToken() {
             const data = await response.json();
             if (data.access_token) {
                 setAccessToken(data.access_token);
+                processQueue(null, data.access_token);
                 return true;
             }
         }
+        processQueue(new Error('Refresh failed'), null);
         return false;
     } catch (error) {
-        console.error('Token refresh failed:', error);
+        processQueue(error, null);
         return false;
+    } finally {
+        isRefreshing = false;
     }
 }
 
@@ -478,7 +515,6 @@ async function handleLogin() {
         const data = await response.json();
 
         if (response.ok && data.success) {
-            // Store tokens
             setAccessToken(data.access_token);
             setRefreshToken(data.refresh_token);
             
@@ -574,7 +610,7 @@ function showLoginForm(){
     document.getElementById('forgotForm').classList.add('hidden');
 }
 
-// ======================== DATA REFRESH (Optimized) ========================
+// ======================== DATA REFRESH ========================
 async function refreshData(reason = 'general') {
     if (!AppState.user) return;
 
@@ -757,8 +793,15 @@ function updateCartBadge(){
     else{ badge.classList.add('hidden'); }
 }
 
-// ======================== ORDER FUNCTIONS ========================
+// ======================== ORDER FUNCTIONS WITH DUPLICATION PREVENTION ========================
+let isSubmittingOrder = false;
+
 async function processPayment() {
+    if (isSubmittingOrder) {
+        showToast('Order already processing...', false);
+        return;
+    }
+    
     var method = document.querySelector('input[name="payMethod"]:checked').value;
     var phone = document.getElementById('payPhone').value;
 
@@ -785,6 +828,7 @@ async function processPayment() {
     }
 
     try {
+        isSubmittingOrder = true;
         showToast('🔄 Processing order...');
 
         const data = await apiCall('/orders', {
@@ -813,6 +857,10 @@ async function processPayment() {
         }
     } catch(error) {
         showToast(error.message || '❌ Network error', true);
+    } finally {
+        setTimeout(() => {
+            isSubmittingOrder = false;
+        }, 3000);
     }
 }
 
@@ -1114,18 +1162,20 @@ function renderAgentConversations(){ document.getElementById('agentChatList').in
 function openAgentToManagerChat(){ showToast('Message manager coming soon'); }
 function showAddRiderModal(){ showToast('Add rider coming soon'); }
 function showAdminMenu(){ showModal('Admin Menu', '<div class="empty-state">Tools coming soon</div>'); }
+
+// ======================== POLLING INTERVAL (REDUCED) ========================
 function startPolling(){
     if(AppState.pollInterval) clearInterval(AppState.pollInterval);
     AppState.pollInterval = setInterval(function(){
         if(AppState.user && AppState.user.role === 'agent') renderAgentConversations();
-    }, 3000);
+    }, 10000);
 }
 
 // ======================== APP INITIALIZATION ========================
 async function enterApp(){
     document.getElementById('loginPage').classList.add('hidden');
     document.getElementById('appContainer').classList.remove('hidden');
-    document.getElementById('headerGreeting').textContent = 'Hi, ' + (AppState.user.name.split(' ')[0] || 'User');
+    document.getElementById('headerGreeting').textContent = 'Hi, ' + ((AppState.user?.name || 'User').split(' ')[0] || 'User');
 
     setupNav();
     startPolling();
@@ -1146,19 +1196,14 @@ async function enterApp(){
 async function initApp(){
     setupPaymentMethodListener();
     
-    // Check for existing token
     const token = getAccessToken();
     if (token) {
         try {
-            // Try to get user data with existing token
             const products = await apiCall('/products');
             if (products) {
-                // Token is valid, but we need user info
-                // You might want to add a /me endpoint
                 showToast('Welcome back!', false);
             }
         } catch(e) {
-            // Token invalid, clear it
             clearTokens();
         }
     }
