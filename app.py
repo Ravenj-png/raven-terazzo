@@ -120,11 +120,12 @@ FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://ravenj-png.github.io')
 ALLOWED_ORIGINS = [
     FRONTEND_URL,
     "http://localhost:5500",
-    "http://localhost:5000"
+    "http://localhost:5000",
+    "https://ravenj-png.github.io"
 ]
 
 CORS(app,
-     origins="*",
+     origins=ALLOWED_ORIGINS,
      supports_credentials=False,
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
      allow_headers=["Content-Type", "Authorization", "X-Requested-With", "Accept"],
