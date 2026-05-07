@@ -124,8 +124,8 @@ ALLOWED_ORIGINS = [
 ]
 
 CORS(app,
-     origins=ALLOWED_ORIGINS,
-     supports_credentials=true,
+     origins="*",
+     supports_credentials=False,
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
      allow_headers=["Content-Type", "Authorization", "X-Requested-With", "Accept"],
      expose_headers=["Content-Type"],
