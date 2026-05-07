@@ -21,17 +21,18 @@ app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', secrets.token_he
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=60)
 app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=7)
 app.config['JWT_TOKEN_LOCATION'] = ['cookies']
-app.config['JWT_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') == 'production'
+app.config['JWT_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
 app.config['JWT_COOKIE_HTTPONLY'] = True
 app.config['JWT_COOKIE_SAMESITE'] = 'Lax'
+app.config['JWT_COOKIE_CSRF_PROTECT'] = False  # Disable CSRF for JWT cookies
 
-# Database - Render will provide DATABASE_URL
+# Database
 database_url = os.environ.get('DATABASE_URL')
 if not database_url:
     database_url = 'sqlite:///tarazo.db'
     print("⚠️ Using SQLite (development)")
 else:
-    print(f"✅ Using PostgreSQL: {database_url[:30]}...")
+    print(f"✅ Using PostgreSQL")
 
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -118,17 +119,13 @@ class Order(db.Model):
     delivery_location = db.Column(db.String(500))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-# ==================== DATABASE INITIALIZATION (CRITICAL FOR RENDER) ====================
+# ==================== DATABASE INITIALIZATION ====================
 def init_database():
     """Initialize database tables and create default data"""
     try:
-        # Create all tables
         db.create_all()
         print("✅ Database tables created successfully")
-        
-        # Create default admin and products
         create_default_data()
-        
     except Exception as e:
         print(f"❌ Database initialization error: {e}")
         import traceback
@@ -137,7 +134,7 @@ def init_database():
 def create_default_data():
     """Create default admin and sample products"""
     try:
-        # Create admin
+        # Create admin if not exists
         admin_email = os.environ.get('ADMIN_EMAIL', 'admin@tarazo.com')
         admin = User.query.filter_by(email=admin_email).first()
         
@@ -152,21 +149,33 @@ def create_default_data():
             db.session.add(admin)
             print(f"✅ Admin created: {admin_email}")
         
+        # Create sample agents
+        agent_email = os.environ.get('AGENT_EMAIL', 'agent@tarazo.com')
+        agent = User.query.filter_by(email=agent_email).first()
+        
+        if not agent:
+            agent = User(
+                name='Support Agent',
+                email=agent_email,
+                phone='0772000000',
+                password_hash=ph.hash(os.environ.get('AGENT_PASSWORD', 'agent123')),
+                role='agent'
+            )
+            db.session.add(agent)
+            print(f"✅ Agent created: {agent_email}")
+        
         # Create sample products if none exist
         if Product.query.count() == 0:
             sample_products = [
                 {'name': 'Classic Floor Terrazzo', 'type': 'Floor', 'price': 150000, 'stock': 100, 
-                 'description': 'Premium floor terrazzo for living rooms and offices. Durable and elegant.',
-                 'image_url': 'https://placehold.co/600x400/1a5276/white?text=Floor+Terrazzo'},
+                 'description': 'Premium floor terrazzo for living rooms and offices.',
+                 'image_url': 'https://placehold.co/600x400/1a5276/white?text=Floor'},
                 {'name': 'Modern Wall Terrazzo', 'type': 'Wall', 'price': 120000, 'stock': 50,
-                 'description': 'Beautiful wall terrazzo tiles for accent walls. Easy to install.',
-                 'image_url': 'https://placehold.co/600x400/27ae60/white?text=Wall+Terrazzo'},
+                 'description': 'Beautiful wall terrazzo tiles for accent walls.',
+                 'image_url': 'https://placehold.co/600x400/27ae60/white?text=Wall'},
                 {'name': 'Premium Countertop', 'type': 'Countertop', 'price': 280000, 'stock': 30,
-                 'description': 'High-end countertop terrazzo for kitchens. Heat and stain resistant.',
+                 'description': 'High-end countertop terrazzo for kitchens.',
                  'image_url': 'https://placehold.co/600x400/f39c12/white?text=Countertop'},
-                {'name': 'Outdoor Terrazzo', 'type': 'Floor', 'price': 180000, 'stock': 75,
-                 'description': 'Weather-resistant outdoor terrazzo. Perfect for patios.',
-                 'image_url': 'https://placehold.co/600x400/154360/white?text=Outdoor'},
             ]
             for p in sample_products:
                 product = Product(**p)
@@ -180,8 +189,7 @@ def create_default_data():
         print(f"Error creating default data: {e}")
         db.session.rollback()
 
-# ==================== INITIALIZE DATABASE ON STARTUP ====================
-# This runs when the app starts (important for Render/Gunicorn)
+# Initialize database
 with app.app_context():
     init_database()
 
@@ -199,18 +207,7 @@ def get_csrf_token():
 def health():
     if request.method == 'OPTIONS':
         return make_response('', 200)
-    # Check database connection
-    try:
-        db.session.execute('SELECT 1')
-        db_status = 'connected'
-    except:
-        db_status = 'disconnected'
-    
-    return jsonify({
-        'status': 'healthy',
-        'database': db_status,
-        'timestamp': datetime.utcnow().isoformat()
-    })
+    return jsonify({'status': 'healthy', 'timestamp': datetime.utcnow().isoformat()})
 
 @app.route('/api/register', methods=['POST', 'OPTIONS'])
 def register():
@@ -223,7 +220,9 @@ def register():
         if not data.get('name') or not data.get('email') or not data.get('password'):
             return jsonify({'error': 'Missing required fields'}), 400
         
-        if User.query.filter_by(email=data['email']).first():
+        # Check if user exists
+        existing_user = User.query.filter_by(email=data['email']).first()
+        if existing_user:
             return jsonify({'error': 'Email already registered'}), 409
         
         user = User(
@@ -251,24 +250,29 @@ def login():
     
     try:
         data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
         
-        if not data.get('email') or not data.get('password'):
+        if not email or not password:
             return jsonify({'error': 'Email and password required'}), 400
         
-        user = User.query.filter_by(email=data['email']).first()
+        # Find user
+        user = User.query.filter_by(email=email).first()
         
         if not user:
-            return jsonify({'error': 'Invalid credentials'}), 401
+            return jsonify({'error': 'Invalid email or password'}), 401
         
+        # Verify password
         try:
-            ph.verify(user.password_hash, data['password'])
+            ph.verify(user.password_hash, password)
         except VerifyMismatchError:
-            return jsonify({'error': 'Invalid credentials'}), 401
+            return jsonify({'error': 'Invalid email or password'}), 401
         
-        # Convert ID to string for JWT identity
+        # Create tokens
         access_token = create_access_token(identity=str(user.id))
         refresh_token = create_refresh_token(identity=str(user.id))
         
+        # Create response
         response = jsonify({
             'success': True,
             'user': {
@@ -277,10 +281,11 @@ def login():
                 'email': user.email,
                 'role': user.role,
                 'phone': user.phone,
-                'address': user.address
+                'address': user.address or ''
             }
         })
         
+        # Set cookies
         set_access_cookies(response, access_token)
         set_refresh_cookies(response, refresh_token)
         
@@ -288,7 +293,17 @@ def login():
         
     except Exception as e:
         print(f"Login error: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/logout', methods=['POST', 'OPTIONS'])
+def logout():
+    if request.method == 'OPTIONS':
+        return make_response('', 200)
+    response = jsonify({'success': True, 'message': 'Logged out'})
+    unset_jwt_cookies(response)
+    return response
 
 @app.route('/api/products', methods=['GET', 'OPTIONS'])
 def get_products():
@@ -298,7 +313,7 @@ def get_products():
     return jsonify([{
         'id': p.id, 'name': p.name, 'type': p.type, 'price': p.price,
         'stock': p.stock, 'description': p.description or '',
-        'image_url': p.image_url or '', 'install_images': p.install_images or '[]'
+        'image_url': p.image_url or ''
     } for p in products])
 
 @app.route('/api/chat/customer', methods=['POST', 'OPTIONS'])
@@ -314,26 +329,17 @@ def customer_chat():
     elif 'delivery' in message:
         response = "🚚 Delivery takes 2-5 days. Free delivery on orders over UGX 500,000!"
     elif 'install' in message:
-        response = "🛠️ Professional installation recommended. Takes 3-7 days depending on area."
+        response = "🛠️ Professional installation recommended. Takes 3-7 days."
     elif 'payment' in message:
         response = "💳 We accept MTN Mobile Money, Airtel Money, and Bank Cards."
     elif 'hello' in message or 'hi' in message:
-        response = "Hello! Welcome to Tarazo Premium Terrazzo! How can I help you today? 😊"
+        response = "Hello! Welcome to Tarazo! How can I help you today? 😊"
     else:
-        response = "I can help you with prices, delivery, installation, and payment methods. What would you like to know?"
+        response = "I can help with prices, delivery, installation, and payments. What would you like to know?"
     
     return jsonify({'response': response})
 
 # ==================== PROTECTED ROUTES ====================
-@app.route('/api/logout', methods=['POST', 'OPTIONS'])
-@jwt_required()
-def logout():
-    if request.method == 'OPTIONS':
-        return make_response('', 200)
-    response = jsonify({'success': True, 'message': 'Logged out successfully'})
-    unset_jwt_cookies(response)
-    return response
-
 @app.route('/api/cart', methods=['GET', 'POST', 'OPTIONS'])
 @jwt_required()
 def handle_cart():
@@ -344,7 +350,11 @@ def handle_cart():
     
     if request.method == 'GET':
         cart_items = CartItem.query.filter_by(user_id=user_id).all()
-        return jsonify([{'id': c.id, 'product_id': c.product_id, 'quantity': c.quantity} for c in cart_items])
+        return jsonify([{
+            'id': c.id, 
+            'product_id': c.product_id, 
+            'quantity': c.quantity
+        } for c in cart_items])
     
     elif request.method == 'POST':
         data = request.get_json()
@@ -359,7 +369,7 @@ def handle_cart():
             db.session.add(cart_item)
         
         db.session.commit()
-        return jsonify({'success': True, 'message': 'Added to cart'}), 201
+        return jsonify({'success': True}), 201
 
 @app.route('/api/cart/<int:product_id>', methods=['DELETE', 'OPTIONS'])
 @jwt_required()
@@ -373,7 +383,7 @@ def remove_from_cart(product_id):
         db.session.delete(cart_item)
         db.session.commit()
     
-    return jsonify({'success': True, 'message': 'Removed from cart'})
+    return jsonify({'success': True})
 
 @app.route('/api/orders', methods=['GET', 'POST', 'OPTIONS'])
 @jwt_required()
@@ -386,11 +396,9 @@ def handle_orders():
     if request.method == 'GET':
         orders = Order.query.filter_by(user_id=user_id).order_by(Order.created_at.desc()).all()
         return jsonify([{
-            'id': o.id, 'user_id': o.user_id, 'items': json.loads(o.items) if o.items else [],
-            'total': o.total, 'status': o.status, 'payment_method': o.payment_method,
-            'rider_name': o.rider_name, 'rider_phone': o.rider_phone,
-            'rider_vehicle': o.rider_vehicle, 'delivery_location': o.delivery_location,
-            'created_at': o.created_at.isoformat()
+            'id': o.id, 'total': o.total, 'status': o.status,
+            'payment_method': o.payment_method, 'rider_name': o.rider_name,
+            'rider_phone': o.rider_phone, 'created_at': o.created_at.isoformat()
         } for o in orders])
     
     elif request.method == 'POST':
@@ -405,6 +413,7 @@ def handle_orders():
         db.session.add(order)
         db.session.commit()
         
+        # Clear cart
         CartItem.query.filter_by(user_id=user_id).delete()
         db.session.commit()
         
@@ -420,7 +429,7 @@ def update_order_status(order_id):
     order = Order.query.get_or_404(order_id)
     order.status = data.get('status', order.status)
     db.session.commit()
-    return jsonify({'success': True, 'message': 'Status updated'})
+    return jsonify({'success': True})
 
 @app.route('/api/orders/<int:order_id>/assign', methods=['PUT', 'OPTIONS'])
 @jwt_required()
@@ -435,7 +444,7 @@ def assign_rider(order_id):
     order.rider_vehicle = data.get('rider_vehicle')
     order.delivery_location = data.get('delivery_location')
     db.session.commit()
-    return jsonify({'success': True, 'message': 'Rider assigned'})
+    return jsonify({'success': True})
 
 # ==================== ADMIN ROUTES ====================
 @app.route('/api/admin/stats', methods=['GET', 'OPTIONS'])
@@ -478,51 +487,23 @@ def admin_orders():
     
     orders = Order.query.order_by(Order.created_at.desc()).all()
     return jsonify([{
-        'id': o.id, 'user_id': o.user_id, 'total': o.total, 'status': o.status,
-        'payment_method': o.payment_method, 'created_at': o.created_at.isoformat()
+        'id': o.id, 'user_id': o.user_id, 'total': o.total, 
+        'status': o.status, 'created_at': o.created_at.isoformat()
     } for o in orders])
-
-@app.route('/api/admin/users', methods=['GET', 'OPTIONS'])
-@jwt_required()
-def admin_users():
-    if request.method == 'OPTIONS':
-        return make_response('', 200)
-    
-    user_id = int(get_jwt_identity())
-    user = User.query.get(user_id)
-    
-    if not user or user.role != 'admin':
-        return jsonify({'error': 'Admin access required'}), 403
-    
-    users = User.query.all()
-    return jsonify([{
-        'id': u.id, 'name': u.name, 'email': u.email,
-        'phone': u.phone, 'role': u.role, 'created_at': u.created_at.isoformat()
-    } for u in users])
-
-# ==================== ERROR HANDLERS ====================
-@app.errorhandler(404)
-def not_found(e):
-    return jsonify({'error': 'Resource not found'}), 404
-
-@app.errorhandler(500)
-def server_error(e):
-    print(f"Server error: {e}")
-    return jsonify({'error': 'Internal server error'}), 500
 
 # ==================== MAIN ====================
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    is_production = os.environ.get('FLASK_ENV') == 'production'
-    
     print(f"""
     ╔══════════════════════════════════════════════════════════╗
     ║              🏛️  TARAZO BACKEND API  🏛️                 ║
     ╠══════════════════════════════════════════════════════════╣
-    ║  Environment: {'PRODUCTION' if is_production else 'DEVELOPMENT':<40} ║
-    ║  Port: {port:<40} ║
-    ║  Database: {'PostgreSQL' if database_url else 'SQLite':<40} ║
+    ║  Port: {port}                                              ║
+    ║  Status: RUNNING                                          ║
+    ║                                                          ║
+    ║  Test Credentials:                                       ║
+    ║  Admin: admin@tarazo.com / admin123                      ║
+    ║  Agent: agent@tarazo.com / agent123                      ║
     ╚══════════════════════════════════════════════════════════╝
     """)
-    
-    app.run(host='0.0.0.0', port=port, debug=not is_production)
+    app.run(host='0.0.0.0', port=port, debug=False)
