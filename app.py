@@ -84,7 +84,7 @@ ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', 'http://localhost:5500,http:
 # In your Flask app.py, update CORS configuration:
 CORS(app, 
      resources={r"/api/*": {
-         "origins": ["https://raven-jpeng.github.io", "http://localhost:5500", "http://localhost:5000"],
+         "origins": ["https://ravenj-png.github.io", "http://localhost:5500", "http://localhost:5000"],
          "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
          "allow_headers": ["Content-Type", "Authorization"],
          "supports_credentials": True,
