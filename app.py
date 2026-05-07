@@ -21,14 +21,25 @@ app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', secrets.token_he
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=60)
 app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=7)
 app.config['JWT_TOKEN_LOCATION'] = ['cookies']
-app.config['JWT_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') == 'production'  # True in production
+app.config['JWT_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') == 'production'
 app.config['JWT_COOKIE_HTTPONLY'] = True
 app.config['JWT_COOKIE_SAMESITE'] = 'Lax'
 
-# Database
-database_url = os.environ.get('DATABASE_URL', 'sqlite:///tarazo.db')
+# Database - Render will provide DATABASE_URL
+database_url = os.environ.get('DATABASE_URL')
+if not database_url:
+    database_url = 'sqlite:///tarazo.db'
+    print("⚠️ Using SQLite (development)")
+else:
+    print(f"✅ Using PostgreSQL: {database_url[:30]}...")
+
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_size': 10,
+    'pool_recycle': 300,
+    'pool_pre_ping': True
+}
 
 # CSRF Configuration
 app.config['WTF_CSRF_ENABLED'] = True
@@ -37,8 +48,7 @@ app.config['WTF_CSRF_HEADERS'] = ['X-CSRFToken']
 app.config['WTF_CSRF_TIME_LIMIT'] = 3600
 app.config['WTF_CSRF_SSL_STRICT'] = False
 
-# ==================== CORS - CLEAN CONFIGURATION ====================
-# NO manual after_request headers - let Flask-CORS handle everything
+# ==================== CORS ====================
 CORS(app, 
      origins=[
          "http://localhost:5500",
@@ -108,8 +118,24 @@ class Order(db.Model):
     delivery_location = db.Column(db.String(500))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-# ==================== CREATE DEFAULT DATA ====================
+# ==================== DATABASE INITIALIZATION (CRITICAL FOR RENDER) ====================
+def init_database():
+    """Initialize database tables and create default data"""
+    try:
+        # Create all tables
+        db.create_all()
+        print("✅ Database tables created successfully")
+        
+        # Create default admin and products
+        create_default_data()
+        
+    except Exception as e:
+        print(f"❌ Database initialization error: {e}")
+        import traceback
+        traceback.print_exc()
+
 def create_default_data():
+    """Create default admin and sample products"""
     try:
         # Create admin
         admin_email = os.environ.get('ADMIN_EMAIL', 'admin@tarazo.com')
@@ -126,24 +152,40 @@ def create_default_data():
             db.session.add(admin)
             print(f"✅ Admin created: {admin_email}")
         
-        # Create sample products
+        # Create sample products if none exist
         if Product.query.count() == 0:
             sample_products = [
-                {'name': 'Classic Floor Terrazzo', 'type': 'Floor', 'price': 150000, 'stock': 100, 'description': 'Premium floor terrazzo for living rooms and offices', 'image_url': 'https://placehold.co/600x400/1a5276/white?text=Floor+Terrazzo'},
-                {'name': 'Modern Wall Terrazzo', 'type': 'Wall', 'price': 120000, 'stock': 50, 'description': 'Beautiful wall terrazzo tiles for accent walls', 'image_url': 'https://placehold.co/600x400/27ae60/white?text=Wall+Terrazzo'},
-                {'name': 'Premium Countertop', 'type': 'Countertop', 'price': 280000, 'stock': 30, 'description': 'High-end countertop terrazzo for kitchens', 'image_url': 'https://placehold.co/600x400/f39c12/white?text=Countertop'},
+                {'name': 'Classic Floor Terrazzo', 'type': 'Floor', 'price': 150000, 'stock': 100, 
+                 'description': 'Premium floor terrazzo for living rooms and offices. Durable and elegant.',
+                 'image_url': 'https://placehold.co/600x400/1a5276/white?text=Floor+Terrazzo'},
+                {'name': 'Modern Wall Terrazzo', 'type': 'Wall', 'price': 120000, 'stock': 50,
+                 'description': 'Beautiful wall terrazzo tiles for accent walls. Easy to install.',
+                 'image_url': 'https://placehold.co/600x400/27ae60/white?text=Wall+Terrazzo'},
+                {'name': 'Premium Countertop', 'type': 'Countertop', 'price': 280000, 'stock': 30,
+                 'description': 'High-end countertop terrazzo for kitchens. Heat and stain resistant.',
+                 'image_url': 'https://placehold.co/600x400/f39c12/white?text=Countertop'},
+                {'name': 'Outdoor Terrazzo', 'type': 'Floor', 'price': 180000, 'stock': 75,
+                 'description': 'Weather-resistant outdoor terrazzo. Perfect for patios.',
+                 'image_url': 'https://placehold.co/600x400/154360/white?text=Outdoor'},
             ]
             for p in sample_products:
                 product = Product(**p)
                 db.session.add(product)
-            print(f"✅ {len(sample_products)} products created")
+            print(f"✅ {len(sample_products)} sample products created")
         
         db.session.commit()
+        print("✅ Default data created successfully")
+        
     except Exception as e:
-        print(f"Error creating data: {e}")
+        print(f"Error creating default data: {e}")
         db.session.rollback()
 
-# ==================== PUBLIC ROUTES (No auth required) ====================
+# ==================== INITIALIZE DATABASE ON STARTUP ====================
+# This runs when the app starts (important for Render/Gunicorn)
+with app.app_context():
+    init_database()
+
+# ==================== PUBLIC ROUTES ====================
 @app.route('/api/csrf-token', methods=['GET', 'OPTIONS'])
 def get_csrf_token():
     if request.method == 'OPTIONS':
@@ -157,7 +199,18 @@ def get_csrf_token():
 def health():
     if request.method == 'OPTIONS':
         return make_response('', 200)
-    return jsonify({'status': 'healthy', 'timestamp': datetime.utcnow().isoformat()})
+    # Check database connection
+    try:
+        db.session.execute('SELECT 1')
+        db_status = 'connected'
+    except:
+        db_status = 'disconnected'
+    
+    return jsonify({
+        'status': 'healthy',
+        'database': db_status,
+        'timestamp': datetime.utcnow().isoformat()
+    })
 
 @app.route('/api/register', methods=['POST', 'OPTIONS'])
 def register():
@@ -212,7 +265,7 @@ def login():
         except VerifyMismatchError:
             return jsonify({'error': 'Invalid credentials'}), 401
         
-        # IMPORTANT: Convert ID to string for JWT identity
+        # Convert ID to string for JWT identity
         access_token = create_access_token(identity=str(user.id))
         refresh_token = create_refresh_token(identity=str(user.id))
         
@@ -271,9 +324,9 @@ def customer_chat():
     
     return jsonify({'response': response})
 
-# ==================== PROTECTED ROUTES (Auth required) ====================
+# ==================== PROTECTED ROUTES ====================
 @app.route('/api/logout', methods=['POST', 'OPTIONS'])
-@jwt_required()  # NOT optional
+@jwt_required()
 def logout():
     if request.method == 'OPTIONS':
         return make_response('', 200)
@@ -282,12 +335,12 @@ def logout():
     return response
 
 @app.route('/api/cart', methods=['GET', 'POST', 'OPTIONS'])
-@jwt_required()  # NOT optional
+@jwt_required()
 def handle_cart():
     if request.method == 'OPTIONS':
         return make_response('', 200)
     
-    user_id = int(get_jwt_identity())  # Convert string to int
+    user_id = int(get_jwt_identity())
     
     if request.method == 'GET':
         cart_items = CartItem.query.filter_by(user_id=user_id).all()
@@ -309,7 +362,7 @@ def handle_cart():
         return jsonify({'success': True, 'message': 'Added to cart'}), 201
 
 @app.route('/api/cart/<int:product_id>', methods=['DELETE', 'OPTIONS'])
-@jwt_required()  # NOT optional
+@jwt_required()
 def remove_from_cart(product_id):
     if request.method == 'OPTIONS':
         return make_response('', 200)
@@ -323,7 +376,7 @@ def remove_from_cart(product_id):
     return jsonify({'success': True, 'message': 'Removed from cart'})
 
 @app.route('/api/orders', methods=['GET', 'POST', 'OPTIONS'])
-@jwt_required()  # NOT optional
+@jwt_required()
 def handle_orders():
     if request.method == 'OPTIONS':
         return make_response('', 200)
@@ -352,14 +405,13 @@ def handle_orders():
         db.session.add(order)
         db.session.commit()
         
-        # Clear cart after order
         CartItem.query.filter_by(user_id=user_id).delete()
         db.session.commit()
         
         return jsonify({'success': True, 'order_id': order.id}), 201
 
 @app.route('/api/orders/<int:order_id>/status', methods=['PUT', 'OPTIONS'])
-@jwt_required()  # NOT optional
+@jwt_required()
 def update_order_status(order_id):
     if request.method == 'OPTIONS':
         return make_response('', 200)
@@ -371,7 +423,7 @@ def update_order_status(order_id):
     return jsonify({'success': True, 'message': 'Status updated'})
 
 @app.route('/api/orders/<int:order_id>/assign', methods=['PUT', 'OPTIONS'])
-@jwt_required()  # NOT optional
+@jwt_required()
 def assign_rider(order_id):
     if request.method == 'OPTIONS':
         return make_response('', 200)
@@ -385,9 +437,9 @@ def assign_rider(order_id):
     db.session.commit()
     return jsonify({'success': True, 'message': 'Rider assigned'})
 
-# ==================== ADMIN ROUTES (Auth + Admin role required) ====================
+# ==================== ADMIN ROUTES ====================
 @app.route('/api/admin/stats', methods=['GET', 'OPTIONS'])
-@jwt_required()  # NOT optional
+@jwt_required()
 def admin_stats():
     if request.method == 'OPTIONS':
         return make_response('', 200)
@@ -413,7 +465,7 @@ def admin_stats():
     })
 
 @app.route('/api/admin/orders', methods=['GET', 'OPTIONS'])
-@jwt_required()  # NOT optional
+@jwt_required()
 def admin_orders():
     if request.method == 'OPTIONS':
         return make_response('', 200)
@@ -431,7 +483,7 @@ def admin_orders():
     } for o in orders])
 
 @app.route('/api/admin/users', methods=['GET', 'OPTIONS'])
-@jwt_required()  # NOT optional
+@jwt_required()
 def admin_users():
     if request.method == 'OPTIONS':
         return make_response('', 200)
@@ -460,29 +512,16 @@ def server_error(e):
 
 # ==================== MAIN ====================
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        create_default_data()
-        print("✅ Database initialized")
-    
     port = int(os.environ.get('PORT', 5000))
     is_production = os.environ.get('FLASK_ENV') == 'production'
     
     print(f"""
     ╔══════════════════════════════════════════════════════════╗
-    ║                                                          ║
     ║              🏛️  TARAZO BACKEND API  🏛️                 ║
-    ║                                                          ║
     ╠══════════════════════════════════════════════════════════╣
-    ║  Server:    http://localhost:{port}                      ║
     ║  Environment: {'PRODUCTION' if is_production else 'DEVELOPMENT':<40} ║
-    ║  CORS:      Enabled for configured origins              ║
-    ║  CSRF:      Enabled                                     ║
-    ║  JWT:       Cookie-based, {'Secure' if is_production else 'HTTP Only':<40} ║
-    ║                                                          ║
-    ║  📡 Test Credentials:                                    ║
-    ║  Admin:     admin@tarazo.com / admin123                 ║
-    ║                                                          ║
+    ║  Port: {port:<40} ║
+    ║  Database: {'PostgreSQL' if database_url else 'SQLite':<40} ║
     ╚══════════════════════════════════════════════════════════╝
     """)
     
