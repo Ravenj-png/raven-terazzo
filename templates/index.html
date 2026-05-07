@@ -215,12 +215,13 @@ tr:last-child td{border-bottom:none}
 <div id="modalOverlay" class="modal-overlay hidden" onclick="closeModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header" id="modalTitle">Title</div><div id="modalBody"></div><button class="btn btn-outline" style="margin-top:15px;" onclick="hideModal()">❌ Close</button></div></div>
 
 <script>
-// ======================== APP STATE ========================
+// ======================== APP STATE (Single Source of Truth) ========================
 const AppState = {
     user: null,
     products: [],
     cart: [],
     orders: [],
+    notifications: [],
     chatOpen: false,
     pollInterval: null,
     currentPage: '',
@@ -251,10 +252,10 @@ function setLoading(isLoading) {
 
 // ======================== API CONSTANTS ========================
 const API_BASE_URL = 'https://raven-terazzo.onrender.com/api';
-const MAX_RETRIES = 2;
+const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
 
-// ======================== TOKEN MANAGEMENT ========================
+// ======================== TOKEN MANAGEMENT (No CSRF) ========================
 function getAccessToken() {
     return localStorage.getItem('access_token');
 }
@@ -284,7 +285,7 @@ function clearTokens() {
     localStorage.removeItem('refresh_token');
 }
 
-// ======================== API CALLER (NO CSRF) ========================
+// ======================== REFRESH TOKEN LOCK ========================
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -299,45 +300,7 @@ function processQueue(error, token = null) {
     failedQueue = [];
 }
 
-async function refreshToken() {
-    const refreshTokenValue = getRefreshToken();
-    if (!refreshTokenValue) return false;
-    
-    if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-            failedQueue.push({ resolve, reject });
-        });
-    }
-    
-    isRefreshing = true;
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/refresh`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${refreshTokenValue}`
-            }
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            if (data.access_token) {
-                setAccessToken(data.access_token);
-                processQueue(null, data.access_token);
-                return true;
-            }
-        }
-        processQueue(new Error('Refresh failed'), null);
-        return false;
-    } catch (error) {
-        processQueue(error, null);
-        return false;
-    } finally {
-        isRefreshing = false;
-    }
-}
-
+// ======================== API CALLER WITH TIMEOUT ========================
 async function apiCall(endpoint, options = {}, retryCount = 0) {
     const token = getAccessToken();
     
@@ -359,6 +322,7 @@ async function apiCall(endpoint, options = {}, retryCount = 0) {
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             ...options,
             headers,
+            credentials: 'omit',
             signal: controller.signal
         });
 
@@ -366,14 +330,11 @@ async function apiCall(endpoint, options = {}, retryCount = 0) {
 
         if (response.status === 401) {
             const refreshed = await refreshToken();
-            if (refreshed && retryCount < MAX_RETRIES) {
+            if (refreshed) {
                 return apiCall(endpoint, options, retryCount + 1);
             } else {
-                clearTokens();
-                AppState.user = null;
-                document.getElementById('appContainer').classList.add('hidden');
-                document.getElementById('loginPage').classList.remove('hidden');
                 showToast('Session expired. Please login again.', true);
+                logout();
                 throw new Error('Session expired');
             }
         }
@@ -405,7 +366,10 @@ async function apiCall(endpoint, options = {}, retryCount = 0) {
             throw new Error('Request timeout');
         }
         
+        console.error('API Error:', error);
+        
         if (retryCount < MAX_RETRIES && (!options.method || options.method === 'GET')) {
+            console.log(`Retrying... (${retryCount + 1}/${MAX_RETRIES})`);
             await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
             return apiCall(endpoint, options, retryCount + 1);
         }
@@ -413,6 +377,47 @@ async function apiCall(endpoint, options = {}, retryCount = 0) {
         throw error;
     } finally {
         setLoading(false);
+    }
+}
+
+// ======================== TOKEN REFRESH WITH LOCK ========================
+async function refreshToken() {
+    const refreshTokenValue = getRefreshToken();
+    if (!refreshTokenValue) return false;
+    
+    if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+        });
+    }
+    
+    isRefreshing = true;
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/refresh`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${refreshTokenValue}`
+            },
+            credentials: 'omit'
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.access_token) {
+                setAccessToken(data.access_token);
+                processQueue(null, data.access_token);
+                return true;
+            }
+        }
+        processQueue(new Error('Refresh failed'), null);
+        return false;
+    } catch (error) {
+        processQueue(error, null);
+        return false;
+    } finally {
+        isRefreshing = false;
     }
 }
 
@@ -431,6 +436,7 @@ function safeJsonParse(data, defaultValue = []) {
     try {
         return JSON.parse(data || "[]");
     } catch(e) {
+        console.warn('JSON parse failed:', e);
         return defaultValue;
     }
 }
@@ -469,7 +475,7 @@ function validateUgPhone(phone){
     return p.length >= 9 && p.length <= 12; 
 }
 
-// ======================== PRODUCT FUNCTIONS ========================
+// ======================== PRODUCT CARD RENDERER ========================
 function renderProductCard(product) {
     var stockClass = ((product.stock || 0) < 5) ? 'low' : '';
     var imageUrl = escapeHtml(product.image_url || 'https://placehold.co/600x400/1a5276/white?text=TARAZO');
@@ -503,29 +509,26 @@ async function handleLogin() {
         const response = await fetch(`${API_BASE_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email.trim(), password: password })
+            body: JSON.stringify({ email, password })
         });
 
         const data = await response.json();
 
         if (response.ok && data.success) {
-            if (data.access_token) setAccessToken(data.access_token);
-            if (data.refresh_token) setRefreshToken(data.refresh_token);
+            setAccessToken(data.access_token);
+            setRefreshToken(data.refresh_token);
             
             AppState.user = data.user;
             if (remember) localStorage.setItem('tarazo_email', email);
             else localStorage.removeItem('tarazo_email');
 
             showToast('✅ Login successful!');
-            await loadProducts();
-            await loadCart();
-            await loadOrders();
+            await refreshData('login');
             enterApp();
         } else {
             showToast(data.error || '❌ Login failed', true);
         }
     } catch (error) {
-        console.error('Login error:', error);
         showToast(error.message || '❌ Login failed', true);
     }
 }
@@ -571,13 +574,7 @@ async function handleRegister() {
 
 async function logout() {
     try {
-        const token = getAccessToken();
-        if (token) {
-            await fetch(`${API_BASE_URL}/logout`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-        }
+        await apiCall('/logout', { method: 'POST' });
     } catch(e) {}
     
     clearTokens();
@@ -613,60 +610,45 @@ function showLoginForm(){
     document.getElementById('forgotForm').classList.add('hidden');
 }
 
-// ======================== DATA LOADING ========================
-async function loadProducts() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/products`);
-        if (response.ok) {
-            AppState.products = await response.json();
-            renderShop();
-        }
-    } catch(e) {
-        console.error('Error loading products:', e);
-        AppState.products = [];
-    }
-}
-
-async function loadCart() {
+// ======================== DATA REFRESH ========================
+async function refreshData(reason = 'general') {
     if (!AppState.user) return;
+
     try {
-        const token = getAccessToken();
-        const response = await fetch(`${API_BASE_URL}/cart`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (response.ok) {
-            AppState.cart = await response.json();
+        AppState.products = await apiCall('/products');
+
+        if (reason === 'login' || reason === 'cart' || reason === 'order') {
+            try {
+                AppState.cart = await apiCall('/cart');
+            } catch(e) { AppState.cart = []; }
+
+            try {
+                AppState.orders = await apiCall('/orders');
+            } catch(e) { AppState.orders = []; }
+
             updateCartBadge();
-            if (AppState.currentPage === 'userCart') renderCart();
         }
-    } catch(e) {
-        AppState.cart = [];
-    }
-}
-
-async function loadOrders() {
-    if (!AppState.user) return;
-    try {
-        const token = getAccessToken();
-        const response = await fetch(`${API_BASE_URL}/orders`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (response.ok) {
-            AppState.orders = await response.json();
-            if (AppState.currentPage === 'userOrders') renderUserOrders();
-        }
-    } catch(e) {
-        AppState.orders = [];
+    } catch (error) {
+        console.error('Error refreshing data:', error);
     }
 }
 
 // ======================== SHOP FUNCTIONS ========================
 async function renderShop(filter = 'all') {
+    if (AppState.products.length === 0) {
+        try {
+            AppState.products = await apiCall('/products');
+        } catch(error) {
+            document.getElementById('shopGrid').innerHTML = '<div class="empty-state">❌ Failed to load products</div>';
+            return;
+        }
+    }
+
     let products = AppState.products;
     if (filter !== 'all') {
         products = AppState.products.filter(p => p.type && p.type.toLowerCase().includes(filter.toLowerCase()));
     }
-    
+
     var html = '';
     for(var j = 0; j < products.length; j++) {
         html += renderProductCard(products[j]);
@@ -697,9 +679,21 @@ async function showProductDetail(id){
     try {
         var p = AppState.products.find(function(pr){ return pr.id === id; });
         if(!p) return;
-        
+
         var stockColor = ((p.stock || 0) < 5) ? 'var(--red)' : 'var(--green)';
         var stockMsg = ((p.stock || 0) < 5) ? '⚠️ Only ' + (p.stock || 0) + ' left!' : '✅ In Stock (' + (p.stock || 0) + ')';
+
+        var installHtml = '';
+        if(p.install_images){
+            var installs = safeJsonParse(p.install_images);
+            if(installs && installs.length > 0){
+                installHtml = '<div class="card-title" style="font-size:16px;margin-bottom:10px;">🏠 Installation Gallery</div><div class="install-gallery">';
+                for(var i = 0; i < installs.length; i++) {
+                    installHtml += '<img src="' + escapeHtml(installs[i]) + '" alt="Installation" onclick="window.open(this.src)">';
+                }
+                installHtml += '</div>';
+            }
+        }
 
         document.getElementById('detailContent').innerHTML = 
             '<img src="' + escapeHtml(p.image_url || 'https://placehold.co/600x400/1a5276/white?text=TARAZO') + '" class="detail-hero">' +
@@ -709,6 +703,7 @@ async function showProductDetail(id){
                 '<div class="product-price" style="font-size:28px;">UGX ' + (p.price || 0).toLocaleString() + '</div>' +
                 '<div style="color:' + stockColor + ';font-weight:700;margin:15px 0;">' + stockMsg + '</div>' +
                 '<p>' + escapeHtml(p.description || 'No description') + '</p>' +
+                installHtml +
                 '<button class="btn btn-green no-disable" style="margin-top:20px;" onclick="addToCart(' + p.id + ')">🛒 Add to Cart</button>' +
                 '<button class="btn btn-outline no-disable" style="margin-top:10px;" onclick="navigateTo(\'userShop\')">⬅️ Back</button>' +
             '</div>';
@@ -723,22 +718,13 @@ async function addToCart(productId) {
     if (!AppState.user) { showToast('Please login first', true); return; }
 
     try {
-        const token = getAccessToken();
-        const response = await fetch(`${API_BASE_URL}/cart`, {
+        await apiCall('/cart', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
             body: JSON.stringify({ product_id: productId, quantity: 1 })
         });
-        
-        if (response.ok) {
-            await loadCart();
-            showToast('✅ Added to cart!');
-        } else {
-            showToast('❌ Failed to add to cart', true);
-        }
+        await refreshData('cart');
+        showToast('✅ Added to cart!');
+        if (AppState.currentPage === 'userCart') renderCart();
     } catch(error) {
         showToast(error.message || '❌ Failed to add to cart', true);
     }
@@ -746,17 +732,10 @@ async function addToCart(productId) {
 
 async function removeFromCart(cartItemId) {
     try {
-        const token = getAccessToken();
-        const response = await fetch(`${API_BASE_URL}/cart/${cartItemId}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (response.ok) {
-            await loadCart();
-            renderCart();
-            showToast('✅ Removed from cart');
-        }
+        await apiCall(`/cart/${cartItemId}`, { method: 'DELETE' });
+        await refreshData('cart');
+        renderCart();
+        showToast('✅ Removed from cart');
     } catch(error) {
         showToast(error.message || '❌ Failed to remove', true);
     }
@@ -764,17 +743,17 @@ async function removeFromCart(cartItemId) {
 
 async function renderCart() {
     if (!AppState.user) return;
-    
+
     if(!AppState.cart || AppState.cart.length === 0){
         document.getElementById('cartItems').innerHTML = '<div class="empty-state"><div class="icon">🛒</div>Your cart is empty</div>';
         document.getElementById('cartSummary').classList.add('hidden');
         return;
     }
-    
+
     var total = 0, html = '';
     for(var i = 0; i < AppState.cart.length; i++){
         var c = AppState.cart[i];
-        var p = AppState.products.find(function(pr){ return pr.id === c.product_id; });
+        var p = (AppState.products || []).find(function(pr){ return pr.id === c.product_id; });
         if(p){
             var itemTotal = (p.price || 0) * (c.quantity || 0);
             total += itemTotal;
@@ -814,7 +793,7 @@ function updateCartBadge(){
     else{ badge.classList.add('hidden'); }
 }
 
-// ======================== ORDER FUNCTIONS ========================
+// ======================== ORDER FUNCTIONS WITH DUPLICATION PREVENTION ========================
 let isSubmittingOrder = false;
 
 async function processPayment() {
@@ -852,13 +831,8 @@ async function processPayment() {
         isSubmittingOrder = true;
         showToast('🔄 Processing order...');
 
-        const token = getAccessToken();
-        const response = await fetch(`${API_BASE_URL}/orders`, {
+        const data = await apiCall('/orders', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
             body: JSON.stringify({ 
                 items: items, 
                 total: total, 
@@ -866,12 +840,9 @@ async function processPayment() {
             })
         });
 
-        const data = await response.json();
-
-        if(response.ok && data.success){
+        if(data.success){
             showToast('✅ Order placed successfully!');
-            await loadCart();
-            await loadOrders();
+            await refreshData('order');
             navigateTo('userOrders');
             renderUserOrders();
             showModal('✅ Payment Successful', 
@@ -897,7 +868,7 @@ async function renderUserOrders() {
     if (!AppState.user) return;
 
     var myOrders = (AppState.orders || []).filter(function(o){ return o.user_id === AppState.user.id; });
-    
+
     var html = '';
     if(myOrders.length === 0) {
         html = '<div class="empty-state">📦 No orders yet</div>';
@@ -911,7 +882,7 @@ async function renderUserOrders() {
                             '<div><strong>📦 Order #' + (o.id || 0) + '</strong></div>' +
                             '<div class="status-badge status-' + escapeHtml(o.status || 'pending') + '">' + escapeHtml(o.status || 'pending') + '</div>' +
                         '</div>' +
-                        '<div>' + new Date(o.created_at).toLocaleDateString() + ' - ' + itemsArray.length + ' item(s)</div>' +
+                        '<div>' + (o.date || 'N/A') + ' - ' + itemsArray.length + ' item(s)</div>' +
                         '<div style="font-size:18px;font-weight:800;margin:10px 0;">UGX ' + ((o.total || 0).toLocaleString()) + '</div>' +
                         '<div style="background:#e8f5e9;padding:12px;border-radius:12px;">' +
                             '<div style="font-weight:700;">🚚 DELIVERY</div>' +
@@ -950,17 +921,11 @@ async function renderAdminDashboard() {
     if (!AppState.user || AppState.user.role !== 'admin') return;
 
     try {
-        const token = getAccessToken();
-        const response = await fetch(`${API_BASE_URL}/admin/stats`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (response.ok) {
-            const stats = await response.json();
-            document.getElementById('adminTodaySales').textContent = 'UGX ' + (stats.today_sales || 0).toLocaleString();
-            document.getElementById('adminPendingOrders').textContent = stats.pending_orders || 0;
-            document.getElementById('adminTotalProducts').textContent = stats.total_products || 0;
-            document.getElementById('adminLowStock').textContent = stats.low_stock || 0;
-        }
+        const stats = await apiCall('/admin/stats');
+        document.getElementById('adminTodaySales').textContent = 'UGX ' + (stats.today_sales || 0).toLocaleString();
+        document.getElementById('adminPendingOrders').textContent = stats.pending_orders || 0;
+        document.getElementById('adminTotalProducts').textContent = stats.total_products || 0;
+        document.getElementById('adminLowStock').textContent = stats.low_stock || 0;
     } catch(error) {
         console.error('Error loading admin stats:', error);
     }
@@ -969,29 +934,18 @@ async function renderAdminDashboard() {
 async function renderAdminOrders() {
     if (!AppState.user || AppState.user.role !== 'admin') return;
 
-    try {
-        const token = getAccessToken();
-        const response = await fetch(`${API_BASE_URL}/admin/orders`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (response.ok) {
-            const orders = await response.json();
-            var html = '';
-            for(var i = 0; i < orders.length; i++){
-                var o = orders[i];
-                html += '<div class="list-item" onclick="viewTransactionDetails(' + (o.id || 0) + ')">' +
-                            '<div class="list-info">' +
-                                '<h4>📦 Transaction #' + (o.id || 0) + '</h4>' +
-                                '<p>UGX ' + ((o.total || 0).toLocaleString()) + ' - ' + escapeHtml(o.status || 'pending') + '</p>' +
-                            '</div>' +
-                            '<div class="status-badge status-' + escapeHtml(o.status || 'pending') + '">' + escapeHtml(o.status || 'pending') + '</div>' +
-                        '</div>';
-            }
-            document.getElementById('adminOrdersList').innerHTML = html || '<div class="empty-state">No orders found</div>';
-        }
-    } catch(e) {
-        document.getElementById('adminOrdersList').innerHTML = '<div class="empty-state">No orders found</div>';
+    var html = '';
+    for(var i = 0; i < (AppState.orders || []).length; i++){
+        var o = AppState.orders[i];
+        html += '<div class="list-item" onclick="viewTransactionDetails(' + (o.id || 0) + ')">' +
+                    '<div class="list-info">' +
+                        '<h4>📦 Transaction #' + (o.id || 0) + '</h4>' +
+                        '<p>UGX ' + ((o.total || 0).toLocaleString()) + ' - ' + escapeHtml(o.status || 'pending') + '</p>' +
+                    '</div>' +
+                    '<div class="status-badge status-' + escapeHtml(o.status || 'pending') + '">' + escapeHtml(o.status || 'pending') + '</div>' +
+                '</div>';
     }
+    document.getElementById('adminOrdersList').innerHTML = html || '<div class="empty-state">No orders found</div>';
 }
 
 function viewTransactionDetails(orderId){
@@ -1001,7 +955,7 @@ function viewTransactionDetails(orderId){
             '<div><strong>Order #' + order.id + '</strong><br>' +
             '<strong>Total:</strong> UGX ' + ((order.total || 0).toLocaleString()) + '<br>' +
             '<strong>Status:</strong> ' + escapeHtml(order.status) + '<br>' +
-            '<strong>Date:</strong> ' + new Date(order.created_at).toLocaleDateString() + '</div>');
+            '<strong>Date:</strong> ' + (order.date || 'N/A') + '</div>');
     }
 }
 
@@ -1010,7 +964,7 @@ async function renderAdminProducts() {
     for(var i = 0; i < (AppState.products || []).length; i++){
         var p = AppState.products[i];
         html += '<div class="list-item">' +
-                    '<div class="list-info">' +
+                    '<div class="list-info" onclick="editProduct(' + p.id + ')">' +
                         '<h4>' + escapeHtml(p.name) + '</h4>' +
                         '<p>' + escapeHtml(p.type) + ' - Stock: ' + (p.stock || 0) + '</p>' +
                         '<p>UGX ' + (p.price || 0).toLocaleString() + '</p>' +
@@ -1024,8 +978,7 @@ async function renderAdminProducts() {
 // ======================== AGENT FUNCTIONS ========================
 async function renderAgentPanel() {
     if (!AppState.user || AppState.user.role !== 'agent') return;
-    await loadOrders();
-    
+
     var myOrders = (AppState.orders || []).filter(function(o) { 
         return o.agent_id === AppState.user.id && o.status !== 'delivered'; 
     });
@@ -1051,17 +1004,12 @@ async function renderAgentPanel() {
 
 async function updateOrderStatus(orderId, newStatus){
     try {
-        const token = getAccessToken();
-        await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
+        await apiCall(`/orders/${orderId}/status`, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
             body: JSON.stringify({ status: newStatus })
         });
         showToast('✅ Order #' + orderId + ' status: ' + newStatus);
-        await loadOrders();
+        await refreshData('order');
         renderAgentPanel();
     } catch(error) {
         showToast(error.message || '❌ Failed to update status', true);
@@ -1078,15 +1026,13 @@ async function sendChat() {
     input.value = '';
 
     try {
-        const response = await fetch(`${API_BASE_URL}/chat/customer`, {
+        const data = await apiCall('/chat/customer', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message: text })
         });
-        const data = await response.json();
         addChatMessage('bot', data.response || 'Sorry, could not process.');
     } catch(error) {
-        addChatMessage('bot', 'Chat service unavailable. Please try again.');
+        addChatMessage('bot', 'Chat service unavailable right now. Please try again later.');
     }
 }
 
@@ -1216,11 +1162,13 @@ function renderAgentConversations(){ document.getElementById('agentChatList').in
 function openAgentToManagerChat(){ showToast('Message manager coming soon'); }
 function showAddRiderModal(){ showToast('Add rider coming soon'); }
 function showAdminMenu(){ showModal('Admin Menu', '<div class="empty-state">Tools coming soon</div>'); }
+
+// ======================== POLLING INTERVAL (REDUCED) ========================
 function startPolling(){
     if(AppState.pollInterval) clearInterval(AppState.pollInterval);
     AppState.pollInterval = setInterval(function(){
         if(AppState.user && AppState.user.role === 'agent') renderAgentConversations();
-    }, 30000);
+    }, 10000);
 }
 
 // ======================== APP INITIALIZATION ========================
@@ -1231,14 +1179,11 @@ async function enterApp(){
 
     setupNav();
     startPolling();
-    await loadProducts();
-    await loadCart();
-    await loadOrders();
+    await refreshData('login');
 
     if(AppState.user.role === 'admin'){
         navigateTo('adminDashboard');
         renderAdminDashboard();
-        renderAdminOrders();
     } else if(AppState.user.role === 'agent'){
         navigateTo('agentPanel');
         renderAgentPanel();
@@ -1251,12 +1196,13 @@ async function enterApp(){
 async function initApp(){
     setupPaymentMethodListener();
     
-    // Check for existing token and try to restore session
     const token = getAccessToken();
     if (token) {
         try {
-            await loadProducts();
-            showToast('Welcome back!', false);
+            const products = await apiCall('/products');
+            if (products) {
+                showToast('Welcome back!', false);
+            }
         } catch(e) {
             clearTokens();
         }
