@@ -63,7 +63,7 @@
             margin-bottom: 5px;
         }
 
-        .form-group input, .form-group select {
+        .form-group input {
             width: 100%;
             padding: 12px;
             border: 2px solid #e0e0e0;
@@ -108,6 +108,15 @@
             color: #1a5276;
         }
 
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
         .toggle-text {
             text-align: center;
             margin-top: 20px;
@@ -118,6 +127,10 @@
             color: #1a5276;
             font-weight: 700;
             cursor: pointer;
+        }
+
+        .hidden {
+            display: none !important;
         }
 
         /* App Container */
@@ -172,10 +185,6 @@
             padding: 20px;
         }
 
-        .hidden {
-            display: none;
-        }
-
         /* Cards */
         .card {
             background: white;
@@ -185,11 +194,31 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
-        .card-title {
-            font-size: 18px;
-            font-weight: 700;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 800;
             color: #1a5276;
-            margin-bottom: 15px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 5px;
         }
 
         /* Product Grid */
@@ -211,7 +240,6 @@
             width: 100%;
             height: 140px;
             object-fit: cover;
-            background: #e0e0e0;
         }
 
         .product-info {
@@ -230,17 +258,8 @@
             margin-bottom: 10px;
         }
 
-        /* Cart Items */
-        .cart-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-        }
-
-        /* Orders */
-        .order-card {
+        /* Order Items */
+        .order-item {
             background: white;
             border-radius: 12px;
             padding: 15px;
@@ -286,11 +305,11 @@
         }
 
         .receipt-total {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 800;
             color: #1a5276;
-            padding-top: 15px;
             margin-top: 15px;
+            padding-top: 15px;
             border-top: 2px solid #1a5276;
         }
 
@@ -319,35 +338,24 @@
             100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
         }
 
-        button {
-            cursor: pointer;
-        }
-
-        .btn-sm {
-            padding: 8px 16px;
-            font-size: 12px;
-            border: none;
+        select {
+            padding: 8px;
             border-radius: 8px;
-            font-weight: 600;
-        }
-
-        .btn-danger {
-            background: #e74c3c;
-            color: white;
+            border: 1px solid #ddd;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
     <div id="toast" class="toast"></div>
 
-    <!-- Login/Register Page -->
+    <!-- Auth Page -->
     <div id="authPage">
         <div class="auth-container">
             <div class="auth-box">
                 <div class="logo">🏛️ TARAZO</div>
                 <div class="logo-sub">Premium Terrazzo Uganda</div>
 
-                <!-- Login Form -->
                 <div id="loginForm">
                     <div class="form-group">
                         <label>📧 Email</label>
@@ -363,31 +371,30 @@
                     </div>
                 </div>
 
-                <!-- Register Form -->
                 <div id="registerForm" class="hidden">
                     <div class="form-group">
                         <label>👤 Full Name</label>
-                        <input type="text" id="regName" placeholder="Your full name">
+                        <input type="text" id="regName">
                     </div>
                     <div class="form-group">
                         <label>📱 Phone</label>
-                        <input type="tel" id="regPhone" placeholder="07XX XXX XXX">
+                        <input type="tel" id="regPhone">
                     </div>
                     <div class="form-group">
                         <label>📧 Email</label>
-                        <input type="email" id="regEmail" placeholder="Your email">
+                        <input type="email" id="regEmail">
                     </div>
                     <div class="form-group">
                         <label>🔒 Password</label>
-                        <input type="password" id="regPassword" placeholder="Create password">
+                        <input type="password" id="regPassword">
                     </div>
                     <div class="form-group">
-                        <label>✅ Confirm Password</label>
-                        <input type="password" id="regConfirmPassword" placeholder="Confirm password">
+                        <label>✅ Confirm</label>
+                        <input type="password" id="regConfirmPassword">
                     </div>
                     <button class="btn btn-green" onclick="handleRegister()">✅ Create Account</button>
                     <div class="toggle-text">
-                        Already have an account? <span onclick="showLogin()">🔐 Login</span>
+                        Have an account? <span onclick="showLogin()">🔐 Login</span>
                     </div>
                 </div>
             </div>
@@ -404,69 +411,96 @@
             </div>
         </div>
 
-        <!-- Shop Page -->
-        <div id="shopPage" class="page">
-            <h2 style="margin-bottom: 15px;">🏪 Shop Terrazzo</h2>
+        <!-- USER PANELS -->
+        <!-- User Shop -->
+        <div id="userShopPage" class="page hidden">
+            <h2>🏪 Shop Terrazzo</h2>
             <div class="product-grid" id="productsGrid"></div>
         </div>
 
-        <!-- Cart Page -->
-        <div id="cartPage" class="page hidden">
-            <h2 style="margin-bottom: 15px;">🛒 My Cart</h2>
+        <!-- User Cart -->
+        <div id="userCartPage" class="page hidden">
+            <h2>🛒 My Cart</h2>
             <div id="cartItems"></div>
-            <div id="cartTotal" class="card" style="text-align: center;">
+            <div id="cartTotal" class="card" style="text-align:center;">
                 <h3>Total: UGX <span id="totalAmount">0</span></h3>
                 <button class="btn btn-green" onclick="checkout()">Proceed to Checkout</button>
             </div>
         </div>
 
-        <!-- Orders Page -->
-        <div id="ordersPage" class="page hidden">
-            <h2 style="margin-bottom: 15px;">📦 My Orders</h2>
+        <!-- User Orders -->
+        <div id="userOrdersPage" class="page hidden">
+            <h2>📦 My Orders</h2>
             <div id="ordersList"></div>
+        </div>
+
+        <!-- ADMIN PANELS -->
+        <!-- Admin Dashboard -->
+        <div id="adminDashboardPage" class="page hidden">
+            <h2>📊 Admin Dashboard</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="todaySales">UGX 0</div>
+                    <div class="stat-label">Today's Sales</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="pendingOrders">0</div>
+                    <div class="stat-label">Pending Orders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalProducts">0</div>
+                    <div class="stat-label">Total Products</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalUsers">0</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+            </div>
+            <div class="card">
+                <h3>All Orders</h3>
+                <div id="adminOrdersList"></div>
+            </div>
+        </div>
+
+        <!-- AGENT PANELS -->
+        <!-- Agent Dashboard -->
+        <div id="agentDashboardPage" class="page hidden">
+            <h2>📦 Agent Dashboard</h2>
+            <div class="card">
+                <h3>Assigned Orders</h3>
+                <div id="agentOrdersList"></div>
+            </div>
         </div>
 
         <!-- Receipt Modal -->
         <div id="receiptModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto;">
-            <div style="max-width: 500px; margin: 50px auto; background: white; border-radius: 16px; overflow: hidden;">
+            <div style="max-width: 500px; margin: 50px auto;">
                 <div id="receiptContent"></div>
-                <div style="padding: 20px; text-align: center;">
-                    <button class="btn btn-outline" onclick="closeReceipt()">Close</button>
-                    <button class="btn btn-primary" onclick="printReceipt()">🖨️ Print Receipt</button>
+                <div style="text-align: center; margin-top: 10px;">
+                    <button class="btn-sm btn-outline" onclick="closeReceipt()">Close</button>
+                    <button class="btn-sm btn-primary" onclick="printReceipt()">Print Receipt</button>
                 </div>
             </div>
         </div>
 
         <!-- Bottom Navigation -->
-        <div class="nav-bar">
-            <div class="nav-item" onclick="showPage('shop')">
-                <span>🏪</span>
-                <span>Shop</span>
-            </div>
-            <div class="nav-item" onclick="showPage('cart')">
-                <span>🛒</span>
-                <span>Cart</span>
-            </div>
-            <div class="nav-item" onclick="showPage('orders')">
-                <span>📦</span>
-                <span>Orders</span>
-            </div>
-        </div>
+        <div class="nav-bar" id="bottomNav"></div>
     </div>
 
     <script>
-        // ==================== CONFIGURATION ====================
+        // ==================== CONFIG ====================
         const API_BASE = 'https://raven-terazzo.onrender.com/api';
         let currentUser = null;
         let csrfToken = null;
         let products = [];
         let cart = [];
         let orders = [];
+        let allOrders = [];
 
-        // ==================== HELPER FUNCTIONS ====================
-        function showToast(message) {
+        // ==================== HELPERS ====================
+        function showToast(msg) {
             const toast = document.getElementById('toast');
-            toast.textContent = message;
+            toast.textContent = msg;
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
@@ -480,13 +514,10 @@
                 const data = await response.json();
                 csrfToken = data.csrf_token;
                 return csrfToken;
-            } catch (error) {
-                console.error('CSRF error:', error);
-                return null;
-            }
+            } catch(e) { return null; }
         }
 
-        // ==================== AUTHENTICATION ====================
+        // ==================== AUTH ====================
         async function handleLogin() {
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
@@ -514,14 +545,13 @@
                 if (response.ok && data.success) {
                     currentUser = data.user;
                     showToast(`Welcome ${currentUser.name}!`);
-                    await loadData();
+                    await loadInitialData();
                     showApp();
                 } else {
                     showToast(data.error || 'Login failed');
                 }
             } catch (error) {
-                console.error('Login error:', error);
-                showToast('Login failed. Please try again.');
+                showToast('Login failed');
             }
         }
 
@@ -565,28 +595,30 @@
                     showToast(data.error || 'Registration failed');
                 }
             } catch (error) {
-                console.error('Register error:', error);
                 showToast('Registration failed');
             }
         }
 
         async function logout() {
             try {
-                await fetch(`${API_BASE}/logout`, {
-                    method: 'POST',
-                    credentials: 'include'
-                });
+                await fetch(`${API_BASE}/logout`, { method: 'POST', credentials: 'include' });
             } catch(e) {}
             
             currentUser = null;
             document.getElementById('appPage').classList.add('hidden');
             document.getElementById('authPage').classList.remove('hidden');
-            showToast('Logged out successfully');
+            showToast('Logged out');
         }
 
         // ==================== DATA LOADING ====================
-        async function loadData() {
-            await Promise.all([loadProducts(), loadCart(), loadOrders()]);
+        async function loadInitialData() {
+            await loadProducts();
+            await loadCart();
+            await loadOrders();
+            if (currentUser?.role === 'admin') {
+                await loadAdminStats();
+                await loadAllOrders();
+            }
         }
 
         async function loadProducts() {
@@ -594,73 +626,173 @@
                 const response = await fetch(`${API_BASE}/products`);
                 products = await response.json();
                 renderProducts();
-            } catch (error) {
-                console.error('Error loading products:', error);
-            }
+            } catch(e) { console.error(e); }
         }
 
         async function loadCart() {
             if (!currentUser) return;
             try {
-                const response = await fetch(`${API_BASE}/cart`, {
-                    credentials: 'include'
-                });
-                if (response.ok) {
-                    cart = await response.json();
-                    renderCart();
-                }
-            } catch (error) {
-                console.error('Error loading cart:', error);
-                cart = [];
-            }
+                const response = await fetch(`${API_BASE}/cart`, { credentials: 'include' });
+                if (response.ok) cart = await response.json();
+                renderCart();
+            } catch(e) { cart = []; }
         }
 
         async function loadOrders() {
             if (!currentUser) return;
             try {
-                const response = await fetch(`${API_BASE}/orders`, {
-                    credentials: 'include'
-                });
-                if (response.ok) {
-                    orders = await response.json();
-                    renderOrders();
-                }
-            } catch (error) {
-                console.error('Error loading orders:', error);
-                orders = [];
-            }
+                const response = await fetch(`${API_BASE}/orders`, { credentials: 'include' });
+                if (response.ok) orders = await response.json();
+                renderOrders();
+            } catch(e) { orders = []; }
         }
 
-        // ==================== PRODUCTS ====================
+        async function loadAdminStats() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/stats`, { credentials: 'include' });
+                if (response.ok) {
+                    const stats = await response.json();
+                    document.getElementById('todaySales').textContent = `UGX ${(stats.today_sales || 0).toLocaleString()}`;
+                    document.getElementById('pendingOrders').textContent = stats.pending_orders || 0;
+                    document.getElementById('totalProducts').textContent = stats.total_products || 0;
+                    document.getElementById('totalUsers').textContent = stats.total_users || 0;
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        async function loadAllOrders() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/orders`, { credentials: 'include' });
+                if (response.ok) {
+                    allOrders = await response.json();
+                    renderAdminOrders();
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        // ==================== RENDER FUNCTIONS ====================
         function renderProducts() {
             const grid = document.getElementById('productsGrid');
-            if (!grid) return;
-
-            if (!products || products.length === 0) {
-                grid.innerHTML = '<div class="card">No products available</div>';
-                return;
-            }
-
-            grid.innerHTML = products.map(product => `
+            if (!grid || !products) return;
+            
+            grid.innerHTML = products.map(p => `
                 <div class="product-card">
-                    <img src="${product.image_url || 'https://placehold.co/400x300/1a5276/white?text=TARAZO'}" alt="${product.name}">
+                    <img src="${p.image_url || 'https://placehold.co/400x300/1a5276/white?text=TARAZO'}">
                     <div class="product-info">
-                        <div class="product-name">${product.name}</div>
-                        <div class="product-type">${product.type}</div>
-                        <div class="product-price">UGX ${(product.price || 0).toLocaleString()}</div>
-                        <button class="btn-sm btn-green" onclick="addToCart(${product.id})">Add to Cart</button>
+                        <div class="product-name">${p.name}</div>
+                        <div class="product-price">UGX ${(p.price || 0).toLocaleString()}</div>
+                        <button class="btn-sm btn-green" onclick="addToCart(${p.id})">Add to Cart</button>
                     </div>
                 </div>
             `).join('');
         }
 
-        // ==================== CART ====================
+        function renderCart() {
+            const container = document.getElementById('cartItems');
+            if (!container) return;
+            
+            if (!cart || cart.length === 0) {
+                container.innerHTML = '<div class="card">Cart is empty</div>';
+                document.getElementById('totalAmount').textContent = '0';
+                return;
+            }
+            
+            let total = 0;
+            let html = '';
+            for (let item of cart) {
+                const product = products.find(p => p.id === item.product_id);
+                if (product) {
+                    total += product.price * item.quantity;
+                    html += `
+                        <div class="order-item">
+                            <div><strong>${product.name}</strong> x ${item.quantity}</div>
+                            <div>UGX ${(product.price * item.quantity).toLocaleString()}</div>
+                            <button class="btn-sm btn-red" onclick="removeFromCart(${item.product_id})">Remove</button>
+                        </div>
+                    `;
+                }
+            }
+            container.innerHTML = html;
+            document.getElementById('totalAmount').textContent = total.toLocaleString();
+        }
+
+        function renderOrders() {
+            const container = document.getElementById('ordersList');
+            if (!container) return;
+            
+            if (!orders || orders.length === 0) {
+                container.innerHTML = '<div class="card">No orders yet</div>';
+                return;
+            }
+            
+            container.innerHTML = orders.map(o => `
+                <div class="order-item">
+                    <div><strong>Order #${o.id}</strong> - ${new Date(o.created_at).toLocaleDateString()}</div>
+                    <div>Total: UGX ${(o.total || 0).toLocaleString()}</div>
+                    <div><span class="status-badge status-${o.status}">${o.status}</span></div>
+                    ${o.rider_name ? `<div>Rider: ${o.rider_name} (${o.rider_phone})</div>` : ''}
+                    <button class="btn-sm btn-primary" style="margin-top:10px;" onclick="viewReceipt(${o.id})">View Receipt</button>
+                </div>
+            `).join('');
+        }
+
+        function renderAdminOrders() {
+            const container = document.getElementById('adminOrdersList');
+            if (!container) return;
+            
+            if (!allOrders || allOrders.length === 0) {
+                container.innerHTML = '<div class="card">No orders</div>';
+                return;
+            }
+            
+            container.innerHTML = allOrders.map(o => `
+                <div class="order-item">
+                    <div><strong>Order #${o.id}</strong> - User ID: ${o.user_id}</div>
+                    <div>Total: UGX ${(o.total || 0).toLocaleString()}</div>
+                    <div><span class="status-badge status-${o.status}">${o.status}</span></div>
+                    <select onchange="updateOrderStatus(${o.id}, this.value)">
+                        <option value="paid" ${o.status === 'paid' ? 'selected' : ''}>Paid</option>
+                        <option value="processing" ${o.status === 'processing' ? 'selected' : ''}>Processing</option>
+                        <option value="shipped" ${o.status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                        <option value="delivered" ${o.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                    </select>
+                </div>
+            `).join('');
+        }
+
+        function renderAgentOrders() {
+            const container = document.getElementById('agentOrdersList');
+            if (!container) return;
+            
+            const myOrders = orders.filter(o => o.agent_id === currentUser?.id);
+            
+            if (myOrders.length === 0) {
+                container.innerHTML = '<div class="card">No orders assigned</div>';
+                return;
+            }
+            
+            container.innerHTML = myOrders.map(o => `
+                <div class="order-item">
+                    <div><strong>Order #${o.id}</strong></div>
+                    <div>Total: UGX ${(o.total || 0).toLocaleString()}</div>
+                    <div><span class="status-badge status-${o.status}">${o.status}</span></div>
+                    <select onchange="updateOrderStatus(${o.id}, this.value)">
+                        <option value="paid" ${o.status === 'paid' ? 'selected' : ''}>Paid</option>
+                        <option value="processing" ${o.status === 'processing' ? 'selected' : ''}>Processing</option>
+                        <option value="shipped" ${o.status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                        <option value="delivered" ${o.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                    </select>
+                </div>
+            `).join('');
+        }
+
+        // ==================== ACTIONS ====================
         async function addToCart(productId) {
             if (!currentUser) {
                 showToast('Please login first');
                 return;
             }
-
+            
             try {
                 await getCSRFToken();
                 const response = await fetch(`${API_BASE}/cart`, {
@@ -672,83 +804,35 @@
                     credentials: 'include',
                     body: JSON.stringify({ product_id: productId, quantity: 1 })
                 });
-
+                
                 if (response.ok) {
                     showToast('Added to cart!');
                     await loadCart();
-                } else {
-                    showToast('Failed to add to cart');
                 }
-            } catch (error) {
-                console.error('Add to cart error:', error);
-                showToast('Failed to add to cart');
-            }
+            } catch(e) { showToast('Failed to add'); }
         }
 
         async function removeFromCart(productId) {
             try {
                 await getCSRFToken();
-                const response = await fetch(`${API_BASE}/cart/${productId}`, {
+                await fetch(`${API_BASE}/cart/${productId}`, {
                     method: 'DELETE',
-                    headers: {
-                        'X-CSRFToken': csrfToken
-                    },
+                    headers: { 'X-CSRFToken': csrfToken },
                     credentials: 'include'
                 });
-
-                if (response.ok) {
-                    showToast('Removed from cart');
-                    await loadCart();
-                }
-            } catch (error) {
-                console.error('Remove error:', error);
-            }
+                await loadCart();
+                showToast('Removed');
+            } catch(e) { showToast('Failed to remove'); }
         }
 
-        function renderCart() {
-            const container = document.getElementById('cartItems');
-            if (!container) return;
-
-            if (!cart || cart.length === 0) {
-                container.innerHTML = '<div class="card">Your cart is empty</div>';
-                document.getElementById('totalAmount').textContent = '0';
-                return;
-            }
-
-            let total = 0;
-            let html = '';
-
-            for (let item of cart) {
-                const product = products.find(p => p.id === item.product_id);
-                if (product) {
-                    const subtotal = product.price * item.quantity;
-                    total += subtotal;
-                    html += `
-                        <div class="cart-item">
-                            <div>
-                                <strong>${product.name}</strong><br>
-                                UGX ${product.price.toLocaleString()} x ${item.quantity} = UGX ${subtotal.toLocaleString()}
-                            </div>
-                            <button class="btn-sm btn-danger" onclick="removeFromCart(${item.product_id})">Remove</button>
-                        </div>
-                    `;
-                }
-            }
-
-            container.innerHTML = html;
-            document.getElementById('totalAmount').textContent = total.toLocaleString();
-        }
-
-        // ==================== CHECKOUT & RECEIPT ====================
         async function checkout() {
             if (!cart || cart.length === 0) {
-                showToast('Your cart is empty');
+                showToast('Cart is empty');
                 return;
             }
-
+            
             let total = 0;
             let items = [];
-
             for (let item of cart) {
                 const product = products.find(p => p.id === item.product_id);
                 if (product) {
@@ -761,7 +845,7 @@
                     });
                 }
             }
-
+            
             try {
                 await getCSRFToken();
                 const response = await fetch(`${API_BASE}/orders`, {
@@ -771,47 +855,59 @@
                         'X-CSRFToken': csrfToken
                     },
                     credentials: 'include',
-                    body: JSON.stringify({
-                        items: items,
-                        total: total,
-                        payment_method: 'MTN Mobile Money'
-                    })
+                    body: JSON.stringify({ items, total, payment_method: 'MTN Mobile Money' })
                 });
-
+                
                 const data = await response.json();
-
                 if (response.ok && data.success) {
-                    showToast('Order placed successfully!');
-                    await loadOrders();
+                    showToast('Order placed!');
                     await loadCart();
-                    showReceipt(data.order_id);
-                    showPage('orders');
-                } else {
-                    showToast(data.error || 'Order failed');
+                    await loadOrders();
+                    viewReceipt(data.order_id);
+                    if (currentUser.role === 'user') showUserPage('orders');
                 }
-            } catch (error) {
-                console.error('Checkout error:', error);
-                showToast('Failed to place order');
-            }
+            } catch(e) { showToast('Order failed'); }
         }
 
-        async function showReceipt(orderId) {
+        async function updateOrderStatus(orderId, status) {
+            try {
+                await getCSRFToken();
+                await fetch(`${API_BASE}/orders/${orderId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ status })
+                });
+                showToast('Status updated');
+                if (currentUser.role === 'admin') {
+                    await loadAllOrders();
+                } else {
+                    await loadOrders();
+                    renderAgentOrders();
+                }
+            } catch(e) { showToast('Update failed'); }
+        }
+
+        // ==================== RECEIPT ====================
+        async function viewReceipt(orderId) {
             const order = orders.find(o => o.id === orderId);
             if (!order) return;
-
-            // Get product details for items
-            let itemsHtml = '';
-            let items = order.items || [];
             
-            for (let item of items) {
-                itemsHtml += `
-                    <div class="receipt-row">
-                        <span>${item.productName} x ${item.quantity}</span>
-                        <span>UGX ${(item.price * item.quantity).toLocaleString()}</span>
-                    </div>
-                `;
+            let itemsHtml = '';
+            if (order.items) {
+                for (let item of order.items) {
+                    itemsHtml += `
+                        <div class="receipt-row">
+                            <span>${item.productName} x ${item.quantity}</span>
+                            <span>UGX ${(item.price * item.quantity).toLocaleString()}</span>
+                        </div>
+                    `;
+                }
             }
-
+            
             const receiptHtml = `
                 <div class="receipt">
                     <div class="receipt-header">
@@ -837,26 +933,18 @@
                             <span>Phone:</span>
                             <span>${currentUser.phone || 'N/A'}</span>
                         </div>
-                        <div class="receipt-row">
-                            <span>Payment Method:</span>
-                            <span>${order.payment_method || 'MTN Mobile Money'}</span>
-                        </div>
-                        <div style="margin: 15px 0;">
-                            <strong>Items Purchased:</strong>
-                        </div>
                         ${itemsHtml}
                         <div class="receipt-row receipt-total">
-                            <span><strong>TOTAL PAID</strong></span>
+                            <span><strong>TOTAL</strong></span>
                             <span><strong>UGX ${(order.total || 0).toLocaleString()}</strong></span>
                         </div>
-                        <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px dashed #ddd;">
+                        <div style="text-align:center; margin-top:20px;">
                             <p>Thank you for shopping with Tarazo!</p>
-                            <p style="font-size: 12px; color: #7f8c8d;">This is your official payment receipt</p>
                         </div>
                     </div>
                 </div>
             `;
-
+            
             document.getElementById('receiptContent').innerHTML = receiptHtml;
             document.getElementById('receiptModal').style.display = 'block';
         }
@@ -866,87 +954,85 @@
         }
 
         function printReceipt() {
-            const receiptContent = document.getElementById('receiptContent').innerHTML;
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <html>
-                <head>
-                    <title>Tarazo Receipt</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; padding: 20px; }
-                        .receipt { max-width: 400px; margin: 0 auto; }
-                        .receipt-header { text-align: center; margin-bottom: 20px; }
-                        .receipt-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
-                        .receipt-total { font-size: 18px; font-weight: bold; margin-top: 15px; padding-top: 15px; border-top: 2px solid #000; }
-                    </style>
-                </head>
-                <body>${receiptContent}</body>
-                </html>
+            const content = document.getElementById('receiptContent').innerHTML;
+            const win = window.open('', '_blank');
+            win.document.write(`
+                <html><head><title>Tarazo Receipt</title>
+                <style>
+                    body { font-family: Arial; padding: 20px; }
+                    .receipt { max-width: 400px; margin: 0 auto; }
+                    .receipt-header { text-align: center; background: #1a5276; color: white; padding: 20px; }
+                    .receipt-body { padding: 20px; }
+                    .receipt-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+                    .receipt-total { font-size: 18px; font-weight: bold; margin-top: 15px; padding-top: 15px; border-top: 2px solid #000; }
+                </style>
+                </head><body>${content}</body></html>
             `);
-            printWindow.print();
-            printWindow.close();
+            win.print();
+            win.close();
         }
 
-        // ==================== ORDERS ====================
-        function renderOrders() {
-            const container = document.getElementById('ordersList');
-            if (!container) return;
-
-            if (!orders || orders.length === 0) {
-                container.innerHTML = '<div class="card">No orders yet</div>';
-                return;
-            }
-
-            container.innerHTML = orders.map(order => `
-                <div class="order-card">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <strong>Order #${order.id}</strong>
-                        <span class="status-badge status-${order.status}">${order.status}</span>
-                    </div>
-                    <div style="margin-bottom: 10px;">
-                        Total: <strong>UGX ${(order.total || 0).toLocaleString()}</strong>
-                    </div>
-                    <div style="margin-bottom: 10px;">
-                        Date: ${new Date(order.created_at).toLocaleDateString()}
-                    </div>
-                    ${order.rider_name ? `<div>Rider: ${order.rider_name} (${order.rider_phone || 'N/A'})</div>` : ''}
-                    <button class="btn-sm btn-primary" style="margin-top: 10px;" onclick="viewReceipt(${order.id})">View Receipt</button>
-                </div>
-            `).join('');
-        }
-
-        async function viewReceipt(orderId) {
-            await loadOrders();
-            const order = orders.find(o => o.id === orderId);
-            if (order) {
-                showReceipt(orderId);
-            }
-        }
-
-        // ==================== UI NAVIGATION ====================
-        function showPage(page) {
-            document.getElementById('shopPage').classList.add('hidden');
-            document.getElementById('cartPage').classList.add('hidden');
-            document.getElementById('ordersPage').classList.add('hidden');
-
-            if (page === 'shop') document.getElementById('shopPage').classList.remove('hidden');
-            if (page === 'cart') document.getElementById('cartPage').classList.remove('hidden');
-            if (page === 'orders') document.getElementById('ordersPage').classList.remove('hidden');
-
-            // Highlight active nav
-            document.querySelectorAll('.nav-item').forEach((item, index) => {
-                item.classList.remove('active');
-                if (index === 0 && page === 'shop') item.classList.add('active');
-                if (index === 1 && page === 'cart') item.classList.add('active');
-                if (index === 2 && page === 'orders') item.classList.add('active');
-            });
-        }
-
+        // ==================== NAVIGATION ====================
         function showApp() {
             document.getElementById('authPage').classList.add('hidden');
             document.getElementById('appPage').classList.remove('hidden');
-            document.getElementById('userGreeting').textContent = `Hi, ${currentUser.name.split(' ')[0]}! 👋`;
-            showPage('shop');
+            document.getElementById('userGreeting').innerHTML = `👋 ${currentUser.name.split(' ')[0]}`;
+            
+            // Setup navigation based on role
+            const nav = document.getElementById('bottomNav');
+            
+            if (currentUser.role === 'admin') {
+                nav.innerHTML = `
+                    <div class="nav-item" onclick="showAdminPage('dashboard')">📊 Dashboard</div>
+                    <div class="nav-item" onclick="logout()">🚪 Logout</div>
+                `;
+                showAdminPage('dashboard');
+            } 
+            else if (currentUser.role === 'agent') {
+                nav.innerHTML = `
+                    <div class="nav-item" onclick="showAgentPage('dashboard')">📦 Orders</div>
+                    <div class="nav-item" onclick="logout()">🚪 Logout</div>
+                `;
+                showAgentPage('dashboard');
+            } 
+            else {
+                nav.innerHTML = `
+                    <div class="nav-item" onclick="showUserPage('shop')">🏪 Shop</div>
+                    <div class="nav-item" onclick="showUserPage('cart')">🛒 Cart</div>
+                    <div class="nav-item" onclick="showUserPage('orders')">📦 Orders</div>
+                    <div class="nav-item" onclick="logout()">🚪 Logout</div>
+                `;
+                showUserPage('shop');
+            }
+        }
+
+        function showUserPage(page) {
+            document.getElementById('userShopPage').classList.add('hidden');
+            document.getElementById('userCartPage').classList.add('hidden');
+            document.getElementById('userOrdersPage').classList.add('hidden');
+            document.getElementById('adminDashboardPage').classList.add('hidden');
+            document.getElementById('agentDashboardPage').classList.add('hidden');
+            
+            if (page === 'shop') document.getElementById('userShopPage').classList.remove('hidden');
+            if (page === 'cart') document.getElementById('userCartPage').classList.remove('hidden');
+            if (page === 'orders') document.getElementById('userOrdersPage').classList.remove('hidden');
+        }
+
+        function showAdminPage(page) {
+            document.getElementById('userShopPage').classList.add('hidden');
+            document.getElementById('userCartPage').classList.add('hidden');
+            document.getElementById('userOrdersPage').classList.add('hidden');
+            document.getElementById('adminDashboardPage').classList.remove('hidden');
+            document.getElementById('agentDashboardPage').classList.add('hidden');
+        }
+
+        function showAgentPage(page) {
+            document.getElementById('userShopPage').classList.add('hidden');
+            document.getElementById('userCartPage').classList.add('hidden');
+            document.getElementById('userOrdersPage').classList.add('hidden');
+            document.getElementById('adminDashboardPage').classList.add('hidden');
+            document.getElementById('agentDashboardPage').classList.remove('hidden');
+            renderAgentOrders();
         }
 
         function showLogin() {
@@ -962,17 +1048,8 @@
         // ==================== INIT ====================
         async function init() {
             await getCSRFToken();
-            
-            // Check if user has existing session
-            try {
-                const response = await fetch(`${API_BASE}/cart`, { credentials: 'include' });
-                if (response.ok) {
-                    // User might be logged in, but we need user data
-                    console.log('Session exists');
-                }
-            } catch(e) {}
         }
-
+        
         init();
     </script>
 </body>
