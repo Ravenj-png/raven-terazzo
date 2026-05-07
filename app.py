@@ -96,6 +96,22 @@ CORS(app,
 csrf = CSRFProtect()
 csrf.init_app(app)
 
+# Add this middleware
+@app.before_request
+def check_csrf():
+    if request.method == 'OPTIONS':
+        return
+        
+    if request.method in ['POST', 'PUT', 'DELETE']:
+        csrf_token = request.headers.get('X-CSRFToken')
+        if not csrf_token:
+            return jsonify({'error': 'CSRF token missing'}), 400
+        try:
+            from flask_wtf.csrf import validate_csrf
+            validate_csrf(csrf_token)
+        except:
+            return jsonify({'error': 'Invalid CSRF token'}), 400
+
 # ==========================================
 # REDIS CONFIGURATION (optional - from env)
 # ==========================================
