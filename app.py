@@ -82,7 +82,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # CORS - ALL from env
 ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', 'http://localhost:5500,http://localhost:5000').split(',')
 
-CORS(app, 
+CORS(app,
      origins=["https://ravenj-png.github.io", "http://localhost:5500", "http://localhost:5000"],
      supports_credentials=True,
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -365,13 +365,13 @@ class TokenBlacklist(db.Model):
 
 def create_default_accounts():
     """Create admin and agent accounts from environment variables"""
-    
+
     # Create Admin from env
     admin_email = os.environ.get('ADMIN_EMAIL')
     admin_password = os.environ.get('ADMIN_PASSWORD')
     admin_name = os.environ.get('ADMIN_NAME', 'Administrator')
     admin_phone = os.environ.get('ADMIN_PHONE', '0771000000')
-    
+
     if admin_email and admin_password:
         admin = User.query.filter_by(email=admin_email).first()
         if not admin:
@@ -390,18 +390,18 @@ def create_default_accounts():
             print(f"ℹ️ Admin already exists: {admin_email}")
     else:
         print("ℹ️ No ADMIN_EMAIL/ADMIN_PASSWORD in env, skipping admin creation")
-    
+
     # Create Agents from env (supports up to 10 agents)
     for i in range(1, 11):
         agent_email = os.environ.get(f'AGENT{i}_EMAIL')
         agent_password = os.environ.get(f'AGENT{i}_PASSWORD')
-        
+
         if agent_email and agent_password:
             agent = User.query.filter_by(email=agent_email).first()
             if not agent:
                 agent_name = os.environ.get(f'AGENT{i}_NAME', f'Agent {i}')
                 agent_phone = os.environ.get(f'AGENT{i}_PHONE', f'077{i}00000')
-                
+
                 agent = User(
                     name=agent_name,
                     email=agent_email,
@@ -415,7 +415,7 @@ def create_default_accounts():
                 print(f"✅ Agent account created: {agent_email}")
             else:
                 print(f"ℹ️ Agent already exists: {agent_email}")
-    
+
     db.session.commit()
 
 # ==========================================
@@ -539,22 +539,22 @@ def send_email(to_email, subject, html_content):
     if not SMTP_USER or not SMTP_PASS:
         app.logger.warning("SMTP not configured")
         return False
-    
+
     try:
         from email.mime.text import MIMEText
         from email.mime.multipart import MIMEMultipart
-        
+
         msg = MIMEMultipart('alternative')
         msg['Subject'] = subject
         msg['From'] = SMTP_USER
         msg['To'] = to_email
         msg.attach(MIMEText(html_content, 'html'))
-        
+
         with smtplib.SMTP('smtp.gmail.com', 587) as server:
             server.starttls()
             server.login(SMTP_USER, SMTP_PASS)
             server.send_message(msg)
-        
+
         app.logger.info(f"Email sent to {mask_email(to_email)}")
         return True
     except Exception as e:
@@ -567,7 +567,7 @@ def send_verification_email(user):
     token = serializer.dumps(user.email, salt='email-verify')
     frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:5500')
     verification_url = f"{frontend_url}/verify-email/{token}"
-    
+
     html = f"""
     <html>
     <body style="font-family: Arial, sans-serif;">
@@ -587,7 +587,7 @@ def send_password_reset_email(user):
     token = serializer.dumps(user.email, salt='password-reset')
     frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:5500')
     reset_url = f"{frontend_url}/reset-password/{token}"
-    
+
     html = f"""
     <html>
     <body style="font-family: Arial, sans-serif;">
@@ -647,14 +647,14 @@ def upload_to_cloudinary(file, folder='tarazo'):
 def initiate_flutterwave_payment(amount, email, phone, name, order_id):
     if not FLUTTERWAVE_SECRET_KEY:
         return None
-    
+
     headers = {
         'Authorization': f'Bearer {FLUTTERWAVE_SECRET_KEY}',
         'Content-Type': 'application/json'
     }
-    
+
     frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:5500')
-    
+
     data = {
         'tx_ref': f'TX-{order_id}-{int(datetime.utcnow().timestamp())}',
         'amount': amount,
@@ -672,7 +672,7 @@ def initiate_flutterwave_payment(amount, email, phone, name, order_id):
             'logo': 'https://tarazo.com/logo.png'
         }
     }
-    
+
     try:
         response = requests.post(f'{FLUTTERWAVE_BASE_URL}/payments', headers=headers, json=data, timeout=30)
         return response.json()
@@ -683,11 +683,11 @@ def initiate_flutterwave_payment(amount, email, phone, name, order_id):
 def verify_flutterwave_payment(tx_ref, transaction_id):
     if not FLUTTERWAVE_SECRET_KEY:
         return None
-    
+
     headers = {
         'Authorization': f'Bearer {FLUTTERWAVE_SECRET_KEY}'
     }
-    
+
     try:
         response = requests.get(f'{FLUTTERWAVE_BASE_URL}/transactions/{transaction_id}/verify', headers=headers, timeout=30)
         return response.json()
@@ -702,13 +702,13 @@ def verify_flutterwave_payment(tx_ref, transaction_id):
 def get_ai_response(message, user_type='customer'):
     if not customer_model:
         return "AI features are currently disabled. Please contact support."
-    
+
     try:
         if user_type == 'customer':
             prompt = f"{CUSTOMER_AI_PROMPT}\n\nCustomer: {message}\nAssistant:"
         else:
             prompt = f"{AGENT_AI_PROMPT}\n\nAgent ask: {message}\nAssistant:"
-        
+
         response = customer_model.generate_content(prompt)
         return response.text.strip()
     except Exception as e:
@@ -725,7 +725,7 @@ def before_request():
         if detect_sql_injection(request.get_json()):
             log_security_event('SQL_INJECTION_ATTEMPT', None, request.remote_addr, "Blocked JSON payload")
             return jsonify({'error': 'Invalid request'}), 400
-    
+
     if request.endpoint == 'login':
         if not check_brute_force(request.remote_addr):
             return jsonify({'error': 'Too many attempts. Try again later.'}), 429
@@ -781,18 +781,18 @@ def health():
 @rate_limit("3 per minute")
 def register():
     data = request.get_json()
-    
+
     schema = RegisterSchema()
     try:
         validated = schema.load(data)
     except ValidationError as e:
         return jsonify({'error': 'Invalid input', 'details': e.messages}), 400
-    
+
     if User.query.filter_by(email=validated['email']).first():
         return jsonify({'error': 'Email already registered'}), 409
-    
+
     password_hash = ph.hash(validated['password'])
-    
+
     user = User(
         name=validated['name'],
         email=validated['email'],
@@ -800,14 +800,14 @@ def register():
         password_hash=password_hash,
         role='user'
     )
-    
+
     db.session.add(user)
     db.session.commit()
-    
+
     send_verification_email(user)
-    
+
     log_security_event('USER_REGISTERED', user.id, request.remote_addr, f"Email: {mask_email(user.email)}")
-    
+
     return jsonify({
         'success': True,
         'message': 'Registration successful. Please check your email for verification.'
@@ -818,13 +818,13 @@ def verify_email(token):
     try:
         email = serializer.loads(token, salt='email-verify', max_age=86400)
         user = User.query.filter_by(email=email).first()
-        
+
         if not user:
             return jsonify({'error': 'User not found'}), 404
-        
+
         user.email_verified = True
         db.session.commit()
-        
+
         return jsonify({'success': True, 'message': 'Email verified successfully'})
     except:
         return jsonify({'error': 'Invalid or expired token'}), 400
@@ -833,22 +833,22 @@ def verify_email(token):
 @rate_limit("5 per minute")
 def login():
     data = request.get_json()
-    
+
     schema = LoginSchema()
     try:
         validated = schema.load(data)
     except ValidationError as e:
         return jsonify({'error': 'Invalid input', 'details': e.messages}), 400
-    
+
     user = User.query.filter_by(email=validated['email']).first()
-    
+
     if user and user.locked_until and user.locked_until > datetime.utcnow():
         return jsonify({'error': 'Account locked. Try again later.'}), 403
-    
+
     if not user:
         record_failed_attempt(request.remote_addr)
         return jsonify({'error': 'Invalid email or password'}), 401
-    
+
     try:
         ph.verify(user.password_hash, validated['password'])
     except VerifyMismatchError:
@@ -858,19 +858,19 @@ def login():
             user.locked_until = datetime.utcnow() + timedelta(minutes=30)
         db.session.commit()
         return jsonify({'error': 'Invalid email or password'}), 401
-    
+
     user.failed_login_attempts = 0
     user.locked_until = None
     db.session.commit()
-    
+
     if not user.email_verified:
         return jsonify({'error': 'Please verify your email first'}), 403
-    
+
     access_token = create_access_token(identity=user.id)
     refresh_token = create_refresh_token(identity=user.id)
-    
+
     log_security_event('USER_LOGIN', user.id, request.remote_addr, f"Role: {user.role}")
-    
+
     response = jsonify({
         'success': True,
         'user': {
@@ -882,10 +882,10 @@ def login():
             'address': user.address
         }
     })
-    
+
     set_access_cookies(response, access_token)
     set_refresh_cookies(response, refresh_token)
-    
+
     return response
 
 @app.route('/api/refresh', methods=['POST'])
@@ -893,7 +893,7 @@ def login():
 def refresh():
     user_id = get_jwt_identity()
     access_token = create_access_token(identity=user_id)
-    
+
     response = jsonify({'success': True})
     set_access_cookies(response, access_token)
     return response
@@ -903,7 +903,7 @@ def refresh():
 def logout():
     jti = get_jwt()['jti']
     add_to_blacklist(jti)
-    
+
     response = jsonify({'success': True, 'message': 'Logged out successfully'})
     unset_jwt_cookies(response)
     return response
@@ -913,13 +913,13 @@ def logout():
 def forgot_password():
     data = request.get_json()
     email = data.get('email')
-    
+
     user = User.query.filter_by(email=email).first()
-    
+
     if user:
         send_password_reset_email(user)
         log_security_event('PASSWORD_RESET_REQUEST', user.id, request.remote_addr, "Reset requested")
-    
+
     return jsonify({'message': 'If an account exists, a reset link has been sent'})
 
 @app.route('/api/reset-password', methods=['POST'])
@@ -928,24 +928,24 @@ def reset_password():
     data = request.get_json()
     token = data.get('token')
     new_password = data.get('password')
-    
+
     if not new_password or len(new_password) < 8:
         return jsonify({'error': 'Password must be at least 8 characters'}), 400
-    
+
     try:
         email = serializer.loads(token, salt='password-reset', max_age=3600)
         user = User.query.filter_by(email=email).first()
-        
+
         if not user:
             return jsonify({'error': 'Invalid token'}), 400
-        
+
         user.password_hash = ph.hash(new_password)
         user.force_password_change = False
         user.last_password_change = datetime.utcnow()
         db.session.commit()
-        
+
         log_security_event('PASSWORD_RESET_SUCCESS', user.id, request.remote_addr, "Password changed")
-        
+
         return jsonify({'success': True, 'message': 'Password reset successful'})
     except:
         return jsonify({'error': 'Invalid or expired token'}), 400
@@ -974,16 +974,16 @@ def get_products():
 @rate_limit("10 per hour")
 def create_product():
     data = request.form
-    
+
     if not data.get('name') or not data.get('price'):
         return jsonify({'error': 'Name and price required'}), 400
-    
+
     image_url = None
     if 'image' in request.files:
         file = request.files['image']
         if file and allowed_file(file.filename):
             image_url = upload_to_cloudinary(file, 'tarazo/products')
-    
+
     install_urls = []
     for i in range(1, 5):
         key = f'install_{i}'
@@ -993,7 +993,7 @@ def create_product():
                 url = upload_to_cloudinary(file, 'tarazo/installations')
                 if url:
                     install_urls.append(url)
-    
+
     product = Product(
         name=sanitize_input(data['name']),
         type=sanitize_input(data.get('type', 'General')),
@@ -1003,10 +1003,10 @@ def create_product():
         image_url=image_url,
         install_images=json.dumps(install_urls)
     )
-    
+
     db.session.add(product)
     db.session.commit()
-    
+
     return jsonify({'success': True, 'product_id': product.id}), 201
 
 # ==========================================
@@ -1018,18 +1018,18 @@ def create_product():
 def customer_chat():
     data = request.get_json()
     message = data.get('message', '')
-    
+
     if not message:
         return jsonify({'error': 'Message required'}), 400
-    
+
     ai_response = get_ai_response(sanitize_input(message), 'customer')
-    
+
     user_id = None
     try:
         user_id = get_jwt_identity()
     except:
         pass
-    
+
     if user_id:
         chat = Chat(
             user_id=user_id,
@@ -1037,7 +1037,7 @@ def customer_chat():
             is_from_user=True
         )
         db.session.add(chat)
-        
+
         chat = Chat(
             user_id=user_id,
             message=ai_response,
@@ -1046,7 +1046,7 @@ def customer_chat():
         )
         db.session.add(chat)
         db.session.commit()
-    
+
     return jsonify({'response': ai_response})
 
 @app.route('/api/chat/agent', methods=['POST'])
@@ -1055,12 +1055,12 @@ def customer_chat():
 def agent_chat():
     data = request.get_json()
     message = data.get('message', '')
-    
+
     if not message:
         return jsonify({'error': 'Message required'}), 400
-    
+
     ai_response = get_ai_response(sanitize_input(message), 'agent')
-    
+
     return jsonify({'response': ai_response})
 
 @app.route('/api/chat/conversations', methods=['GET'])
@@ -1068,7 +1068,7 @@ def agent_chat():
 def get_conversations():
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
-    
+
     if user.role == 'admin':
         chats = Chat.query.order_by(Chat.timestamp.desc()).limit(100).all()
     elif user.role == 'agent':
@@ -1077,7 +1077,7 @@ def get_conversations():
         ).order_by(Chat.timestamp.desc()).limit(100).all()
     else:
         chats = Chat.query.filter_by(user_id=user_id).order_by(Chat.timestamp.desc()).all()
-    
+
     return jsonify([{
         'id': c.id,
         'user_id': c.user_id,
@@ -1096,11 +1096,11 @@ def get_conversations():
 def create_order():
     user_id = get_jwt_identity()
     data = request.get_json()
-    
+
     items = data.get('items', [])
     total = data.get('total', 0)
     payment_method = data.get('payment_method', 'MTN Mobile Money')
-    
+
     order = Order(
         user_id=user_id,
         items=json.dumps(items),
@@ -1110,10 +1110,10 @@ def create_order():
         date=datetime.utcnow().strftime('%Y-%m-%d'),
         payment_ref=f'ORD-{int(datetime.utcnow().timestamp())}'
     )
-    
+
     db.session.add(order)
     db.session.commit()
-    
+
     admin = User.query.filter_by(role='admin').first()
     if admin:
         notif = Notification(
@@ -1124,17 +1124,17 @@ def create_order():
             link='adminOrders'
         )
         db.session.add(notif)
-    
+
     available_agents = User.query.filter_by(role='agent', status='online').all()
     if available_agents:
         order_counts = {}
         for agent in available_agents:
             count = Order.query.filter_by(agent_id=agent.id).filter(Order.status.in_(['paid', 'processing'])).count()
             order_counts[agent.id] = count
-        
+
         best_agent = min(available_agents, key=lambda a: order_counts.get(a.id, 0))
         order.agent_id = best_agent.id
-        
+
         notif = Notification(
             user_id=best_agent.id,
             title='New Order Assigned',
@@ -1143,12 +1143,12 @@ def create_order():
             link='agentPanel'
         )
         db.session.add(notif)
-    
+
     db.session.commit()
-    
+
     user = User.query.get(user_id)
     send_order_confirmation(order, user)
-    
+
     return jsonify({'success': True, 'order_id': order.id}), 201
 
 @app.route('/api/orders', methods=['GET'])
@@ -1156,7 +1156,7 @@ def create_order():
 def get_orders():
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
-    
+
     if user.role == 'admin':
         orders = Order.query.order_by(Order.created_at.desc()).all()
     elif user.role == 'agent':
@@ -1165,7 +1165,7 @@ def get_orders():
         ).order_by(Order.created_at.desc()).all()
     else:
         orders = Order.query.filter_by(user_id=user_id).order_by(Order.created_at.desc()).all()
-    
+
     return jsonify([{
         'id': o.id,
         'user_id': o.user_id,
@@ -1187,18 +1187,18 @@ def get_orders():
 def assign_rider(order_id):
     data = request.get_json()
     order = Order.query.get_or_404(order_id)
-    
+
     order.rider_name = sanitize_input(data.get('rider_name', ''))
     order.rider_phone = sanitize_input(data.get('rider_phone', ''))
     order.rider_vehicle = sanitize_input(data.get('rider_vehicle', ''))
     order.delivery_location = sanitize_input(data.get('delivery_location', ''))
     order.delivery_notes = sanitize_input(data.get('delivery_notes', ''))
-    
+
     if order.status == 'paid':
         order.status = 'processing'
-    
+
     db.session.commit()
-    
+
     notif = Notification(
         user_id=order.user_id,
         title='Rider Assigned',
@@ -1208,7 +1208,7 @@ def assign_rider(order_id):
     )
     db.session.add(notif)
     db.session.commit()
-    
+
     return jsonify({'success': True})
 
 @app.route('/api/orders/<int:order_id>/status', methods=['PUT'])
@@ -1217,16 +1217,16 @@ def update_order_status(order_id):
     data = request.get_json()
     new_status = data.get('status')
     order = Order.query.get_or_404(order_id)
-    
+
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
-    
+
     if user.role != 'admin' and (user.role == 'agent' and order.agent_id != user_id):
         return jsonify({'error': 'Permission denied'}), 403
-    
+
     order.status = new_status
     db.session.commit()
-    
+
     if order.user_id:
         notif = Notification(
             user_id=order.user_id,
@@ -1237,7 +1237,7 @@ def update_order_status(order_id):
         )
         db.session.add(notif)
         db.session.commit()
-    
+
     return jsonify({'success': True})
 
 # ==========================================
@@ -1249,7 +1249,7 @@ def update_order_status(order_id):
 def get_notifications():
     user_id = get_jwt_identity()
     notifications = Notification.query.filter_by(user_id=user_id).order_by(Notification.created_at.desc()).limit(50).all()
-    
+
     return jsonify([{
         'id': n.id,
         'title': n.title,
@@ -1265,13 +1265,13 @@ def get_notifications():
 def mark_notification_read(notif_id):
     user_id = get_jwt_identity()
     notif = Notification.query.get_or_404(notif_id)
-    
+
     if notif.user_id != user_id:
         return jsonify({'error': 'Permission denied'}), 403
-    
+
     notif.read = True
     db.session.commit()
-    
+
     return jsonify({'success': True})
 
 # ==========================================
@@ -1285,10 +1285,10 @@ def initiate_payment():
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
     data = request.get_json()
-    
+
     amount = data.get('amount')
     order_id = data.get('order_id')
-    
+
     result = initiate_flutterwave_payment(
         amount=amount,
         email=user.email,
@@ -1296,43 +1296,43 @@ def initiate_payment():
         name=user.name,
         order_id=order_id
     )
-    
+
     if result and result.get('status') == 'success':
         return jsonify({
             'success': True,
             'payment_link': result['data']['link'],
             'transaction_ref': result['data']['tx_ref']
         })
-    
+
     return jsonify({'error': 'Payment initiation failed'}), 400
 
 @app.route('/api/payment/webhook', methods=['POST'])
 def flutterwave_webhook():
     signature = request.headers.get('verif-hash')
     expected_signature = os.environ.get('FLUTTERWAVE_WEBHOOK_SECRET')
-    
+
     if expected_signature and signature != expected_signature:
         log_security_event('INVALID_WEBHOOK', None, request.remote_addr, "Invalid signature")
         return jsonify({'error': 'Invalid signature'}), 401
-    
+
     data = request.json
-    
+
     if data.get('status') == 'successful':
         tx_ref = data.get('tx_ref')
         transaction_id = data.get('transaction_id')
-        
+
         verification = verify_flutterwave_payment(tx_ref, transaction_id)
-        
+
         if verification and verification.get('status') == 'success':
             order_id = int(tx_ref.split('-')[1])
             order = Order.query.get(order_id)
-            
+
             if order:
                 order.status = 'paid'
                 order.payment_ref = transaction_id
                 order.payment_details = json.dumps(data)
                 db.session.commit()
-                
+
                 notif = Notification(
                     user_id=order.user_id,
                     title='Payment Successful',
@@ -1342,7 +1342,7 @@ def flutterwave_webhook():
                 )
                 db.session.add(notif)
                 db.session.commit()
-    
+
     return jsonify({'status': 'ok'}), 200
 
 # ==========================================
@@ -1355,7 +1355,7 @@ def flutterwave_webhook():
 @admin_ip_required
 def get_agents():
     agents = User.query.filter_by(role='agent').all()
-    
+
     return jsonify([{
         'id': a.id,
         'name': a.name,
@@ -1372,11 +1372,11 @@ def get_agents():
 def update_agent_status(agent_id):
     data = request.get_json()
     new_status = data.get('status')
-    
+
     agent = User.query.get_or_404(agent_id)
     agent.status = new_status
     db.session.commit()
-    
+
     return jsonify({'success': True})
 
 @app.route('/api/admin/stats', methods=['GET'])
@@ -1384,16 +1384,16 @@ def update_agent_status(agent_id):
 @role_required('admin')
 def get_stats():
     today = datetime.utcnow().date()
-    
+
     today_orders = Order.query.filter(
         db.func.date(Order.created_at) == today,
         Order.status != 'pending'
     ).all()
     today_sales = sum(o.total for o in today_orders)
-    
+
     pending = Order.query.filter(Order.status.in_(['paid', 'processing'])).count()
     low_stock = Product.query.filter(Product.stock < 5).count()
-    
+
     return jsonify({
         'today_sales': today_sales,
         'pending_orders': pending,
@@ -1428,10 +1428,10 @@ if __name__ == '__main__':
         db.create_all()
         create_default_accounts()  # Auto-create admin/agents from .env
         print("✅ Database tables created")
-    
+
     port = int(os.environ.get('PORT', 5000))
     debug = os.environ.get('FLASK_ENV') == 'development'
-    
+
     print(f"""
     ╔══════════════════════════════════════════════════════════╗
     ║                    TARAZO BACKEND                        ║
@@ -1444,5 +1444,5 @@ if __name__ == '__main__':
     ║  CSRF: PROTECTED ON ALL ENDPOINTS 🔐                     ║
     ╚══════════════════════════════════════════════════════════╝
     """)
-    
+
     app.run(host='0.0.0.0', port=port, debug=debug)
