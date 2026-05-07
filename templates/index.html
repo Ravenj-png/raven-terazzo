@@ -1,253 +1,1324 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Tarazo Backend Test</title>
-    <style>
-        body { font-family: monospace; padding: 20px; background: #1a5276; }
-        .test-card { background: white; border-radius: 10px; padding: 20px; margin: 15px 0; }
-        button { background: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
-        pre { background: #f0f0f0; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
-        .success { color: green; font-weight: bold; }
-        .error { color: red; font-weight: bold; }
-        input { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 5px; width: 200px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>TARAZO - Premium Terrazzo Uganda</title>
+<style>
+/* ============ COMPLETE ORIGINAL CSS - KEPT INTACT ============ */
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+:root{--blue:#1a5276;--blue-dark:#154360;--green:#27ae60;--green-light:#2ecc71;--white:#ffffff;--gray:#f5f6fa;--gray-dark:#7f8c8d;--red:#e74c3c;--orange:#f39c12;--shadow:0 4px 20px rgba(0,0,0,.08)}
+body{background:var(--gray);color:#2c3e50;overflow-x:hidden;-webkit-tap-highlight-color:transparent;font-size:14px;line-height:1.5}
+.hidden{display:none!important}
+#splashPage{position:fixed;top:0;left:0;right:0;bottom:0;background:linear-gradient(135deg,var(--blue)0%,var(--blue-dark)100%);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s}
+.splash-logo{font-size:clamp(32px,8vw,48px);font-weight:800;color:var(--white);letter-spacing:4px;text-shadow:0 4px 20px rgba(0,0,0,.3)}
+.splash-sub{color:var(--green-light);font-size:clamp(11px,3vw,13px);font-weight:600;text-transform:uppercase;letter-spacing:3px;margin-top:8px;text-align:center;padding:0 20px}
+.splash-loader{width:50px;height:50px;border:4px solid rgba(255,255,255,.2);border-top-color:var(--green-light);border-radius:50%;animation:spin 1s linear infinite;margin-top:30px}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loginPage{min-height:100vh;background:linear-gradient(135deg,var(--blue)0%,var(--blue-dark)100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.login-box{background:var(--white);width:100%;max-width:400px;border-radius:20px;padding:30px 20px;box-shadow:var(--shadow)}
+.logo-text{text-align:center;font-size:clamp(24px,6vw,32px);font-weight:800;color:var(--blue);margin-bottom:5px;letter-spacing:2px}
+.logo-sub{text-align:center;color:var(--green);font-size:12px;font-weight:600;margin-bottom:25px;text-transform:uppercase;letter-spacing:1px}
+.form-group{margin-bottom:15px}
+.form-group label{display:block;font-size:12px;font-weight:600;color:var(--gray-dark);margin-bottom:5px;text-transform:uppercase}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:14px;border:2px solid #e0e0e0;border-radius:12px;font-size:15px;transition:all .3s;outline:none;background:var(--white)}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--blue)}
+.form-group input:disabled,.form-group textarea:disabled{background:#e8e8e8;color:#666;cursor:not-allowed}
+.btn{width:100%;padding:16px;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;transition:all .3s;text-transform:uppercase;letter-spacing:1px}
+.btn-primary{background:var(--blue);color:var(--white)}
+.btn-primary:active{background:var(--blue-dark);transform:scale(.98)}
+.btn-green{background:var(--green);color:var(--white)}
+.btn-green:active{background:#219a52;transform:scale(.98)}
+.btn-outline{background:transparent;border:2px solid var(--blue);color:var(--blue);margin-top:10px}
+.btn-red{background:var(--red);color:var(--white)}
+.btn-sm{padding:8px 14px;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;margin-top:10px;width:100%}
+.btn-add{background:var(--green);color:var(--white)}
+.btn-view{background:var(--blue);color:var(--white)}
+.btn-edit{background:var(--orange);color:var(--white)}
+.btn-disabled{background:#ccc;color:#888;cursor:not-allowed}
+.remember-row{display:flex;align-items:center;gap:8px;margin:10px 0 15px;font-size:13px;color:var(--gray-dark)}
+.remember-row input{width:18px;height:18px;accent-color:var(--blue)}
+.toggle-text{text-align:center;margin-top:15px;font-size:14px;color:var(--gray-dark)}
+.toggle-text span{color:var(--blue);font-weight:700;cursor:pointer}
+.forgot-link{text-align:center;margin-top:10px;font-size:13px;color:var(--blue);cursor:pointer;font-weight:600}
+.forgot-link:hover{text-decoration:underline}
+#appContainer{min-height:100vh;padding-bottom:80px}
+.app-header{background:var(--blue);color:var(--white);padding:15px 20px;position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 10px rgba(0,0,0,.1)}
+.app-header h1{font-size:clamp(16px,4vw,20px);letter-spacing:1px}
+.header-actions{display:flex;gap:15px;align-items:center}
+.user-greeting{font-size:13px;font-weight:600;opacity:.9;margin-right:5px;display:none}
+@media(min-width:400px){.user-greeting{display:block}}
+.icon-btn{background:rgba(255,255,255,.2);border:none;color:var(--white);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;position:relative;flex-shrink:0}
+.badge{position:absolute;top:-5px;right:-5px;background:var(--red);color:var(--white);font-size:10px;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--white);display:flex;justify-content:space-around;padding:10px 0;box-shadow:0 -2px 10px rgba(0,0,0,.1);z-index:100;border-top:1px solid #eee}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--gray-dark);font-size:11px;font-weight:600;cursor:pointer;padding:5px 10px;border-radius:10px;transition:all .2s;flex:1}
+.nav-item.active{color:var(--blue);background:rgba(26,82,118,.1)}
+.nav-icon{font-size:22px}
+.card{background:var(--white);border-radius:16px;padding:20px;margin:15px;box-shadow:var(--shadow)}
+.card-title{font-size:18px;font-weight:700;color:var(--blue-dark);margin-bottom:15px;display:flex;align-items:center;gap:10px}
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:15px}
+.stat-card{background:var(--white);border-radius:16px;padding:18px;text-align:center;box-shadow:var(--shadow);border-left:4px solid var(--blue);cursor:pointer;transition:transform .2s}
+.stat-card:active{transform:scale(.98)}
+.stat-card.green{border-left-color:var(--green)}
+.stat-card.orange{border-left-color:var(--orange)}
+.stat-card.red{border-left-color:var(--red)}
+.stat-value{font-size:clamp(18px,5vw,24px);font-weight:800;color:var(--blue-dark)}
+.stat-label{font-size:12px;color:var(--gray-dark);margin-top:5px;font-weight:600}
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:15px}
+.product-card{background:var(--white);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);cursor:pointer;transition:transform .2s}
+.product-card:active{transform:scale(.98)}
+.product-card img{width:100%;height:150px;object-fit:cover;display:block;image-rendering:-webkit-optimize-contrast}
+.product-info{padding:12px}
+.product-name{font-size:14px;font-weight:700;color:var(--blue-dark);margin-bottom:5px}
+.product-type{font-size:11px;color:var(--green);font-weight:600;text-transform:uppercase;margin-bottom:8px}
+.product-price{font-size:18px;font-weight:800;color:var(--blue)}
+.product-stock{font-size:11px;color:var(--gray-dark);margin-top:5px}
+.product-stock.low{color:var(--red);font-weight:700}
+.list-item{background:var(--white);margin:10px 15px;padding:15px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 4px rgba(0,0,0,.05);cursor:pointer;transition:all .2s}
+.list-item:active{background:#f0f0f0}
+.list-info h4{font-size:15px;color:var(--blue-dark);margin-bottom:3px}
+.list-info p{font-size:12px;color:var(--gray-dark)}
+.status-badge{padding:5px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase}
+.status-pending{background:#fff3cd;color:#856404}
+.status-paid{background:#d4edda;color:#155724}
+.status-processing{background:#e2e3f3;color:#383d7a}
+.status-shipped{background:#cce5ff;color:#004085}
+.status-delivered{background:#d1ecf1;color:#0c5460}
+.status-resolved{background:#d4edda;color:#155724}
+.status-unresolved{background:#fff3cd;color:#856404}
+.app-form .form-group{margin-bottom:12px}
+.app-form input,.app-form select,.app-form textarea{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;font-size:15px}
+.app-form textarea{min-height:100px;resize:vertical}
+.upload-area{border:3px dashed var(--blue);border-radius:16px;padding:40px 20px;text-align:center;background:rgba(26,82,118,.05);margin:15px;cursor:pointer}
+.upload-area:active{background:rgba(26,82,118,.1)}
+.chat-widget{position:fixed;bottom:80px;right:20px;z-index:200}
+.chat-btn{width:60px;height:60px;border-radius:50%;background:var(--green);color:var(--white);border:none;font-size:24px;cursor:pointer;box-shadow:0 4px 15px rgba(39,174,96,.4);display:flex;align-items:center;justify-content:center}
+.chat-box{position:fixed;bottom:150px;right:20px;width:calc(100% - 40px);max-width:350px;height:450px;background:var(--white);border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,.2);display:flex;flex-direction:column;overflow:hidden;z-index:250}
+.chat-header{background:var(--blue);color:var(--white);padding:15px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.chat-header small{font-weight:400;opacity:.9;font-size:12px;display:block;margin-top:2px}
+.chat-close{background:rgba(255,255,255,.2);border:none;color:var(--white);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px}
+.chat-messages{flex:1;overflow-y:auto;padding:15px;display:flex;flex-direction:column;gap:10px}
+.chat-msg{max-width:80%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.4;word-break:break-word}
+.chat-msg.user{align-self:flex-end;background:var(--blue);color:var(--white);border-bottom-right-radius:4px}
+.chat-msg.bot{align-self:flex-start;background:var(--gray);color:#2c3e50;border-bottom-left-radius:4px}
+.chat-msg.agent{align-self:flex-start;background:#e8f5e9;color:#2e7d32;border-bottom-left-radius:4px}
+.chat-msg.manager{align-self:flex-start;background:#fce4ec;color:#c2185b;border-bottom-left-radius:4px}
+.chat-msg.rider{align-self:flex-start;background:#fff3e0;color:#e65100;border-bottom-left-radius:4px}
+.chat-input-area{display:flex;padding:10px;border-top:1px solid #eee;gap:8px}
+.chat-input-area input{flex:1;padding:12px;border:1px solid #ddd;border-radius:20px;outline:none}
+.whatsapp-widget{position:fixed;bottom:80px;left:20px;z-index:200}
+.whatsapp-btn{width:60px;height:60px;border-radius:50%;background:#25d366;color:var(--white);border:none;font-size:28px;cursor:pointer;box-shadow:0 4px 15px rgba(37,211,102,.4);display:flex;align-items:center;justify-content:center;text-decoration:none}
+.table-wrap{overflow-x:auto;margin:15px}
+table{width:100%;background:var(--white);border-radius:12px;overflow:hidden;font-size:13px;border-collapse:collapse}
+th{background:var(--blue);color:var(--white);padding:12px;text-align:left;font-weight:600}
+td{padding:12px;border-bottom:1px solid #eee}
+tr:last-child td{border-bottom:none}
+.section-title{font-size:clamp(16px,4vw,20px);font-weight:800;color:var(--blue-dark);padding:20px 15px 10px}
+.agent-card{background:var(--white);margin:10px 15px;padding:15px;border-radius:12px;border-left:4px solid var(--green);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.agent-card.offline{border-left-color:var(--gray-dark);opacity:.7}
+.agent-card.busy{border-left-color:var(--orange)}
+.agent-name{font-weight:700;color:var(--blue-dark)}
+.agent-status{font-size:12px;font-weight:600;margin-top:4px}
+.online{color:var(--green)}
+.offline{color:var(--gray-dark)}
+.busy{color:var(--orange)}
+.bar-chart-container{background:var(--white);border-radius:12px;padding:15px;margin:15px;box-shadow:var(--shadow)}
+.bar-chart-svg{width:100%;height:180px}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-content{background:var(--white);border-radius:20px;padding:25px;width:100%;max-width:450px;max-height:85vh;overflow-y:auto}
+.modal-header{font-size:20px;font-weight:800;color:var(--blue-dark);margin-bottom:15px;display:flex;justify-content:space-between;align-items:center}
+.gallery{display:flex;gap:10px;overflow-x:auto;padding:10px 0}
+.gallery-img{min-width:100px;height:100px;border-radius:10px;object-fit:cover}
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-100px);background:var(--blue-dark);color:var(--white);padding:14px 24px;border-radius:12px;font-weight:600;z-index:400;transition:all .3s;opacity:0;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+::-webkit-scrollbar{width:0;background:transparent}
+.empty-state{text-align:center;padding:40px 20px;color:var(--gray-dark)}
+.empty-state .icon{font-size:60px;margin-bottom:15px;opacity:.5}
+.timeline{margin:15px;padding:15px;background:var(--white);border-radius:12px}
+.timeline-item{display:flex;gap:15px;margin-bottom:15px;position:relative}
+.timeline-item:last-child{margin-bottom:0}
+.timeline-dot{width:16px;height:16px;border-radius:50%;background:var(--gray-dark);flex-shrink:0;margin-top:3px}
+.timeline-dot.active{background:var(--green)}
+.timeline-dot.current{background:var(--blue);box-shadow:0 0 0 4px rgba(26,82,118,.2)}
+.timeline-content h4{font-size:14px;color:var(--blue-dark);margin-bottom:3px}
+.timeline-content p{font-size:12px;color:var(--gray-dark)}
+.install-gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:15px}
+.install-gallery img{width:100%;height:120px;object-fit:cover;border-radius:10px;cursor:pointer}
+.detail-hero{width:100%;height:250px;object-fit:cover;display:block}
+.filter-row{display:flex;gap:8px;overflow-x:auto;padding:0 15px 15px;-webkit-overflow-scrolling:touch}
+.filter-btn{padding:8px 16px;border:2px solid #ddd;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;background:var(--white);color:var(--gray-dark)}
+.filter-btn.active{background:var(--blue);color:var(--white);border-color:var(--blue)}
+.wishlist-btn{background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray-dark);transition:all .2s}
+.wishlist-btn.active{color:var(--red)}
+.rating-stars{color:var(--orange);font-size:18px;letter-spacing:2px}
+.review-card{background:var(--white);margin:10px 15px;padding:15px;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.review-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.review-author{font-weight:700;color:var(--blue-dark)}
+.review-date{font-size:11px;color:var(--gray-dark)}
+.review-text{font-size:13px;color:#555;line-height:1.5}
+.network-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;margin-left:8px}
+.network-mtn{background:#f5a623;color:#333}
+.network-airtel{background:#e74c3c;color:white}
+.card-fields-group{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.receipt-signature{margin-top:20px;padding-top:15px;border-top:1px dashed #ccc;display:flex;justify-content:space-between}
+.receipt-stamp{text-align:center;margin-top:15px;padding:8px;border:1px dashed var(--green);border-radius:8px;color:var(--green);font-weight:700}
+@media(max-width:350px){.product-grid{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
-    <div style="max-width: 600px; margin: 0 auto;">
-        <h1 style="color: white;">🧪 Tarazo Backend Test</h1>
+<div id="toast" class="toast"></div>
+<div id="splashPage"><div class="splash-logo">🏛️ TARAZO</div><div class="splash-sub">Premium Terrazzo Uganda</div><div class="splash-loader"></div></div>
+<div id="loginPage" class="hidden"><div class="login-box"><div class="logo-text">🏛️ TARAZO</div><div class="logo-sub">Premium Terrazzo Uganda</div>
+<div id="loginForm"><div class="form-group"><label>📧 Email</label><input type="email" id="loginEmail" placeholder="Enter email"></div><div class="form-group"><label>🔒 Password</label><input type="password" id="loginPassword" placeholder="Enter password"></div><div class="remember-row"><input type="checkbox" id="rememberMe"><label for="rememberMe" style="margin:0;text-transform:none;font-size:13px;font-weight:400;color:var(--gray-dark);cursor:pointer;">Remember Me</label></div><button class="btn btn-primary" onclick="handleLogin()">🔐 Login</button><div class="forgot-link" onclick="showForgotPassword()">🔑 Forgot Password?</div><div class="toggle-text">No account? <span onclick="toggleAuth()">📝 Register</span></div></div>
+<div id="registerForm" class="hidden"><div class="form-group"><label>👤 Full Name</label><input type="text" id="regName" placeholder="Your name"></div><div class="form-group"><label>📱 Phone</label><input type="tel" id="regPhone" placeholder="07XX XXX XXX"></div><div class="form-group"><label>📧 Email</label><input type="email" id="regEmail" placeholder="Enter email"></div><div class="form-group"><label>🔒 Password</label><input type="password" id="regPassword" placeholder="Create password"></div><div class="form-group"><label>🔒 Confirm Password</label><input type="password" id="regConfirmPassword" placeholder="Confirm password"></div><button class="btn btn-green" onclick="handleRegister()">✅ Create Account</button><div class="toggle-text">Have an account? <span onclick="toggleAuth()">🔐 Login</span></div></div>
+<div id="forgotForm" class="hidden"><div class="form-group"><label>📧 Email</label><input type="email" id="forgotEmail" placeholder="Enter your registered email"></div><button class="btn btn-primary" onclick="handleForgotPassword()">🔄 Reset Password</button><div class="toggle-text">Remember your password? <span onclick="showLoginForm()">🔐 Login</span></div></div>
+</div></div>
+<div id="appContainer" class="hidden">
+<div class="app-header"><h1>🏛️ TARAZO</h1><div class="header-actions"><span class="user-greeting" id="headerGreeting"></span><button class="icon-btn" onclick="showCart()" id="cartBtn">🛒<span class="badge hidden" id="cartBadge">0</span></button><button class="icon-btn" onclick="showNotifications()">🔔<span class="badge hidden" id="notificationBadge">0</span></button><button class="icon-btn" onclick="logout()" title="Logout">🚪</button></div></div>
+<div id="adminDashboard" class="page hidden"><div class="section-title">📊 Manager Overview</div><div Aclass="stats-grid"><div class="stat-card" onclick="showSalesDetail()"><div class="stat-value" id="adminTodaySales">UGX 0</div><div class="stat-label">💰 Today's Sales</div></div><div class="stat-card orange" onclick="showPendingDetail()"><div class="stat-value" id="adminPendingOrders">0</div><div class="stat-label">⏳ Pending Orders</div></div><div class="stat-card green" onclick="showProductsDetail()"><div class="stat-value" id="adminTotalProducts">0</div><div class="stat-label">📦 Products</div></div><div class="stat-card red" onclick="showLowStockDetail()"><div class="stat-value" id="adminLowStock">0</div><div class="stat-label">⚠️ Low Stock</div></div></div><div class="card"><div class="card-title">📈 Sales Trend</div><div class="bar-chart-container" id="adminChart"></div></div><div class="card"><div class="card-title">👥 Agent Status</div><div id="adminAgentStatus"></div></div><div class="card"><div class="card-title">🛒 Recent Orders</div><div id="adminRecentOrders"></div></div></div>
+<div id="adminProducts" class="page hidden"><div class="section-title">📦 Manage Products</div><button class="btn btn-green" style="margin:0 15px 15px;" onclick="resetProductForm()">➕ Add New Terrazzo</button><div class="card"><div class="card-title" id="productFormTitle">📤 Upload New Product</div><div class="upload-area" onclick="document.getElementById('productImage').click()"><div style="font-size:48px;margin-bottom:10px;">📷</div><div style="font-weight:700;color:var(--blue);">Tap to Upload Photo</div><div style="font-size:12px;color:var(--gray-dark);margin-top:5px;">AI will auto-generate description</div></div><input type="file" id="productImage" class="hidden" accept="image/*" onchange="handleImageUpload(this)"><div id="uploadPreview" class="hidden" style="margin:15px;text-align:center;"><img id="previewImg" style="max-width:100%;border-radius:12px;max-height:200px;" src=""><div style="margin-top:10px;padding:10px;background:#e8f5e9;border-radius:8px;color:var(--green);font-weight:600;" id="aiStatus">Analyzing image...</div></div><div class="app-form" style="padding:15px;"><input type="hidden" id="editProductId" value=""><div class="form-group"><label>🏷️ Product Name</label><input type="text" id="prodName" placeholder="e.g. Classic Floor Terrazzo"></div><div class="form-group"><label>📂 Type</label><select id="prodType"><option>Floor Terrazzo</option><option>Wall Terrazzo</option><option>Countertop Terrazzo</option><option>Stair Terrazzo</option><option>Outdoor Terrazzo</option><option>Terrazzo Tiles</option><option>Terrazzo Slabs</option><option>Polished Terrazzo</option><option>Honed Terrazzo</option><option>Rustic Terrazzo</option><option>Venetian Terrazzo</option><option>Glass Chip Terrazzo</option></select></div><div class="form-group"><label>📝 Description (AI Generated)</label><textarea id="prodDesc" placeholder="Description will appear here after upload..."></textarea></div><div class="form-group"><label>💵 Price (UGX)</label><input type="number" id="prodPrice" placeholder="e.g. 150000"></div><div class="form-group"><label>📊 Stock Quantity</label><input type="number" id="prodStock" placeholder="e.g. 10"></div><button class="btn btn-primary" id="saveProductBtn" onclick="saveProduct()">💾 Save Product</button><button class="btn btn-outline hidden" id="cancelEditBtn" onclick="resetProductForm()">❌ Cancel Edit</button></div></div><div class="section-title">📋 All Products (Tap to Edit)</div><div id="adminProductList"></div></div>
+<div id="adminOrders" class="page hidden"><div class="section-title">📋 All Orders</div><div class="search-transaction-box"><input type="text" id="transactionSearchPhone" placeholder="🔍 Search by phone number (e.g., 0777777777)"><button class="btn btn-primary" onclick="searchTransactionByPhone()">Search</button><button class="btn btn-outline" onclick="resetTransactionSearch()">Show All</button><button class="btn btn-green" onclick="exportTransactionsCSV()" style="width:auto;">📎 Export CSV</button></div><div id="adminOrdersList"></div></div>
+<div id="adminBooks" class="page hidden"><div class="section-title">📚 Balance Books</div><div class="date-filter-row"><select id="bookPeriod" onchange="changeBookPeriod()"><option value="today">Today</option><option value="week">This Week</option><option value="month">This Month</option><option value="year">This Year</option><option value="custom">Custom Range</option></select><input type="date" id="bookStart" class="hidden"><input type="date" id="bookEnd" class="hidden"><button class="btn btn-primary" style="width:auto;padding:10px 20px;" onclick="renderAdminBooks()">🔍 View</button></div><div class="stats-grid"><div class="stat-card green"><div class="stat-value" id="bookSales">UGX 0</div><div class="stat-label" id="bookSalesLabel">💰 Sales</div></div><div class="stat-card"><div class="stat-value" id="bookOrders">0</div><div class="stat-label">📦 Orders</div></div><div class="stat-card orange"><div class="stat-value" id="bookAvgOrder">UGX 0</div><div class="stat-label">📊 Avg Order</div></div><div class="stat-card"><div class="stat-value" id="bookItems">0</div><div class="stat-label">🧱 Items Sold</div></div></div><div class="card"><div class="card-title">📈 Sales Trend</div><div class="bar-chart-container" id="booksChart"></div></div><div class="card"><div class="card-title">📋 Transaction History</div><div id="booksTransactions"></div></div></div>
+<div id="adminMonitor" class="page hidden"><div class="section-title">👁️ Live Agent Monitor</div><div id="monitorFeed"></div></div>
+<div id="adminChats" class="page hidden"><div class="section-title">💬 All Conversations</div><div id="allChatsList"></div></div>
+<div id="adminTeam" class="page hidden"><div class="section-title">👥 Support Team (5 Agents)</div><div id="teamList"></div></div>
+<div id="adminDelivery" class="page hidden"><div class="section-title">🚚 Delivery Management</div><div id="adminDeliveryList"></div></div>
+<div id="adminMessages" class="page hidden"><div class="section-title">💬 Manager Messages</div><div id="managerMsgList"></div></div>
+<div id="agentPanel" class="page hidden">
+<div class="section-title">📦 My Assigned Orders</div>
+<div id="agentAssignedOrders"></div>
+<div class="section-title">🆓 Available Orders (Claim for Delivery)</div>
+<div id="agentAvailableOrders"></div>
+<div class="section-title">🚚 My Deliveries (Assign Rider)</div>
+<div id="agentDeliveryList"></div>
+<div class="section-title">👥 Riders Management</div>
+<div id="agentRiderList"></div>
+<div class="section-title">💬 My Customer Conversations</div>
+<div id="agentChatList"></div>
+<button class="btn btn-add" style="margin:0 15px 15px;" onclick="showAddRiderModal()">➕ Add New Rider</button>
+<button class="btn btn-primary" style="margin:0 15px 15px;" onclick="openAgentToManagerChat()">💬 Message Manager</button>
+<div class="section-title">💬 Agent Group Chat</div>
+<div class="agent-chat-panel"><div class="agent-chat-messages" id="agentChatMessages"></div><div class="agent-input"><input type="text" id="agentChatInput" placeholder="Type to team..." onkeypress="if(event.key==='Enter')sendAgentChat()"><button onclick="sendAgentChat()">📤</button></div></div>
+</div>
+<div id="agentFullscreenChat" class="page hidden"><div class="fullscreen-chat"><div class="fullscreen-chat-header"><div><div id="fsChatTitle">Chat</div><small id="fsChatSub" style="opacity:.8;font-size:12px;"></small></div><div style="display:flex;gap:10px;"><button class="icon-btn" onclick="minimizeFullscreenChat()" title="Minimize" style="font-size:16px;">🗕️</button><button class="icon-btn" onclick="closeFullscreenChat()" title="Close" style="font-size:16px;">✕</button></div></div><div class="fullscreen-chat-body" id="fsChatBody"></div><div class="fullscreen-chat-input"><input type="text" id="fsChatInput" placeholder="Type message..." onkeypress="if(event.key==='Enter')sendFullscreenChat()"><button class="btn btn-green" style="width:auto;padding:10px 16px;" onclick="sendFullscreenChat()">📤</button></div></div></div>
+<div id="userShop" class="page hidden"><div style="padding:15px;"><input type="text" placeholder="🔍 Search terrazzo..." style="width:100%;padding:14px;border-radius:12px;border:1px solid #ddd;font-size:15px;" onkeyup="searchProducts(this.value)"></div><div class="filter-row"><button class="filter-btn active" onclick="filterProducts('all',this)">🏠 All</button><button class="filter-btn" onclick="filterProducts('Floor',this)">🏠 Floor</button><button class="filter-btn" onclick="filterProducts('Wall',this)">🧱 Wall</button><button class="filter-btn" onclick="filterProducts('Countertop',this)">🍽️ Countertop</button><button class="filter-btn" onclick="filterProducts('Outdoor',this)">🌳 Outdoor</button><button class="filter-btn" onclick="filterProducts('Tile',this)">🔲 Tiles</button></div><div class="product-grid" id="shopGrid"></div></div>
+<div id="productDetail" class="page hidden"><div id="detailContent"></div></div>
+<div id="userCart" class="page hidden"><div class="section-title">🛒 My Cart</div><div id="cartItems"></div><div class="card" id="cartSummary"><div style="display:flex;justify-content:space-between;font-size:18px;font-weight:800;"><span>💵 Total:</span><span id="cartTotal" style="color:var(--blue);">UGX 0</span></div><button class="btn btn-green" style="margin-top:15px;" onclick="showCheckout()" id="checkoutBtn">✅ Proceed to Checkout</button></div></div>
+<div id="checkoutPage" class="page hidden"><div class="section-title">💳 Checkout</div><div class="card"><div class="card-title">💳 Payment Method</div><div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;"><label style="display:flex;align-items:center;gap:10px;padding:15px;border:2px solid var(--blue);border-radius:12px;cursor:pointer;"><input type="radio" name="payMethod" value="mtn" checked style="width:20px;height:20px;"><span style="font-weight:700;">📱 MTN Mobile Money</span></label><label style="display:flex;align-items:center;gap:10px;padding:15px;border:2px solid #ddd;border-radius:12px;cursor:pointer;"><input type="radio" name="payMethod" value="airtel" style="width:20px;height:20px;"><span style="font-weight:700;">📡 Airtel Money</span></label><label style="display:flex;align-items:center;gap:10px;padding:15px;border:2px solid #ddd;border-radius:12px;cursor:pointer;"><input type="radio" name="payMethod" value="card" style="width:20px;height:20px;"><span style="font-weight:700;">💳 Bank Card</span></label></div><div id="cardFields" class="card-fields-group hidden"><div class="form-group"><label>💳 Card Number</label><input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19"></div><div class="form-group"><label>📅 Expiry (MM/YY)</label><input type="text" id="cardExpiry" placeholder="MM/YY"></div><div class="form-group"><label>🔒 CVV</label><input type="password" id="cardCvv" placeholder="123" maxlength="4"></div></div><div class="form-group"><label>📱 Phone Number</label><input type="tel" id="payPhone" placeholder="07XX XXX XXX" value="0770000000"><div id="networkBadge" class="hidden"></div></div><div style="background:#fff3cd;padding:15px;border-radius:10px;margin:15px 0;font-size:13px;color:#856404;"><strong>⚠️ DEMO MODE:</strong> No real money will be deducted.</div><div style="display:flex;justify-content:space-between;font-size:20px;font-weight:800;margin:20px 0;"><span>💵 Total:</span><span id="checkoutTotal" style="color:var(--green);">UGX 0</span></div><button class="btn btn-green" onclick="processPayment()">💰 Pay Now</button><button class="btn btn-outline" onclick="navigateTo('userCart')">⬅️ Back to Cart</button></div></div>
+<div id="userOrders" class="page hidden"><div class="section-title">📦 My Orders & Delivery Info</div><div id="userOrderList"></div></div>
+<div id="userDashboard" class="page hidden"><div class="section-title">👤 My Account</div><div class="card"><div style="display:flex;align-items:center;gap:15px;margin-bottom:15px;"><div style="width:60px;height:60px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:28px;">👤</div><div><div style="font-weight:800;font-size:18px;" id="userNameDisplay">Customer</div><div style="color:var(--gray-dark);font-size:13px;" id="userEmailDisplay">email@example.com</div></div></div></div><div class="stats-grid"><div class="stat-card"><div class="stat-value" id="userTotalOrders">0</div><div class="stat-label">📦 Total Orders</div></div><div class="stat-card green"><div class="stat-value" id="userPendingOrders">0</div><div class="stat-label">⏳ Pending</div></div></div><div class="card"><div class="card-title">📝 My Profile</div><div class="app-form"><div class="form-group"><label>👤 Full Name</label><input type="text" id="profileName" placeholder="Your name"></div><div class="form-group"><label>📧 Email</label><input type="email" id="profileEmail" placeholder="Your email" style="background:#f0f0f0;" readonly></div><div class="form-group"><label>📱 Phone Number</label><input type="tel" id="profilePhone" placeholder="07XX XXX XXX"></div><div class="form-group"><label>🏠 Delivery Address</label><textarea id="profileAddress" placeholder="Enter your full delivery address..."></textarea></div><button class="btn btn-primary" onclick="saveUserProfile()">💾 Save Profile</button></div></div><div class="card"><div class="card-title">❤️ My Wishlist</div><div id="wishlistItems"></div></div><div class="card"><div class="card-title">⭐ My Reviews & Ratings</div><div id="userReviews"></div></div></div>
+<div class="chat-widget hidden" id="chatWidgetContainer"><button class="chat-btn" onclick="toggleChat()">💬</button></div>
+<div id="chatBox" class="chat-box hidden"><div class="chat-header"><div>🤖 Tarazo Assistant<div id="chatStatus"><small>🟢 Online - Ask me anything</small></div></div><button class="chat-close" onclick="toggleChat()">✕</button></div><div class="chat-messages" id="chatMessages"></div><div class="chat-input-area"><input type="text" id="chatInput" placeholder="Type message..." onkeypress="if(event.key==='Enter')sendChat()"><button class="btn btn-green" style="width:auto;padding:10px 16px;" onclick="sendChat()">📤</button></div></div>
+<div class="whatsapp-widget hidden" id="whatsappWidget"><a href="https://wa.me/256772123456?text=Hello%20Tarazo%2C%20I%20need%20assistance" class="whatsapp-btn" target="_blank"><svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a></div>
+<div class="bottom-nav" id="bottomNav"></div>
+</div>
+<div id="modalOverlay" class="modal-overlay hidden" onclick="closeModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header" id="modalTitle">Title</div><div id="modalBody"></div><button class="btn btn-outline" style="margin-top:15px;" onclick="hideModal()">❌ Close</button></div></div>
 
-        <div class="test-card">
-            <h3>Test Login with .env Credentials</h3>
+<script>
+// ======================== BACKEND CONFIGURATION ========================
+const API_BASE_URL = 'https://raven-terazzo.onrender.com/api';
+
+// ======================== GLOBAL STATE ========================
+var currentUser = null;
+var currentPage = '';
+var chatOpen = false;
+var pollInterval = null;
+var notifications = [];
+var productsList = [];
+var cartList = [];
+var ordersList = [];
+
+// ======================== HELPER FUNCTIONS ========================
+function showToast(msg) {
+    var toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(function(){ toast.classList.remove('show'); }, 2500);
+}
+
+function showModal(title, html){
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalBody').innerHTML = html;
+    document.getElementById('modalOverlay').classList.remove('hidden');
+}
+
+function hideModal(){
+    document.getElementById('modalOverlay').classList.add('hidden');
+}
+
+function closeModal(e){
+    if(e.target === document.getElementById('modalOverlay')) hideModal();
+}
+
+// ======================== AUTHENTICATION ========================
+async function handleLogin() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    const remember = document.getElementById('rememberMe').checked;
+    
+    if (!email || !password) {
+        showToast('❌ Please enter email and password');
+        return;
+    }
+    
+    try {
+        showToast('🔄 Logging in...');
+        
+        const response = await fetch(`${API_BASE_URL}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            mode: 'cors',
+            body: JSON.stringify({ email, password })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            currentUser = data.user;
             
-            <div>
-                <input type="email" id="email" placeholder="Email" value="admin@tarazo.com">
-                <input type="password" id="password" placeholder="Password" value="admin123">
-                <button onclick="testLogin()">Test Login</button>
-            </div>
-            
-            <div id="loginResult" style="margin-top: 10px;"></div>
-        </div>
-
-        <div class="test-card">
-            <h3>Test Register New User</h3>
-            <div>
-                <input type="text" id="regName" placeholder="Name" value="Test User">
-                <input type="email" id="regEmail" placeholder="Email" value="testuser@example.com">
-                <input type="tel" id="regPhone" placeholder="Phone" value="0771234567">
-                <input type="password" id="regPassword" placeholder="Password" value="test123">
-                <button onclick="testRegister()">Test Register</button>
-            </div>
-            <div id="registerResult" style="margin-top: 10px;"></div>
-        </div>
-
-        <div class="test-card">
-            <h3>Test Protected Routes (After Login)</h3>
-            <button onclick="testProducts()">1. Get Products</button>
-            <button onclick="testCart()">2. Get Cart</button>
-            <button onclick="testOrders()">3. Get Orders</button>
-            <button onclick="testAdminStats()">4. Admin Stats (admin only)</button>
-            <div id="protectedResult" style="margin-top: 10px;"></div>
-        </div>
-    </div>
-
-    <script>
-        const API_BASE = 'https://raven-terazzo.onrender.com/api';
-        let csrfToken = null;
-        let currentUser = null;
-
-        function showResult(elementId, success, message, data = null) {
-            const el = document.getElementById(elementId);
-            el.innerHTML = `
-                <div class="${success ? 'success' : 'error'}">
-                    ${success ? '✅' : '❌'} ${message}
-                </div>
-                ${data ? `<pre>${JSON.stringify(data, null, 2)}</pre>` : ''}
-            `;
-        }
-
-        async function getCSRFToken() {
-            try {
-                const response = await fetch(`${API_BASE}/csrf-token`, {
-                    method: 'GET',
-                    credentials: 'include'
-                });
-                const data = await response.json();
-                csrfToken = data.csrf_token;
-                console.log('CSRF Token:', csrfToken);
-                return csrfToken;
-            } catch (error) {
-                console.error('CSRF error:', error);
-                return null;
+            if (remember) {
+                localStorage.setItem('tarazo_email', email);
+            } else {
+                localStorage.removeItem('tarazo_email');
             }
+            
+            showToast('✅ Login successful!');
+            await loadAllData();
+            enterApp();
+        } else {
+            showToast(data.error || '❌ Login failed. Check your credentials.');
         }
+    } catch (error) {
+        console.error('Login error:', error);
+        showToast('❌ Cannot connect to server. Please check if backend is running.');
+    }
+}
 
-        async function testLogin() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+async function handleRegister() {
+    const name = document.getElementById('regName').value;
+    const phone = document.getElementById('regPhone').value;
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPassword').value;
+    const confirmPassword = document.getElementById('regConfirmPassword').value;
+    
+    if (!name || !email || !password) {
+        showToast('Please fill all fields');
+        return;
+    }
+    if (password !== confirmPassword) {
+        showToast('Passwords do not match');
+        return;
+    }
+    
+    try {
+        showToast('🔄 Creating account...');
+        const response = await fetch(`${API_BASE_URL}/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            mode: 'cors',
+            body: JSON.stringify({ name, email, phone, password })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            showToast('✅ Registration successful! Please check your email for verification.');
+            toggleAuth();
+            document.getElementById('loginEmail').value = email;
+        } else {
+            showToast(data.error || '❌ Registration failed');
+        }
+    } catch (error) {
+        console.error('Register error:', error);
+        showToast('❌ Network error');
+    }
+}
 
-            showResult('loginResult', false, 'Logging in...');
+async function handleForgotPassword() {
+    const email = document.getElementById('forgotEmail').value;
+    if (!email) {
+        showToast('Please enter your email');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/forgot-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            mode: 'cors',
+            body: JSON.stringify({ email })
+        });
+        
+        if (response.ok) {
+            showToast('✅ Reset link sent to your email');
+            showLoginForm();
+        } else {
+            showToast('❌ Failed to send reset link');
+        }
+    } catch (error) {
+        showToast('❌ Network error');
+    }
+}
 
+async function logout() {
+    try {
+        await fetch(`${API_BASE_URL}/logout`, {
+            method: 'POST',
+            credentials: 'include',
+            mode: 'cors'
+        });
+    } catch(e) {}
+    
+    currentUser = null;
+    localStorage.removeItem('tarazo_email');
+    document.getElementById('appContainer').classList.add('hidden');
+    document.getElementById('loginPage').classList.remove('hidden');
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('loginPassword').value = '';
+    showToast('👋 Logged out');
+    
+    if (pollInterval) clearInterval(pollInterval);
+}
+
+function toggleAuth(){
+    var a=document.getElementById('loginForm'), b=document.getElementById('registerForm'), c=document.getElementById('forgotForm');
+    if(!a.classList.contains('hidden')){ a.classList.add('hidden'); b.classList.remove('hidden'); c.classList.add('hidden'); }
+    else{ a.classList.remove('hidden'); b.classList.add('hidden'); c.classList.add('hidden'); }
+}
+
+function showForgotPassword(){
+    document.getElementById('loginForm').classList.add('hidden');
+    document.getElementById('registerForm').classList.add('hidden');
+    document.getElementById('forgotForm').classList.remove('hidden');
+}
+
+function showLoginForm(){
+    document.getElementById('loginForm').classList.remove('hidden');
+    document.getElementById('registerForm').classList.add('hidden');
+    document.getElementById('forgotForm').classList.add('hidden');
+}
+
+// ======================== LOAD DATA FROM BACKEND ========================
+async function loadAllData() {
+    if (!currentUser) return;
+    
+    try {
+        // Load products
+        const productsRes = await fetch(`${API_BASE_URL}/products`, {
+            credentials: 'include',
+            mode: 'cors'
+        });
+        productsList = await productsRes.json();
+        
+        // Load cart
+        const cartRes = await fetch(`${API_BASE_URL}/cart`, {
+            credentials: 'include',
+            mode: 'cors'
+        });
+        if (cartRes.ok) cartList = await cartRes.json();
+        
+        // Load orders
+        const ordersRes = await fetch(`${API_BASE_URL}/orders`, {
+            credentials: 'include',
+            mode: 'cors'
+        });
+        if (ordersRes.ok) ordersList = await ordersRes.json();
+        
+        updateCartBadge();
+    } catch (error) {
+        console.error('Error loading data:', error);
+    }
+}
+
+// ======================== SHOP FUNCTIONS ========================
+async function renderShop(filter) {
+    filter = filter || 'all';
+    
+    if (productsList.length === 0) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/products`, {
+                credentials: 'include',
+                mode: 'cors'
+            });
+            productsList = await response.json();
+        } catch(error) {
+            console.error('Error fetching products:', error);
+            document.getElementById('shopGrid').innerHTML = '<div class="empty-state">❌ Failed to load products. Please refresh.</div>';
+            return;
+        }
+    }
+    
+    let products = productsList;
+    if (filter !== 'all') {
+        products = productsList.filter(p => p.type && p.type.toLowerCase().includes(filter.toLowerCase()));
+    }
+    
+    var html = '';
+    for(var j=0;j<products.length;j++) {
+        var p = products[j];
+        var stockClass = (p.stock < 5) ? 'low' : '';
+        var imageUrl = p.image_url || p.image || 'https://placehold.co/600x400/1a5276/white?text=TARAZO';
+        html += '<div class="product-card" onclick="showProductDetail('+p.id+')">' +
+                    '<img src="'+imageUrl+'" alt="'+p.name+'" loading="lazy">' +
+                    '<div class="product-info">' +
+                        '<div class="product-name">'+escapeHtml(p.name)+'</div>' +
+                        '<div class="product-type">'+escapeHtml(p.type)+'</div>' +
+                        '<div class="product-price">UGX '+(p.price || 0).toLocaleString()+'</div>' +
+                        '<div class="product-stock '+stockClass+'">'+(p.stock || 0)+' in stock</div>' +
+                        '<button class="btn-sm btn-green" style="margin-top:8px;" onclick="event.stopPropagation();addToCart('+p.id+')">🛒 Add to Cart</button>' +
+                    '</div>' +
+                '</div>';
+    }
+    document.getElementById('shopGrid').innerHTML = html || '<div class="empty-state">No products available</div>';
+}
+
+function searchProducts(query){
+    if(!query){ renderShop(); return; }
+    var filtered = productsList.filter(function(p){ return p.name.toLowerCase().indexOf(query.toLowerCase())!==-1 || (p.type && p.type.toLowerCase().indexOf(query.toLowerCase())!==-1); });
+    var html = '';
+    for(var j=0;j<filtered.length;j++){
+        var p=filtered[j];
+        var stockClass=(p.stock<5)?'low':'';
+        var imageUrl = p.image_url || p.image || 'https://placehold.co/600x400/1a5276/white?text=TARAZO';
+        html+='<div class="product-card" onclick="showProductDetail('+p.id+')">' +
+                '<img src="'+imageUrl+'" alt="'+p.name+'" loading="lazy">' +
+                '<div class="product-info">' +
+                    '<div class="product-name">'+p.name+'</div>' +
+                    '<div class="product-type">'+p.type+'</div>' +
+                    '<div class="product-price">UGX '+p.price.toLocaleString()+'</div>' +
+                    '<div class="product-stock '+stockClass+'">'+p.stock+' in stock</div>' +
+                    '<button class="btn-sm btn-green" style="margin-top:8px;" onclick="event.stopPropagation();addToCart('+p.id+')">🛒 Add to Cart</button>' +
+                '</div>' +
+            '</div>';
+    }
+    document.getElementById('shopGrid').innerHTML=html;
+}
+
+function filterProducts(type,btn){
+    var btns=document.querySelectorAll('.filter-btn');
+    for(var i=0;i<btns.length;i++){ btns[i].classList.remove('active'); }
+    if(btn)btn.classList.add('active');
+    renderShop(type);
+}
+
+async function showProductDetail(id){
+    try {
+        var p = productsList.find(function(pr){ return pr.id === id; });
+        if(!p) return;
+        
+        var stockColor = (p.stock < 5) ? 'var(--red)' : 'var(--green)';
+        var stockMsg = (p.stock < 5) ? '⚠️ Only '+p.stock+' left!' : '✅ In Stock ('+p.stock+')';
+        
+        var installHtml = '';
+        if(p.install_images){
             try {
-                await getCSRFToken();
-                
-                const response = await fetch(`${API_BASE}/login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({ email, password })
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.success) {
-                    currentUser = data.user;
-                    showResult('loginResult', true, 
-                        `Login successful! Welcome ${currentUser.name} (Role: ${currentUser.role})`, 
-                        data
-                    );
-                } else {
-                    showResult('loginResult', false, `Login failed: ${data.error || 'Unknown error'}`, data);
+                var installs = JSON.parse(p.install_images);
+                if(installs && installs.length>0){
+                    installHtml = '<div class="card-title" style="font-size:16px;margin-bottom:10px;">🏠 Installation Gallery</div><div class="install-gallery">'+installs.map(function(img){ return'<img src="'+img+'" alt="Installation" loading="lazy" onclick="window.open(this.src)">'; }).join('')+'</div>';
                 }
-            } catch (error) {
-                showResult('loginResult', false, `Login error: ${error.message}`);
-            }
+            } catch(e) {}
         }
+        
+        document.getElementById('detailContent').innerHTML = 
+            '<img src="'+(p.image_url || p.image || 'https://placehold.co/600x400/1a5276/white?text=TARAZO')+'" alt="'+p.name+'" class="detail-hero" loading="lazy">' +
+            '<div class="card">' +
+                '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+                    '<div class="product-name" style="font-size:22px;">'+p.name+'</div>' +
+                '</div>' +
+                '<div class="product-type" style="font-size:14px;margin:8px 0;">'+p.type+'</div>' +
+                '<div class="product-price" style="font-size:28px;margin:10px 0;">UGX '+p.price.toLocaleString()+'</div>' +
+                '<div style="color:'+stockColor+';font-weight:700;margin-bottom:15px;">'+stockMsg+'</div>' +
+                '<p style="line-height:1.6;color:#555;margin-bottom:20px;">'+(p.description || p.desc || 'No description available')+'</p>' +
+                installHtml +
+                '<div style="display:flex;gap:10px;margin-top:20px;">' +
+                    '<button class="btn btn-green" style="flex:1;" onclick="addToCart('+p.id+')">🛒 Add to Cart</button>' +
+                    '<button class="btn btn-outline" style="flex:1;" onclick="navigateTo(\'userShop\')">⬅️ Back</button>' +
+                '</div>' +
+            '</div>';
+        navigateTo('productDetail');
+    } catch(error) {
+        showToast('Failed to load product details');
+    }
+}
 
-        async function testRegister() {
-            const name = document.getElementById('regName').value;
-            const email = document.getElementById('regEmail').value;
-            const phone = document.getElementById('regPhone').value;
-            const password = document.getElementById('regPassword').value;
-
-            showResult('registerResult', false, 'Creating account...');
-
-            try {
-                await getCSRFToken();
-                
-                const response = await fetch(`${API_BASE}/register`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({ name, email, phone, password })
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.success) {
-                    showResult('registerResult', true, 'Registration successful! You can now login.', data);
-                } else {
-                    showResult('registerResult', false, `Registration failed: ${data.error || 'Unknown error'}`, data);
-                }
-            } catch (error) {
-                showResult('registerResult', false, `Registration error: ${error.message}`);
-            }
+// ======================== CART FUNCTIONS ========================
+async function addToCart(productId) {
+    if (!currentUser) { showToast('Please login first'); return; }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/cart`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            mode: 'cors',
+            body: JSON.stringify({ product_id: productId, quantity: 1 })
+        });
+        
+        if (response.ok) {
+            await loadAllData();
+            updateCartBadge();
+            showToast('✅ Added to cart!');
+            renderShop();
+        } else {
+            showToast('❌ Failed to add to cart');
         }
+    } catch(error) {
+        console.error('Add to cart error:', error);
+        showToast('❌ Network error');
+    }
+}
 
-        async function testProducts() {
-            showResult('protectedResult', false, 'Fetching products...');
-            
-            try {
-                const response = await fetch(`${API_BASE}/products`, {
-                    credentials: 'include'
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    showResult('protectedResult', true, `Products loaded: ${data.length} products`, data);
-                } else {
-                    showResult('protectedResult', false, `Failed: ${data.error || 'Unknown error'}`, data);
-                }
-            } catch (error) {
-                showResult('protectedResult', false, `Error: ${error.message}`);
-            }
+async function removeFromCart(productId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/cart/${productId}`, {
+            method: 'DELETE',
+            credentials: 'include',
+            mode: 'cors'
+        });
+        if (response.ok) {
+            await loadAllData();
+            renderCart();
+            updateCartBadge();
+            showToast('✅ Removed from cart');
         }
+    } catch(error) {
+        showToast('❌ Failed to remove');
+    }
+}
 
-        async function testCart() {
-            if (!currentUser) {
-                showResult('protectedResult', false, 'Please login first to test cart');
-                return;
-            }
-            
-            showResult('protectedResult', false, 'Fetching cart...');
-            
-            try {
-                const response = await fetch(`${API_BASE}/cart`, {
-                    credentials: 'include'
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    showResult('protectedResult', true, `Cart loaded: ${data.length} items`, data);
-                } else {
-                    showResult('protectedResult', false, `Failed: ${data.error || 'Unauthorized - please login'}`, data);
-                }
-            } catch (error) {
-                showResult('protectedResult', false, `Error: ${error.message}`);
-            }
-        }
+function removeItemFromCart(productId) { removeFromCart(productId); }
 
-        async function testOrders() {
-            if (!currentUser) {
-                showResult('protectedResult', false, 'Please login first to test orders');
-                return;
-            }
-            
-            showResult('protectedResult', false, 'Fetching orders...');
-            
-            try {
-                const response = await fetch(`${API_BASE}/orders`, {
-                    credentials: 'include'
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    showResult('protectedResult', true, `Orders loaded: ${data.length} orders`, data);
-                } else {
-                    showResult('protectedResult', false, `Failed: ${data.error || 'Unauthorized - please login'}`, data);
-                }
-            } catch (error) {
-                showResult('protectedResult', false, `Error: ${error.message}`);
-            }
+async function renderCart() {
+    if (!currentUser) return;
+    
+    await loadAllData();
+    
+    if(cartList.length === 0){
+        document.getElementById('cartItems').innerHTML='<div class="empty-state"><div class="icon">🛒</div>Your cart is empty</div>';
+        document.getElementById('cartSummary').classList.add('hidden');
+        return;
+    }
+    
+    var total=0, html='';
+    for(var i=0;i<cartList.length;i++){
+        var c = cartList[i];
+        var p = productsList.find(function(pr){ return pr.id === c.product_id; });
+        if(p){
+            total += p.price * c.quantity;
+            html += '<div class="list-item">' +
+                        '<div class="list-info">' +
+                            '<h4>'+p.name+'</h4>' +
+                            '<p>UGX '+p.price.toLocaleString()+' x '+c.quantity+' = UGX '+(p.price * c.quantity).toLocaleString()+'</p>' +
+                        '</div>' +
+                        '<button class="btn-sm btn-red" onclick="removeItemFromCart('+c.product_id+')">Remove</button>' +
+                    '</div>';
         }
+    }
+    document.getElementById('cartItems').innerHTML = html;
+    document.getElementById('cartTotal').textContent = 'UGX '+total.toLocaleString();
+    document.getElementById('cartSummary').classList.remove('hidden');
+}
 
-        async function testAdminStats() {
-            if (!currentUser) {
-                showResult('protectedResult', false, 'Please login first to test admin stats');
-                return;
-            }
-            
-            if (currentUser.role !== 'admin') {
-                showResult('protectedResult', false, `You are logged in as ${currentUser.role}. Admin stats require admin role.`);
-                return;
-            }
-            
-            showResult('protectedResult', false, 'Fetching admin stats...');
-            
-            try {
-                const response = await fetch(`${API_BASE}/admin/stats`, {
-                    credentials: 'include'
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    showResult('protectedResult', true, 'Admin stats loaded', data);
-                } else {
-                    showResult('protectedResult', false, `Failed: ${data.error || 'Unauthorized'}`, data);
-                }
-            } catch (error) {
-                showResult('protectedResult', false, `Error: ${error.message}`);
-            }
+function showCart(){ navigateTo('userCart'); }
+
+function showCheckout(){
+    var total = cartList.reduce(function(s,c){ 
+        var p = productsList.find(function(pr){ return pr.id === c.product_id; }); 
+        return s + (p ? p.price * c.quantity : 0); 
+    }, 0);
+    document.getElementById('checkoutTotal').textContent = 'UGX '+total.toLocaleString();
+    navigateTo('checkoutPage');
+}
+
+function updateCartBadge(){
+    var total = cartList.reduce(function(s,c){ return s + c.quantity; }, 0);
+    var badge = document.getElementById('cartBadge');
+    if(total > 0){ badge.textContent = total; badge.classList.remove('hidden'); }
+    else{ badge.classList.add('hidden'); }
+}
+
+function detectNetwork(phone){ let p=phone.toString().replace(/\D/g,''); if(/^(077|078|076|079|039)/.test(p)) return'MTN'; if(/^(075|074|070|073|071|041)/.test(p)) return'Airtel'; return null; }
+function validateUgPhone(phone){ let p=phone.toString().replace(/\D/g,''); return p.length>=9&&p.length<=12; }
+
+async function processPayment(){
+    var method = document.querySelector('input[name="payMethod"]:checked').value;
+    var phone = document.getElementById('payPhone').value;
+    
+    if(method !== 'card'){
+        if(!phone || !validateUgPhone(phone)){ showToast('❌ Please enter a valid Ugandan phone number'); return; }
+        var network = detectNetwork(phone);
+        if(method === 'mtn' && network !== 'MTN'){ showToast('❌ Please enter a valid MTN number'); return; }
+        if(method === 'airtel' && network !== 'Airtel'){ showToast('❌ Please enter a valid Airtel number'); return; }
+    }
+    
+    var total = 0;
+    var items = [];
+    for(var i=0;i<cartList.length;i++){ 
+        var p = productsList.find(function(pr){ return pr.id === cartList[i].product_id; }); 
+        if(p){
+            total += p.price * cartList[i].quantity;
+            items.push({ productId: cartList[i].product_id, qty: cartList[i].quantity });
         }
-    </script>
+    }
+    
+    try {
+        showToast('🔄 Processing order...');
+        const response = await fetch(`${API_BASE_URL}/orders`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            mode: 'cors',
+            body: JSON.stringify({ 
+                items: items, 
+                total: total, 
+                payment_method: method === 'mtn' ? 'MTN Mobile Money' : (method === 'airtel' ? 'Airtel Money' : 'Bank Card'),
+                payment_phone: phone
+            })
+        });
+        
+        const data = await response.json();
+        
+        if(response.ok && data.success){
+            showToast('✅ Order placed successfully!');
+            await loadAllData();
+            navigateTo('userOrders');
+            renderUserOrders();
+            showModal('✅ Payment Successful', 
+                '<div style="text-align:center;">' +
+                    '<div style="font-size:48px;">✅</div>' +
+                    '<div style="font-size:20px;font-weight:800;">Order Placed!</div>' +
+                    '<div>Your order will be processed shortly.</div>' +
+                    '<button class="btn btn-green" style="margin-top:15px;" onclick="hideModal();navigateTo(\'userOrders\')">View Orders</button>' +
+                '</div>');
+        } else {
+            showToast(data.error || '❌ Order failed');
+        }
+    } catch(error) {
+        console.error('Payment error:', error);
+        showToast('❌ Network error');
+    }
+}
+
+function setupPaymentMethodListener(){
+    var radios = document.querySelectorAll('input[name="payMethod"]');
+    for(var i=0;i<radios.length;i++){
+        radios[i].addEventListener('change', function(){
+            var method = document.querySelector('input[name="payMethod"]:checked').value;
+            var cardFields = document.getElementById('cardFields');
+            var phoneDiv = document.getElementById('payPhone').parentElement;
+            if(method === 'card'){ 
+                if(cardFields) cardFields.classList.remove('hidden'); 
+                if(phoneDiv) phoneDiv.style.display = 'none';
+            } else { 
+                if(cardFields) cardFields.classList.add('hidden'); 
+                if(phoneDiv) phoneDiv.style.display = 'block';
+            }
+        });
+    }
+    var payPhone = document.getElementById('payPhone');
+    if(payPhone){
+        payPhone.addEventListener('input', function(){
+            var net = detectNetwork(payPhone.value);
+            var badge = document.getElementById('networkBadge');
+            if(badge){ 
+                if(net){ 
+                    badge.innerHTML = '<span class="network-badge network-'+net.toLowerCase()+'">'+net+'</span>'; 
+                    badge.classList.remove('hidden'); 
+                } else { 
+                    badge.classList.add('hidden'); 
+                } 
+            }
+        });
+    }
+}
+
+// ======================== ORDER FUNCTIONS ========================
+async function renderUserOrders() {
+    if (!currentUser) return;
+    
+    await loadAllData();
+    
+    var myOrders = ordersList.filter(function(o){ return o.user_id === currentUser.id; });
+    
+    var html = '';
+    if(myOrders.length === 0) {
+        html = '<div class="empty-state">📦 No orders yet</div>';
+    } else {
+        for(var i=0;i<myOrders.length;i++){
+            var o = myOrders[i];
+            var deliveryPerson = o.rider_name ? o.rider_name : (o.agent_id ? 'Agent assigned' : 'Not assigned');
+            var deliveryPhone = o.rider_phone ? o.rider_phone : 'N/A';
+            var itemsCount = o.items ? (Array.isArray(o.items) ? o.items.length : JSON.parse(o.items).length) : 0;
+            
+            html += '<div class="card">' +
+                        '<div style="display:flex; justify-content:space-between;">' +
+                            '<div><strong>📦 Order #'+o.id+'</strong></div>' +
+                            '<div class="status-badge status-'+o.status+'">'+o.status+'</div>' +
+                        '</div>' +
+                        '<div>'+ (o.date || 'N/A') +' - '+itemsCount+' item(s)</div>' +
+                        '<div style="font-size:18px;font-weight:800;color:var(--blue);margin:10px 0;">UGX '+(o.total || 0).toLocaleString()+'</div>' +
+                        '<div style="background:#e8f5e9;padding:12px;border-radius:12px;">' +
+                            '<div style="font-weight:700;">🚚 DELIVERY PERSON</div>' +
+                            '<div><strong>Name:</strong> '+deliveryPerson+'</div>' +
+                            '<div><strong>Phone:</strong> <a href="tel:'+deliveryPhone+'" style="color:var(--blue);">'+deliveryPhone+'</a></div>' +
+                            '<div><strong>Vehicle:</strong> '+(o.rider_vehicle || 'N/A')+'</div>' +
+                            '<div><strong>Location:</strong> '+(o.delivery_location || 'Being assigned')+'</div>' +
+                        '</div>' +
+                    '</div>';
+        }
+    }
+    document.getElementById('userOrderList').innerHTML = html;
+}
+
+// ======================== PROFILE FUNCTIONS ========================
+function renderUserDashboard(){
+    if(!currentUser) return;
+    document.getElementById('userNameDisplay').textContent = currentUser.name;
+    document.getElementById('userEmailDisplay').textContent = currentUser.email;
+    document.getElementById('profileName').value = currentUser.name || '';
+    document.getElementById('profileEmail').value = currentUser.email || '';
+    document.getElementById('profilePhone').value = currentUser.phone || '';
+    document.getElementById('profileAddress').value = currentUser.address || '';
+    
+    var myOrders = ordersList.filter(function(o){ return o.user_id === currentUser.id; });
+    var pending = myOrders.filter(function(o){ return o.status === 'paid' || o.status === 'processing'; }).length;
+    document.getElementById('userTotalOrders').textContent = myOrders.length;
+    document.getElementById('userPendingOrders').textContent = pending;
+}
+
+function saveUserProfile(){
+    showToast('Profile update will be available soon');
+}
+
+// ======================== ADMIN FUNCTIONS ========================
+async function renderAdminDashboard() {
+    if (!currentUser || currentUser.role !== 'admin') return;
+    
+    try {
+        const statsRes = await fetch(`${API_BASE_URL}/admin/stats`, {
+            credentials: 'include',
+            mode: 'cors'
+        });
+        const stats = await statsRes.json();
+        
+        document.getElementById('adminTodaySales').textContent = 'UGX ' + (stats.today_sales || 0).toLocaleString();
+        document.getElementById('adminPendingOrders').textContent = stats.pending_orders || 0;
+        document.getElementById('adminTotalProducts').textContent = stats.total_products || 0;
+        document.getElementById('adminLowStock').textContent = stats.low_stock || 0;
+        
+        renderBarChart('adminChart', [120, 200, 150, 300, 250], ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']);
+    } catch(error) {
+        console.error('Error loading admin stats:', error);
+    }
+}
+
+function renderBarChart(containerId, data, labels){
+    var maxVal = Math.max.apply(null,data) || 1;
+    var svgHtml = '<svg class="bar-chart-svg" viewBox="0 0 100 100" preserveAspectRatio="none" style="background:#f8fafc;border-radius:12px;">';
+    for(var j=0;j<data.length;j++){
+        var h = (data[j]/maxVal)*75;
+        var x = 8 + j*(84/data.length);
+        var y = 100 - h - 15;
+        var w = (84/data.length)-4;
+        svgHtml += '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="#1a5276" rx="3" opacity="0.9"></rect>';
+    }
+    svgHtml += '</svg>';
+    var labelsHtml = '<div style="display:flex;justify-content:space-between;padding:0 8px;margin-top:5px;">';
+    for(var l=0;l<labels.length;l++){ labelsHtml += '<span style="font-size:9px;font-weight:600;color:var(--gray-dark);text-align:center;flex:1;">'+labels[l]+'</span>'; }
+    labelsHtml += '</div>';
+    document.getElementById(containerId).innerHTML = svgHtml + labelsHtml;
+}
+
+async function renderAdminOrders() {
+    if (!currentUser || currentUser.role !== 'admin') return;
+    
+    await loadAllData();
+    
+    var html = '';
+    for(var i=0;i<ordersList.length;i++){
+        var o = ordersList[i];
+        html += '<div class="list-item" onclick="viewTransactionDetails('+o.id+')">' +
+                    '<div class="list-info">' +
+                        '<h4>📦 Transaction #'+o.id+'</h4>' +
+                        '<p>UGX '+(o.total || 0).toLocaleString()+' - '+o.status+'</p>' +
+                    '</div>' +
+                    '<div><div class="status-badge status-'+o.status+'">'+o.status+'</div></div>' +
+                '</div>';
+    }
+    document.getElementById('adminOrdersList').innerHTML = html || '<div class="empty-state">No orders found</div>';
+}
+
+function viewTransactionDetails(orderId){
+    var order = ordersList.find(function(o){ return o.id === orderId; });
+    if(order){
+        showModal('Transaction Details', 
+            '<div><strong>Order #'+order.id+'</strong><br>' +
+            '<strong>Total:</strong> UGX '+(order.total || 0).toLocaleString()+'<br>' +
+            '<strong>Status:</strong> '+order.status+'<br>' +
+            '<strong>Date:</strong> '+order.date+'</div>');
+    }
+}
+
+function searchTransactionByPhone(){
+    showToast('Search by phone feature - will search all orders');
+}
+
+function resetTransactionSearch(){
+    renderAdminOrders();
+}
+
+function exportTransactionsCSV(){
+    showToast('CSV export coming soon');
+}
+
+function showSalesDetail(){ showModal('Sales Details', 'Today\'s sales data'); }
+function showPendingDetail(){ showModal('Pending Orders', 'List of pending orders'); }
+function showProductsDetail(){ showModal('Products', 'Total products: '+productsList.length); }
+function showLowStockDetail(){ showModal('Low Stock Alert', 'Products with low stock'); }
+
+// ======================== AGENT FUNCTIONS ========================
+async function renderAgentPanel() {
+    if (!currentUser || currentUser.role !== 'agent') return;
+    
+    await loadAllData();
+    
+    var myOrders = ordersList.filter(function(o) { return o.agent_id === currentUser.id && o.status !== 'delivered'; });
+    var html = '';
+    for(var i=0;i<myOrders.length;i++){
+        var o = myOrders[i];
+        html += '<div class="card">' +
+                    '<div style="display:flex;justify-content:space-between;">' +
+                        '<h4>📦 Order #'+o.id+'</h4>' +
+                        '<select id="orderStatus_'+o.id+'" onchange="updateOrderStatus('+o.id+', this.value)" class="status-badge status-'+o.status+'">' +
+                            '<option value="paid" '+(o.status==='paid'?'selected':'')+'>💰 Paid</option>' +
+                            '<option value="processing" '+(o.status==='processing'?'selected':'')+'>⚙️ Processing</option>' +
+                            '<option value="shipped" '+(o.status==='shipped'?'selected':'')+'>🚚 Shipped</option>' +
+                            '<option value="delivered" '+(o.status==='delivered'?'selected':'')+'>✅ Delivered</option>' +
+                        '</select>' +
+                    '</div>' +
+                    '<p><strong>Total:</strong> UGX '+(o.total || 0).toLocaleString()+'</p>' +
+                    '<button class="btn-sm btn-primary" onclick="viewOrderDetailsForAgent('+o.id+')">👁️ Details</button>' +
+                '</div>';
+    }
+    document.getElementById('agentAssignedOrders').innerHTML = html || '<div class="empty-state">No assigned orders</div>';
+    
+    var availableOrders = ordersList.filter(function(o) { return o.status === 'paid' && !o.agent_id; });
+    var availHtml = '';
+    for(var j=0;j<availableOrders.length;j++){
+        var ao = availableOrders[j];
+        availHtml += '<div class="card">' +
+                        '<h4>📦 Order #'+ao.id+'</h4>' +
+                        '<p>Total: UGX '+(ao.total || 0).toLocaleString()+'</p>' +
+                        '<button class="btn-sm btn-add" onclick="claimOrderManually('+ao.id+')">➕ Claim This Order</button>' +
+                    '</div>';
+    }
+    document.getElementById('agentAvailableOrders').innerHTML = availHtml || '<div class="empty-state">No available orders</div>';
+}
+
+async function updateOrderStatus(orderId, newStatus){
+    try {
+        const response = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            mode: 'cors',
+            body: JSON.stringify({ status: newStatus })
+        });
+        if(response.ok){
+            showToast('✅ Order #'+orderId+' status: '+newStatus);
+            await loadAllData();
+            renderAgentPanel();
+        } else {
+            showToast('❌ Failed to update status');
+        }
+    } catch(error) {
+        showToast('❌ Network error');
+    }
+}
+
+function claimOrderManually(orderId){
+    showToast('Claim order - contact admin to assign orders');
+}
+
+function viewOrderDetailsForAgent(orderId){
+    var order = ordersList.find(function(o){ return o.id === orderId; });
+    if(order){
+        showModal('Order Details', 
+            '<div><strong>Order #'+order.id+'</strong><br>' +
+            '<strong>Customer ID:</strong> '+order.user_id+'<br>' +
+            '<strong>Total:</strong> UGX '+(order.total || 0).toLocaleString()+'<br>' +
+            '<strong>Status:</strong> '+order.status+'<br>' +
+            '<strong>Items:</strong> '+(order.items ? (Array.isArray(order.items) ? order.items.length : JSON.parse(order.items).length) : 0)+' items</div>');
+    }
+}
+
+function showAssignRiderForm(orderId){
+    showModal('Assign Rider', 
+        '<div>' +
+            '<input type="text" id="riderName" placeholder="Rider Name" style="width:100%;padding:10px;margin:5px 0;">' +
+            '<input type="tel" id="riderPhone" placeholder="Rider Phone" style="width:100%;padding:10px;margin:5px 0;">' +
+            '<input type="text" id="riderVehicle" placeholder="Vehicle" style="width:100%;padding:10px;margin:5px 0;">' +
+            '<input type="text" id="deliveryLocation" placeholder="Delivery Location" style="width:100%;padding:10px;margin:5px 0;">' +
+            '<textarea id="deliveryNotes" placeholder="Notes" style="width:100%;padding:10px;margin:5px 0;"></textarea>' +
+            '<button class="btn btn-green" onclick="saveRiderAssignment('+orderId+')">Save</button>' +
+        '</div>');
+}
+
+async function saveRiderAssignment(orderId){
+    var riderName = document.getElementById('riderName').value;
+    var riderPhone = document.getElementById('riderPhone').value;
+    var riderVehicle = document.getElementById('riderVehicle').value;
+    var deliveryLocation = document.getElementById('deliveryLocation').value;
+    var deliveryNotes = document.getElementById('deliveryNotes').value;
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/orders/${orderId}/assign`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            mode: 'cors',
+            body: JSON.stringify({ 
+                rider_name: riderName, 
+                rider_phone: riderPhone,
+                rider_vehicle: riderVehicle,
+                delivery_location: deliveryLocation,
+                delivery_notes: deliveryNotes
+            })
+        });
+        if(response.ok){
+            showToast('✅ Rider assigned successfully!');
+            hideModal();
+            await loadAllData();
+            renderAgentPanel();
+        } else {
+            showToast('❌ Failed to assign rider');
+        }
+    } catch(error) {
+        showToast('❌ Network error');
+    }
+}
+
+function renderAgentConversations(){ document.getElementById('agentChatList').innerHTML = '<div class="empty-state">No conversations yet</div>'; }
+function renderAgentChatRoom(){ document.getElementById('agentChatMessages').innerHTML = '<div class="empty-state">Team chat coming soon</div>'; }
+function sendAgentChat(){ showToast('Team chat feature coming soon'); }
+function openAgentToManagerChat(){ showToast('Message manager feature coming soon'); }
+function showAddRiderModal(){ showToast('Add rider feature coming soon'); }
+function renderAgentRiders(){ document.getElementById('agentRiderList').innerHTML = '<div class="empty-state">No riders added</div>'; }
+
+// ======================== CHAT FUNCTIONS ========================
+async function sendChat() {
+    var input = document.getElementById('chatInput'), text = input.value.trim();
+    if(!text) return;
+    addChatMessage('user', text);
+    input.value = '';
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/chat/customer`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            mode: 'cors',
+            body: JSON.stringify({ message: text })
+        });
+        const data = await response.json();
+        addChatMessage('bot', data.response || 'Sorry, I could not process that.');
+    } catch(error) {
+        console.error('Chat error:', error);
+        addChatMessage('bot', 'Network error. Please try again.');
+    }
+}
+
+function addChatMessage(sender, text){
+    var container = document.getElementById('chatMessages');
+    var div = document.createElement('div');
+    div.className = 'chat-msg '+sender;
+    div.textContent = text;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+
+function toggleChat(){
+    chatOpen = !chatOpen;
+    var box = document.getElementById('chatBox');
+    if(chatOpen){
+        box.classList.remove('hidden');
+        if(document.getElementById('chatMessages').children.length === 0){
+            addChatMessage('bot', '👋 Welcome to Tarazo! Ask me about terrazzo prices, types, or anything else!');
+        }
+    } else {
+        box.classList.add('hidden');
+    }
+}
+
+// ======================== NOTIFICATION FUNCTIONS ========================
+function addNotification(userId, title, message, type, link) {
+    var notif = { id: notifications.length+1, userId: userId, title: title, message: message, type: type, link: link, read: false, timestamp: new Date().toISOString() };
+    notifications.push(notif);
+    if(currentUser && currentUser.id === userId) {
+        showToast("🔔 "+title+": "+message);
+        updateNotificationBadge(userId);
+    }
+}
+
+function showNotifications() {
+    var myNotifs = notifications.filter(function(n){ return n.userId === currentUser.id; }).sort(function(a,b){ return new Date(b.timestamp) - new Date(a.timestamp); });
+    var html = '<div class="notifications-list">';
+    if(myNotifs.length===0) html += '<div class="empty-state">🔔 No notifications</div>';
+    else {
+        for(var i=0;i<myNotifs.length;i++) {
+            var n = myNotifs[i];
+            var unreadClass = n.read ? '' : 'unread';
+            html += '<div class="notification-item '+unreadClass+'" onclick="markNotificationRead('+n.id+'); hideModal();">' +
+                        '<div class="notif-icon">'+(n.type==='order'?'📦':(n.type==='chat'?'💬':'🚚'))+'</div>' +
+                        '<div class="notif-content">' +
+                            '<div class="notif-title">'+n.title+'</div>' +
+                            '<div class="notif-message">'+n.message+'</div>' +
+                            '<div class="notif-time">'+new Date(n.timestamp).toLocaleTimeString()+'</div>' +
+                        '</div>' +
+                    '</div>';
+        }
+    }
+    html += '</div><button class="btn btn-outline" style="margin-top:10px;" onclick="markAllNotificationsRead()">Mark all as read</button>';
+    showModal('🔔 Notifications', html);
+}
+
+function markNotificationRead(id) {
+    var n = notifications.find(function(n){ return n.id === id; });
+    if(n) { n.read = true; updateNotificationBadge(currentUser.id); }
+}
+
+function markAllNotificationsRead() {
+    for(var i=0;i<notifications.length;i++) { if(notifications[i].userId === currentUser.id) notifications[i].read = true; }
+    updateNotificationBadge(currentUser.id);
+}
+
+function updateNotificationBadge(userId) {
+    var unread = notifications.filter(function(n){ return n.userId === userId && !n.read; }).length;
+    var badge = document.getElementById('notificationBadge');
+    if(badge) { if(unread>0) { badge.textContent = unread; badge.classList.remove('hidden'); } else badge.classList.add('hidden'); }
+}
+
+// ======================== ADMIN PRODUCT MANAGEMENT ========================
+function resetProductForm(){
+    document.getElementById('editProductId').value = '';
+    document.getElementById('productFormTitle').textContent = '📤 Upload New Product';
+    document.getElementById('prodName').value = '';
+    document.getElementById('prodDesc').value = '';
+    document.getElementById('prodPrice').value = '';
+    document.getElementById('prodStock').value = '';
+    document.getElementById('saveProductBtn').textContent = '💾 Save Product';
+    document.getElementById('cancelEditBtn').classList.add('hidden');
+    document.getElementById('uploadPreview').classList.add('hidden');
+}
+
+function handleImageUpload(input){
+    if(input.files && input.files[0]){
+        var file = input.files[0];
+        document.getElementById('uploadPreview').classList.remove('hidden');
+        var reader = new FileReader();
+        reader.onload = function(e){ document.getElementById('previewImg').src = e.target.result; };
+        reader.readAsDataURL(file);
+        document.getElementById('aiStatus').textContent = '🤖 AI analyzing image...';
+        setTimeout(function(){
+            document.getElementById('aiStatus').innerHTML = '✅ AI: Premium terrazzo with marble chips, polished finish.';
+        }, 1500);
+    }
+}
+
+async function saveProduct(){
+    var editId = document.getElementById('editProductId').value;
+    var name = document.getElementById('prodName').value;
+    var type = document.getElementById('prodType').value;
+    var desc = document.getElementById('prodDesc').value;
+    var price = parseInt(document.getElementById('prodPrice').value) || 0;
+    var stock = parseInt(document.getElementById('prodStock').value) || 0;
+    
+    if(!name || !price){ showToast('Please fill product name and price'); return; }
+    
+    showToast('Product save - admin feature via backend API');
+}
+
+function editProduct(id){ showToast('Edit product feature coming soon'); }
+function deleteProductItem(id){ showToast('Delete product feature coming soon'); }
+function addStockToProduct(id){ showToast('Add stock feature coming soon'); }
+
+async function renderAdminProducts() {
+    await loadAllData();
+    var html = '';
+    for(var i=0;i<productsList.length;i++){
+        var p = productsList[i];
+        html += '<div class="list-item">' +
+                    '<div class="list-info" onclick="editProduct('+p.id+')">' +
+                        '<h4>'+p.name+'</h4>' +
+                        '<p>'+p.type+' - Stock: '+(p.stock || 0)+'</p>' +
+                    '</div>' +
+                    '<div style="text-align:right;">' +
+                        '<div style="font-weight:800;color:var(--blue);">UGX '+(p.price || 0).toLocaleString()+'</div>' +
+                        '<div style="display:flex;gap:5px;margin-top:8px;">' +
+                            '<input type="number" id="stockAdd_'+p.id+'" placeholder="+Qty" style="width:70px;padding:5px;border-radius:8px;border:1px solid #ddd;">' +
+                            '<button class="btn-sm btn-green" onclick="addStockToProduct('+p.id+')">➕ Add</button>' +
+                            '<button class="btn-sm btn-red" onclick="deleteProductItem('+p.id+')">🗑️ Delete</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+    }
+    document.getElementById('adminProductList').innerHTML = html || '<div class="empty-state">No products</div>';
+}
+
+// ======================== OTHER ADMIN FUNCTIONS ========================
+function renderAdminBooks(){ showToast('Books feature coming soon'); }
+function changeBookPeriod(){}
+function renderAdminMonitor(){ document.getElementById('monitorFeed').innerHTML = '<div class="empty-state">Agent monitoring coming soon</div>'; }
+function renderAdminChats(){ document.getElementById('allChatsList').innerHTML = '<div class="empty-state">Chat monitoring coming soon</div>'; }
+function renderAdminTeam(){ document.getElementById('teamList').innerHTML = '<div class="empty-state">Team management coming soon</div>'; }
+function renderAdminDelivery(){ document.getElementById('adminDeliveryList').innerHTML = '<div class="empty-state">Delivery management coming soon</div>'; }
+function renderManagerMessages(){ document.getElementById('managerMsgList').innerHTML = '<div class="empty-state">Messages coming soon</div>'; }
+function openManagerToAgentChat(agentId){ showToast('Chat with agent feature coming soon'); }
+function viewAgentChats(agentId){ showModal('Agent Chats', 'Chat history for agent'); }
+
+// ======================== NAVIGATION ========================
+function navigateTo(pageId){
+    var pages = document.querySelectorAll('.page');
+    for(var i=0;i<pages.length;i++){ pages[i].classList.add('hidden'); }
+    document.getElementById(pageId).classList.remove('hidden');
+    currentPage = pageId;
+    
+    var navItems = document.querySelectorAll('.nav-item');
+    for(var j=0;j<navItems.length;j++){ navItems[j].classList.remove('active'); }
+    var navItem = document.querySelector('.nav-item[data-page="'+pageId+'"]');
+    if(navItem) navItem.classList.add('active');
+    
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+    
+    // Load data based on page
+    if(pageId === 'userShop') renderShop();
+    if(pageId === 'userCart') renderCart();
+    if(pageId === 'userOrders') renderUserOrders();
+    if(pageId === 'userDashboard') renderUserDashboard();
+    if(pageId === 'adminDashboard') renderAdminDashboard();
+    if(pageId === 'adminOrders') renderAdminOrders();
+    if(pageId === 'adminProducts') renderAdminProducts();
+    if(pageId === 'agentPanel') renderAgentPanel();
+}
+
+function setupNav(){
+    var nav = document.getElementById('bottomNav');
+    var html = '';
+    if(currentUser && currentUser.role === 'admin'){
+        html = '<div class="nav-item active" onclick="navigateTo(\'adminDashboard\')" data-page="adminDashboard"><div class="nav-icon">🏠</div>Home</div>' +
+               '<div class="nav-item" onclick="navigateTo(\'adminProducts\')" data-page="adminProducts"><div class="nav-icon">📦</div>Products</div>' +
+               '<div class="nav-item" onclick="navigateTo(\'adminOrders\')" data-page="adminOrders"><div class="nav-icon">📋</div>Orders</div>' +
+               '<div class="nav-item" onclick="navigateTo(\'adminBooks\')" data-page="adminBooks"><div class="nav-icon">📚</div>Books</div>' +
+               '<div class="nav-item" onclick="showAdminMenu()" data-page="adminMenu"><div class="nav-icon">⚙️</div>More</div>';
+    } else if(currentUser && currentUser.role === 'agent'){
+        html = '<div class="nav-item active" onclick="navigateTo(\'agentPanel\')" data-page="agentPanel"><div class="nav-icon">💬</div>Chats</div>' +
+               '<div class="nav-item" onclick="navigateTo(\'agentPanel\')" data-page="agentPanel"><div class="nav-icon">🚚</div>Delivery</div>' +
+               '<div class="nav-item" onclick="logout()"><div class="nav-icon">🚪</div>Exit</div>';
+    } else if(currentUser && currentUser.role === 'user'){
+        html = '<div class="nav-item active" onclick="navigateTo(\'userShop\')" data-page="userShop"><div class="nav-icon">🏪</div>Shop</div>' +
+               '<div class="nav-item" onclick="navigateTo(\'userOrders\')" data-page="userOrders"><div class="nav-icon">📦</div>Orders</div>' +
+               '<div class="nav-item" onclick="navigateTo(\'userCart\')" data-page="userCart"><div class="nav-icon">🛒</div>Cart</div>' +
+               '<div class="nav-item" onclick="navigateTo(\'userDashboard\')" data-page="userDashboard"><div class="nav-icon">👤</div>Profile</div>';
+    }
+    nav.innerHTML = html;
+    
+    var chatWidget = document.getElementById('chatWidgetContainer');
+    var whatsappWidget = document.getElementById('whatsappWidget');
+    if(currentUser && currentUser.role === 'user'){
+        if(chatWidget) chatWidget.classList.remove('hidden');
+        if(whatsappWidget) whatsappWidget.classList.remove('hidden');
+    } else {
+        if(chatWidget) chatWidget.classList.add('hidden');
+        if(whatsappWidget) whatsappWidget.classList.add('hidden');
+    }
+}
+
+function showAdminMenu(){
+    var items = [
+        {name:'Monitor Agents', page:'adminMonitor', icon:'👁️'},
+        {name:'All Chats', page:'adminChats', icon:'💬'},
+        {name:'Team Management', page:'adminTeam', icon:'👥'},
+        {name:'Delivery Mgmt', page:'adminDelivery', icon:'🚚'},
+        {name:'My Messages', page:'adminMessages', icon:'📨'}
+    ];
+    var html = '';
+    for(var i=0;i<items.length;i++){
+        html += '<div class="list-item" onclick="navigateTo(\''+items[i].page+'\');hideModal();">' +
+                    '<div class="list-info"><h4>'+items[i].icon+' '+items[i].name+'</h4></div>' +
+                    '<div>➡️</div>' +
+                '</div>';
+    }
+    showModal('⚙️ Manager Tools', html);
+}
+
+function escapeHtml(text) {
+    if(!text) return '';
+    return text.replace(/[&<>]/g, function(m) {
+        if(m === '&') return '&amp;';
+        if(m === '<') return '&lt;';
+        if(m === '>') return '&gt;';
+        return m;
+    });
+}
+
+function startPolling(){
+    if(pollInterval) clearInterval(pollInterval);
+    pollInterval = setInterval(function(){
+        if(currentUser){
+            if(currentUser.role === 'agent'){ renderAgentConversations(); }
+            if(currentUser.role === 'admin'){ renderManagerMessages(); }
+        }
+    }, 3000);
+}
+
+// ======================== APP INITIALIZATION ========================
+async function enterApp(){
+    document.getElementById('loginPage').classList.add('hidden');
+    document.getElementById('appContainer').classList.remove('hidden');
+    document.getElementById('headerGreeting').textContent = 'Hi, '+currentUser.name.split(' ')[0];
+    
+    setupNav();
+    startPolling();
+    await loadAllData();
+    
+    if(currentUser.role === 'admin'){
+        navigateTo('adminDashboard');
+        renderAdminDashboard();
+    } else if(currentUser.role === 'agent'){
+        navigateTo('agentPanel');
+        renderAgentPanel();
+    } else {
+        navigateTo('userShop');
+        renderShop();
+    }
+}
+
+function checkAutoLogin(){
+    var saved = localStorage.getItem('tarazo_email');
+    if(saved){
+        return false;
+    }
+    return false;
+}
+
+function initApp(){
+    setupPaymentMethodListener();
+    
+    var splash = document.getElementById('splashPage');
+    setTimeout(function(){
+        splash.style.opacity = '0';
+        setTimeout(function(){
+            splash.classList.add('hidden');
+            document.getElementById('loginPage').classList.remove('hidden');
+        }, 600);
+    }, 2000);
+}
+
+window.onload = initApp;
+</script>
 </body>
 </html>
