@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>TARAZO - Premium Terrazzo Uganda</title>
 <style>
-/* ============ YOUR COMPLETE ORIGINAL CSS - NOTHING REMOVED ============ */
+/* ============ COMPLETE ORIGINAL CSS - KEPT INTACT ============ */
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 :root{--blue:#1a5276;--blue-dark:#154360;--green:#27ae60;--green-light:#2ecc71;--white:#ffffff;--gray:#f5f6fa;--gray-dark:#7f8c8d;--red:#e74c3c;--orange:#f39c12;--shadow:0 4px 20px rgba(0,0,0,.08)}
 body{background:var(--gray);color:#2c3e50;overflow-x:hidden;-webkit-tap-highlight-color:transparent;font-size:14px;line-height:1.5}
@@ -216,75 +216,41 @@ tr:last-child td{border-bottom:none}
 
 <script>
 // ======================== BACKEND CONFIGURATION ========================
-const API_CONFIG = {
-    baseURL: 'https://raven-terazzo.onrender.com/api',
-    useBackend: true,
-    endpoints: {
-        login: '/login',
-        register: '/register',
-        products: '/products',
-        orders: '/orders',
-        cart: '/cart',
-        chatCustomer: '/chat/customer',
-        chatAgent: '/chat/agent',
-        agentStatus: '/agent/status',
-        adminStats: '/admin/stats',
-        adminAgents: '/admin/agents'
-    }
-};
+const API_BASE_URL = 'https://raven-terazzo.onrender.com/api';
 
-// ======================== GLOBAL STATE (KEPT FROM ORIGINAL) ========================
+// ======================== GLOBAL STATE ========================
 var currentUser = null;
 var currentPage = '';
 var chatOpen = false;
-var currentChatId = null;
-var fsChatData = null;
-var agentConnected = false;
-var activeAgentId = null;
 var pollInterval = null;
-var currentTransactionFilter = null;
 var notifications = [];
-var DB = { users: [], products: [], orders: [], chats: [], cart: [], wishlist: [], reviews: [], agentMessages: [], managerMessages: [], riders: [] };
+var productsList = [];
+var cartList = [];
+var ordersList = [];
 
-// ======================== API HELPER FUNCTIONS ========================
-async function apiCall(endpoint, options = {}) {
-    try {
-        const response = await fetch(`${API_CONFIG.baseURL}${endpoint}`, {
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            },
-            credentials: 'include'
-        });
-        
-        if (response.status === 401 && currentUser) {
-            // Token expired, try refresh
-            const refreshRes = await fetch(`${API_CONFIG.baseURL}/refresh`, {
-                method: 'POST',
-                credentials: 'include'
-            });
-            if (refreshRes.ok) {
-                // Retry original request
-                return fetch(`${API_CONFIG.baseURL}${endpoint}`, {
-                    ...options,
-                    headers: { 'Content-Type': 'application/json', ...options.headers },
-                    credentials: 'include'
-                });
-            } else {
-                logout();
-                throw new Error('Session expired');
-            }
-        }
-        
-        return response;
-    } catch (error) {
-        console.error('API Error:', error);
-        throw error;
-    }
+// ======================== HELPER FUNCTIONS ========================
+function showToast(msg) {
+    var toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(function(){ toast.classList.remove('show'); }, 2500);
 }
 
-// ======================== AUTHENTICATION (CONNECTED TO BACKEND) ========================
+function showModal(title, html){
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalBody').innerHTML = html;
+    document.getElementById('modalOverlay').classList.remove('hidden');
+}
+
+function hideModal(){
+    document.getElementById('modalOverlay').classList.add('hidden');
+}
+
+function closeModal(e){
+    if(e.target === document.getElementById('modalOverlay')) hideModal();
+}
+
+// ======================== AUTHENTICATION ========================
 async function handleLogin() {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
@@ -297,8 +263,12 @@ async function handleLogin() {
     
     try {
         showToast('🔄 Logging in...');
-        const response = await apiCall('/login', {
+        
+        const response = await fetch(`${API_BASE_URL}/login`, {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            mode: 'cors',
             body: JSON.stringify({ email, password })
         });
         
@@ -307,9 +277,6 @@ async function handleLogin() {
         if (response.ok && data.success) {
             currentUser = data.user;
             
-            // Load user-specific data from backend
-            await loadUserData();
-            
             if (remember) {
                 localStorage.setItem('tarazo_email', email);
             } else {
@@ -317,13 +284,14 @@ async function handleLogin() {
             }
             
             showToast('✅ Login successful!');
+            await loadAllData();
             enterApp();
         } else {
-            showToast(data.error || '❌ Login failed');
+            showToast(data.error || '❌ Login failed. Check your credentials.');
         }
     } catch (error) {
         console.error('Login error:', error);
-        showToast('❌ Network error. Please try again.');
+        showToast('❌ Cannot connect to server. Please check if backend is running.');
     }
 }
 
@@ -345,8 +313,11 @@ async function handleRegister() {
     
     try {
         showToast('🔄 Creating account...');
-        const response = await apiCall('/register', {
+        const response = await fetch(`${API_BASE_URL}/register`, {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            mode: 'cors',
             body: JSON.stringify({ name, email, phone, password })
         });
         
@@ -360,6 +331,7 @@ async function handleRegister() {
             showToast(data.error || '❌ Registration failed');
         }
     } catch (error) {
+        console.error('Register error:', error);
         showToast('❌ Network error');
     }
 }
@@ -372,8 +344,11 @@ async function handleForgotPassword() {
     }
     
     try {
-        const response = await apiCall('/forgot-password', {
+        const response = await fetch(`${API_BASE_URL}/forgot-password`, {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            mode: 'cors',
             body: JSON.stringify({ email })
         });
         
@@ -390,7 +365,11 @@ async function handleForgotPassword() {
 
 async function logout() {
     try {
-        await apiCall('/logout', { method: 'POST' });
+        await fetch(`${API_BASE_URL}/logout`, {
+            method: 'POST',
+            credentials: 'include',
+            mode: 'cors'
+        });
     } catch(e) {}
     
     currentUser = null;
@@ -404,110 +383,116 @@ async function logout() {
     if (pollInterval) clearInterval(pollInterval);
 }
 
-// ======================== LOAD USER DATA FROM BACKEND ========================
-async function loadUserData() {
+function toggleAuth(){
+    var a=document.getElementById('loginForm'), b=document.getElementById('registerForm'), c=document.getElementById('forgotForm');
+    if(!a.classList.contains('hidden')){ a.classList.add('hidden'); b.classList.remove('hidden'); c.classList.add('hidden'); }
+    else{ a.classList.remove('hidden'); b.classList.add('hidden'); c.classList.add('hidden'); }
+}
+
+function showForgotPassword(){
+    document.getElementById('loginForm').classList.add('hidden');
+    document.getElementById('registerForm').classList.add('hidden');
+    document.getElementById('forgotForm').classList.remove('hidden');
+}
+
+function showLoginForm(){
+    document.getElementById('loginForm').classList.remove('hidden');
+    document.getElementById('registerForm').classList.add('hidden');
+    document.getElementById('forgotForm').classList.add('hidden');
+}
+
+// ======================== LOAD DATA FROM BACKEND ========================
+async function loadAllData() {
     if (!currentUser) return;
     
     try {
         // Load products
-        const productsRes = await apiCall('/products');
-        DB.products = await productsRes.json();
-        
-        // Load orders
-        const ordersRes = await apiCall('/orders');
-        DB.orders = await ordersRes.json();
+        const productsRes = await fetch(`${API_BASE_URL}/products`, {
+            credentials: 'include',
+            mode: 'cors'
+        });
+        productsList = await productsRes.json();
         
         // Load cart
-        const cartRes = await apiCall('/cart');
-        DB.cart = await cartRes.json();
+        const cartRes = await fetch(`${API_BASE_URL}/cart`, {
+            credentials: 'include',
+            mode: 'cors'
+        });
+        if (cartRes.ok) cartList = await cartRes.json();
+        
+        // Load orders
+        const ordersRes = await fetch(`${API_BASE_URL}/orders`, {
+            credentials: 'include',
+            mode: 'cors'
+        });
+        if (ordersRes.ok) ordersList = await ordersRes.json();
         
         updateCartBadge();
     } catch (error) {
-        console.error('Error loading user data:', error);
+        console.error('Error loading data:', error);
     }
 }
 
-// ======================== NOTIFICATION FUNCTIONS (KEPT ORIGINAL) ========================
-function addNotification(userId, title, message, type, link) {
-    var notif = { id: notifications.length+1, userId: userId, title: title, message: message, type: type, link: link, read: false, timestamp: new Date().toISOString() };
-    notifications.push(notif);
-    saveNotificationsToLocal();
-    if(currentUser && currentUser.id===userId) {
-        showToast("🔔 "+title+": "+message);
-        updateNotificationBadge(userId);
-    }
-}
-
-function showNotifications() {
-    var myNotifs = notifications.filter(function(n) { return n.userId === currentUser.id; }).sort(function(a,b) { return new Date(b.timestamp) - new Date(a.timestamp); });
-    var html = '<div class="notifications-list">';
-    if(myNotifs.length===0) html += '<div class="empty-state">🔔 No notifications</div>';
-    else {
-        for(var i=0;i<myNotifs.length;i++) {
-            var n = myNotifs[i];
-            var unreadClass = n.read ? '' : 'unread';
-            html += '<div class="notification-item '+unreadClass+'" onclick="markNotificationRead('+n.id+'); showNotificationDetails(\''+n.title+'\', \''+n.message.replace(/'/g, "\\'")+'\', \''+n.link+'\'); hideModal();"><div class="notif-icon">'+(n.type==='order'?'📦':(n.type==='chat'?'💬':'🚚'))+'</div><div class="notif-content"><div class="notif-title">'+n.title+'</div><div class="notif-message">'+n.message+'</div><div class="notif-time">'+new Date(n.timestamp).toLocaleTimeString()+'</div></div></div>';
-        }
-    }
-    html += '</div><button class="btn btn-outline" style="margin-top:10px;" onclick="markAllNotificationsRead()">Mark all as read</button>';
-    showModal('🔔 Notifications', html);
-}
-
-function showNotificationDetails(title, message, link) {
-    var html = '<div><div style="font-size:18px;font-weight:800;margin-bottom:10px;">'+title+'</div><div style="background:#f5f5f5;padding:15px;border-radius:12px;margin-bottom:15px;">'+message+'</div><p style="font-size:12px;color:var(--gray-dark);">🔍 Go to '+(link ? link.replace(/([A-Z])/g, ' $1').trim() : 'relevant page')+' to take action</p><button class="btn btn-primary" style="margin-top:15px;" onclick="hideModal(); if(\''+link+'\') navigateTo(\''+link+'\');">Go to Page</button></div>';
-    showModal('📋 Notification Details', html);
-}
-
-function markNotificationRead(id) {
-    var n = notifications.find(function(n) { return n.id===id; });
-    if(n) { n.read=true; saveNotificationsToLocal(); updateNotificationBadge(currentUser.id); }
-}
-
-function markAllNotificationsRead() {
-    for(var i=0;i<notifications.length;i++) { if(notifications[i].userId===currentUser.id) notifications[i].read=true; }
-    saveNotificationsToLocal(); updateNotificationBadge(currentUser.id);
-}
-
-function updateNotificationBadge(userId) {
-    var unread = notifications.filter(function(n) { return n.userId===userId && !n.read; }).length;
-    var badge = document.getElementById('notificationBadge');
-    if(badge) { if(unread>0) { badge.textContent=unread; badge.classList.remove('hidden'); } else badge.classList.add('hidden'); }
-}
-
-function saveNotificationsToLocal() { try{ localStorage.setItem('tarazo_notifications', JSON.stringify(notifications)); } catch(e){} }
-function loadNotificationsFromLocal() { try{ var saved = localStorage.getItem('tarazo_notifications'); if(saved) notifications = JSON.parse(saved); } catch(e){} }
-
-// ======================== PRODUCT FUNCTIONS (BACKEND CONNECTED) ========================
+// ======================== SHOP FUNCTIONS ========================
 async function renderShop(filter) {
     filter = filter || 'all';
-    try {
-        const response = await apiCall('/products');
-        let products = await response.json();
-        
-        if (filter !== 'all') {
-            products = products.filter(p => p.type.toLowerCase().includes(filter.toLowerCase()));
+    
+    if (productsList.length === 0) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/products`, {
+                credentials: 'include',
+                mode: 'cors'
+            });
+            productsList = await response.json();
+        } catch(error) {
+            console.error('Error fetching products:', error);
+            document.getElementById('shopGrid').innerHTML = '<div class="empty-state">❌ Failed to load products. Please refresh.</div>';
+            return;
         }
-        
-        var html = '';
-        for(var j=0;j<products.length;j++) {
-            var p = products[j];
-            var stockClass = p.stock < 5 ? 'low' : '';
-            html += '<div class="product-card" onclick="showProductDetail('+p.id+')"><img src="'+p.image+'" alt="'+p.name+'" loading="lazy"><div class="product-info"><div class="product-name">'+escapeHtml(p.name)+'</div><div class="product-type">'+escapeHtml(p.type)+'</div><div class="product-price">UGX '+p.price.toLocaleString()+'</div><div class="product-stock '+stockClass+'">'+p.stock+' in stock</div><button class="btn-sm btn-green" style="margin-top:8px;" onclick="event.stopPropagation();addToCart('+p.id+')">🛒 Add to Cart</button></div></div>';
-        }
-        document.getElementById('shopGrid').innerHTML = html || '<div class="empty-state">No products available</div>';
-    } catch (error) {
-        console.error('Error fetching products:', error);
-        document.getElementById('shopGrid').innerHTML = '<div class="empty-state">❌ Failed to load products</div>';
     }
+    
+    let products = productsList;
+    if (filter !== 'all') {
+        products = productsList.filter(p => p.type && p.type.toLowerCase().includes(filter.toLowerCase()));
+    }
+    
+    var html = '';
+    for(var j=0;j<products.length;j++) {
+        var p = products[j];
+        var stockClass = (p.stock < 5) ? 'low' : '';
+        var imageUrl = p.image_url || p.image || 'https://placehold.co/600x400/1a5276/white?text=TARAZO';
+        html += '<div class="product-card" onclick="showProductDetail('+p.id+')">' +
+                    '<img src="'+imageUrl+'" alt="'+p.name+'" loading="lazy">' +
+                    '<div class="product-info">' +
+                        '<div class="product-name">'+escapeHtml(p.name)+'</div>' +
+                        '<div class="product-type">'+escapeHtml(p.type)+'</div>' +
+                        '<div class="product-price">UGX '+(p.price || 0).toLocaleString()+'</div>' +
+                        '<div class="product-stock '+stockClass+'">'+(p.stock || 0)+' in stock</div>' +
+                        '<button class="btn-sm btn-green" style="margin-top:8px;" onclick="event.stopPropagation();addToCart('+p.id+')">🛒 Add to Cart</button>' +
+                    '</div>' +
+                '</div>';
+    }
+    document.getElementById('shopGrid').innerHTML = html || '<div class="empty-state">No products available</div>';
 }
 
-function searchProducts(query) {
+function searchProducts(query){
     if(!query){ renderShop(); return; }
-    var filtered = DB.products.filter(function(p){ return p.name.toLowerCase().indexOf(query.toLowerCase())!==-1 || p.type.toLowerCase().indexOf(query.toLowerCase())!==-1; });
+    var filtered = productsList.filter(function(p){ return p.name.toLowerCase().indexOf(query.toLowerCase())!==-1 || (p.type && p.type.toLowerCase().indexOf(query.toLowerCase())!==-1); });
     var html = '';
     for(var j=0;j<filtered.length;j++){
-        var p=filtered[j],stockClass=p.stock<5?'low':'';
-        html+='<div class="product-card" onclick="showProductDetail('+p.id+')"><img src="'+p.image+'" alt="'+p.name+'" loading="lazy"><div class="product-info"><div class="product-name">'+p.name+'</div><div class="product-type">'+p.type+'</div><div class="product-price">UGX '+p.price.toLocaleString()+'</div><div class="product-stock '+stockClass+'">'+p.stock+' in stock</div><button class="btn-sm btn-green" style="margin-top:8px;" onclick="event.stopPropagation();addToCart('+p.id+')">🛒 Add to Cart</button></div></div>';
+        var p=filtered[j];
+        var stockClass=(p.stock<5)?'low':'';
+        var imageUrl = p.image_url || p.image || 'https://placehold.co/600x400/1a5276/white?text=TARAZO';
+        html+='<div class="product-card" onclick="showProductDetail('+p.id+')">' +
+                '<img src="'+imageUrl+'" alt="'+p.name+'" loading="lazy">' +
+                '<div class="product-info">' +
+                    '<div class="product-name">'+p.name+'</div>' +
+                    '<div class="product-type">'+p.type+'</div>' +
+                    '<div class="product-price">UGX '+p.price.toLocaleString()+'</div>' +
+                    '<div class="product-stock '+stockClass+'">'+p.stock+' in stock</div>' +
+                    '<button class="btn-sm btn-green" style="margin-top:8px;" onclick="event.stopPropagation();addToCart('+p.id+')">🛒 Add to Cart</button>' +
+                '</div>' +
+            '</div>';
     }
     document.getElementById('shopGrid').innerHTML=html;
 }
@@ -521,83 +506,80 @@ function filterProducts(type,btn){
 
 async function showProductDetail(id){
     try {
-        const response = await apiCall('/products');
-        var products = await response.json();
-        var p = products.find(function(pr){ return pr.id===id; });
+        var p = productsList.find(function(pr){ return pr.id === id; });
         if(!p) return;
         
-        var stockColor=p.stock<5?'var(--red)':'var(--green)',stockMsg=p.stock<5?'⚠️ Only '+p.stock+' left!':'✅ In Stock ('+p.stock+')';
-        var isWishlisted=DB.wishlist.some(function(w){ return w.productId===id && w.userId===currentUser.id; });
-        var wishlistBtnClass=isWishlisted?'active':'';
-        var installHtml='';
-        if(p.install && p.install.length>0){
-            installHtml='<div class="card-title" style="font-size:16px;margin-bottom:10px;">🏠 Installation Gallery</div><div class="install-gallery">'+p.install.map(function(img){ return'<img src="'+img+'" alt="Installation" loading="lazy" onclick="window.open(this.src)">'; }).join('')+'</div>';
+        var stockColor = (p.stock < 5) ? 'var(--red)' : 'var(--green)';
+        var stockMsg = (p.stock < 5) ? '⚠️ Only '+p.stock+' left!' : '✅ In Stock ('+p.stock+')';
+        
+        var installHtml = '';
+        if(p.install_images){
+            try {
+                var installs = JSON.parse(p.install_images);
+                if(installs && installs.length>0){
+                    installHtml = '<div class="card-title" style="font-size:16px;margin-bottom:10px;">🏠 Installation Gallery</div><div class="install-gallery">'+installs.map(function(img){ return'<img src="'+img+'" alt="Installation" loading="lazy" onclick="window.open(this.src)">'; }).join('')+'</div>';
+                }
+            } catch(e) {}
         }
-        var reviewsHtml=renderProductReviews(p.id);
-        document.getElementById('detailContent').innerHTML='<img src="'+p.image+'" alt="'+p.name+'" class="detail-hero" loading="lazy"><div class="card"><div style="display:flex;justify-content:space-between;align-items:center;"><div class="product-name" style="font-size:22px;">'+p.name+'</div><button class="wishlist-btn '+wishlistBtnClass+'" onclick="toggleWishlist('+p.id+');event.stopPropagation();">❤️</button></div><div class="product-type" style="font-size:14px;margin:8px 0;">'+p.type+'</div><div class="product-price" style="font-size:28px;margin:10px 0;">UGX '+p.price.toLocaleString()+'</div><div style="color:'+stockColor+';font-weight:700;margin-bottom:15px;">'+stockMsg+'</div><p style="line-height:1.6;color:#555;margin-bottom:20px;">'+p.desc+'</p>'+installHtml+'<div class="card-title" style="margin-top:20px;">⭐ Rate This Product</div><div class="star-rating" id="productRatingStars"><span onclick="setRatingTemp(1)">★</span><span onclick="setRatingTemp(2)">★</span><span onclick="setRatingTemp(3)">★</span><span onclick="setRatingTemp(4)">★</span><span onclick="setRatingTemp(5)">★</span></div><textarea id="reviewText" placeholder="Write your review..." style="width:100%;padding:10px;margin:10px 0;border-radius:10px;border:1px solid #ddd;"></textarea><button class="btn-sm btn-green" onclick="submitProductReview('+p.id+')">Submit Review</button>'+reviewsHtml+'<div style="display:flex;gap:10px;margin-top:20px;"><button class="btn btn-green" style="flex:1;" onclick="addToCart('+p.id+')">🛒 Add to Cart</button><button class="btn btn-outline" style="flex:1;" onclick="navigateTo(\'userShop\')">⬅️ Back</button></div></div>';
+        
+        document.getElementById('detailContent').innerHTML = 
+            '<img src="'+(p.image_url || p.image || 'https://placehold.co/600x400/1a5276/white?text=TARAZO')+'" alt="'+p.name+'" class="detail-hero" loading="lazy">' +
+            '<div class="card">' +
+                '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+                    '<div class="product-name" style="font-size:22px;">'+p.name+'</div>' +
+                '</div>' +
+                '<div class="product-type" style="font-size:14px;margin:8px 0;">'+p.type+'</div>' +
+                '<div class="product-price" style="font-size:28px;margin:10px 0;">UGX '+p.price.toLocaleString()+'</div>' +
+                '<div style="color:'+stockColor+';font-weight:700;margin-bottom:15px;">'+stockMsg+'</div>' +
+                '<p style="line-height:1.6;color:#555;margin-bottom:20px;">'+(p.description || p.desc || 'No description available')+'</p>' +
+                installHtml +
+                '<div style="display:flex;gap:10px;margin-top:20px;">' +
+                    '<button class="btn btn-green" style="flex:1;" onclick="addToCart('+p.id+')">🛒 Add to Cart</button>' +
+                    '<button class="btn btn-outline" style="flex:1;" onclick="navigateTo(\'userShop\')">⬅️ Back</button>' +
+                '</div>' +
+            '</div>';
         navigateTo('productDetail');
     } catch(error) {
         showToast('Failed to load product details');
     }
 }
 
-function renderProductReviews(productId){
-    var productReviews=DB.reviews.filter(function(r){ return r.productId===productId; });
-    if(productReviews.length===0) return'<div style="margin-top:20px;"><div class="card-title">⭐ No reviews yet. Be the first!</div></div>';
-    var html='<div style="margin-top:20px;"><div class="card-title">⭐ Customer Reviews ('+productReviews.length+')</div>';
-    for(var j=0;j<productReviews.length;j++){
-        var r=productReviews[j];
-        var stars='⭐'.repeat(r.rating);
-        html+='<div class="review-card"><div class="review-header"><div class="review-author">'+r.userName+'</div><div class="review-date">'+r.date+'</div></div><div class="rating-stars">'+stars+'</div><div class="review-text">'+r.text+'</div></div>';
-    }
-    html+='</div>';
-    return html;
-}
-
-var tempRating=0;
-function setRatingTemp(r){ tempRating=r; var stars=document.querySelectorAll('#productRatingStars span'); for(var i=0;i<stars.length;i++){ stars[i].classList.toggle('active',i<r); } }
-
-function submitProductReview(productId){
-    if(tempRating===0){ showToast('Please select a rating'); return; }
-    var reviewText=document.getElementById('reviewText').value;
-    if(!reviewText){ showToast('Please write a review'); return; }
-    DB.reviews.push({ id:DB.reviews.length+1, userId:currentUser.id, userName:currentUser.name, productId:productId, rating:tempRating, text:reviewText, date:new Date().toISOString().split('T')[0] });
-    saveDBToLocal();
-    showToast('✅ Review submitted!');
-    tempRating=0;
-    document.getElementById('reviewText').value='';
-    showProductDetail(productId);
-}
-
-// ======================== CART FUNCTIONS (BACKEND CONNECTED) ========================
+// ======================== CART FUNCTIONS ========================
 async function addToCart(productId) {
     if (!currentUser) { showToast('Please login first'); return; }
     
     try {
-        const response = await apiCall('/cart', {
+        const response = await fetch(`${API_BASE_URL}/cart`, {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            mode: 'cors',
             body: JSON.stringify({ product_id: productId, quantity: 1 })
         });
         
         if (response.ok) {
-            await loadUserData();
+            await loadAllData();
             updateCartBadge();
             showToast('✅ Added to cart!');
             renderShop();
-            if(currentPage==='productDetail') showProductDetail(productId);
         } else {
             showToast('❌ Failed to add to cart');
         }
     } catch(error) {
+        console.error('Add to cart error:', error);
         showToast('❌ Network error');
     }
 }
 
 async function removeFromCart(productId) {
     try {
-        const response = await apiCall(`/cart/${productId}`, { method: 'DELETE' });
+        const response = await fetch(`${API_BASE_URL}/cart/${productId}`, {
+            method: 'DELETE',
+            credentials: 'include',
+            mode: 'cors'
+        });
         if (response.ok) {
-            await loadUserData();
+            await loadAllData();
             renderCart();
             updateCartBadge();
             showToast('✅ Removed from cart');
@@ -607,54 +589,54 @@ async function removeFromCart(productId) {
     }
 }
 
-function changeQty(productId, delta) {
-    // Implementation would need backend endpoint for quantity update
-    showToast('Use remove and re-add to change quantity');
-}
-
 function removeItemFromCart(productId) { removeFromCart(productId); }
 
 async function renderCart() {
     if (!currentUser) return;
     
-    try {
-        await loadUserData();
-        var myCart = DB.cart;
-        
-        if(myCart.length===0){
-            document.getElementById('cartItems').innerHTML='<div class="empty-state"><div class="icon">🛒</div>Your cart is empty</div>';
-            document.getElementById('cartSummary').classList.add('hidden');
-            return;
-        }
-        
-        var total=0, html='';
-        for(var i=0;i<myCart.length;i++){
-            var c=myCart[i], p=DB.products.find(function(pr){ return pr.id===c.product_id; });
-            if(p){
-                total+=p.price*c.quantity;
-                html+='<div class="list-item"><div class="list-info"><h4>'+p.name+'</h4><p>UGX '+p.price.toLocaleString()+' x '+c.quantity+'</p></div><div style="display:flex;align-items:center;gap:10px;"><button class="icon-btn" style="background:var(--gray);color:#333;width:30px;height:30px;" onclick="changeQty('+c.product_id+',-1)">➖</button><span style="font-weight:700;">'+c.quantity+'</span><button class="icon-btn" style="background:var(--gray);color:#333;width:30px;height:30px;" onclick="changeQty('+c.product_id+',1)">➕</button><button class="icon-btn" style="background:var(--red);color:white;width:30px;height:30px;" onclick="removeItemFromCart('+c.product_id+')">🗑️</button></div></div>';
-            }
-        }
-        document.getElementById('cartItems').innerHTML=html;
-        document.getElementById('cartTotal').textContent='UGX '+total.toLocaleString();
-        document.getElementById('cartSummary').classList.remove('hidden');
-    } catch(error) {
-        console.error('Error rendering cart:', error);
+    await loadAllData();
+    
+    if(cartList.length === 0){
+        document.getElementById('cartItems').innerHTML='<div class="empty-state"><div class="icon">🛒</div>Your cart is empty</div>';
+        document.getElementById('cartSummary').classList.add('hidden');
+        return;
     }
+    
+    var total=0, html='';
+    for(var i=0;i<cartList.length;i++){
+        var c = cartList[i];
+        var p = productsList.find(function(pr){ return pr.id === c.product_id; });
+        if(p){
+            total += p.price * c.quantity;
+            html += '<div class="list-item">' +
+                        '<div class="list-info">' +
+                            '<h4>'+p.name+'</h4>' +
+                            '<p>UGX '+p.price.toLocaleString()+' x '+c.quantity+' = UGX '+(p.price * c.quantity).toLocaleString()+'</p>' +
+                        '</div>' +
+                        '<button class="btn-sm btn-red" onclick="removeItemFromCart('+c.product_id+')">Remove</button>' +
+                    '</div>';
+        }
+    }
+    document.getElementById('cartItems').innerHTML = html;
+    document.getElementById('cartTotal').textContent = 'UGX '+total.toLocaleString();
+    document.getElementById('cartSummary').classList.remove('hidden');
 }
 
 function showCart(){ navigateTo('userCart'); }
 
 function showCheckout(){
-    var total=DB.cart.reduce(function(s,c){ var p=DB.products.find(function(pr){ return pr.id===c.product_id; }); return s+(p?p.price*c.quantity:0); },0);
-    document.getElementById('checkoutTotal').textContent='UGX '+total.toLocaleString();
+    var total = cartList.reduce(function(s,c){ 
+        var p = productsList.find(function(pr){ return pr.id === c.product_id; }); 
+        return s + (p ? p.price * c.quantity : 0); 
+    }, 0);
+    document.getElementById('checkoutTotal').textContent = 'UGX '+total.toLocaleString();
     navigateTo('checkoutPage');
 }
 
 function updateCartBadge(){
-    var total=DB.cart.reduce(function(s,c){ return s+c.quantity; },0);
-    var badge=document.getElementById('cartBadge');
-    if(total>0){ badge.textContent=total; badge.classList.remove('hidden'); }
+    var total = cartList.reduce(function(s,c){ return s + c.quantity; }, 0);
+    var badge = document.getElementById('cartBadge');
+    if(total > 0){ badge.textContent = total; badge.classList.remove('hidden'); }
     else{ badge.classList.add('hidden'); }
 }
 
@@ -662,97 +644,164 @@ function detectNetwork(phone){ let p=phone.toString().replace(/\D/g,''); if(/^(0
 function validateUgPhone(phone){ let p=phone.toString().replace(/\D/g,''); return p.length>=9&&p.length<=12; }
 
 async function processPayment(){
-    var method=document.querySelector('input[name="payMethod"]:checked').value;
-    var phone=document.getElementById('payPhone').value;
+    var method = document.querySelector('input[name="payMethod"]:checked').value;
+    var phone = document.getElementById('payPhone').value;
     
-    if(method!=='card'){
-        if(!phone||!validateUgPhone(phone)){ showToast('❌ Please enter a valid Ugandan phone number'); return; }
-        var network=detectNetwork(phone);
-        if(method==='mtn'&&network!=='MTN'){ showToast('❌ Please enter a valid MTN number'); return; }
-        if(method==='airtel'&&network!=='Airtel'){ showToast('❌ Please enter a valid Airtel number'); return; }
+    if(method !== 'card'){
+        if(!phone || !validateUgPhone(phone)){ showToast('❌ Please enter a valid Ugandan phone number'); return; }
+        var network = detectNetwork(phone);
+        if(method === 'mtn' && network !== 'MTN'){ showToast('❌ Please enter a valid MTN number'); return; }
+        if(method === 'airtel' && network !== 'Airtel'){ showToast('❌ Please enter a valid Airtel number'); return; }
     }
     
-    var total=0;
-    var myCart=DB.cart;
-    for(var i=0;i<myCart.length;i++){ var p=DB.products.find(function(pr){ return pr.id===myCart[i].product_id; }); if(p) total+=p.price*myCart[i].quantity; }
-    
-    var items = myCart.map(function(c){ return { productId: c.product_id, qty: c.quantity }; });
+    var total = 0;
+    var items = [];
+    for(var i=0;i<cartList.length;i++){ 
+        var p = productsList.find(function(pr){ return pr.id === cartList[i].product_id; }); 
+        if(p){
+            total += p.price * cartList[i].quantity;
+            items.push({ productId: cartList[i].product_id, qty: cartList[i].quantity });
+        }
+    }
     
     try {
         showToast('🔄 Processing order...');
-        const response = await apiCall('/orders', {
+        const response = await fetch(`${API_BASE_URL}/orders`, {
             method: 'POST',
-            body: JSON.stringify({ items: items, total: total, payment_method: method==='mtn'?'MTN Mobile Money':(method==='airtel'?'Airtel Money':'Bank Card') })
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            mode: 'cors',
+            body: JSON.stringify({ 
+                items: items, 
+                total: total, 
+                payment_method: method === 'mtn' ? 'MTN Mobile Money' : (method === 'airtel' ? 'Airtel Money' : 'Bank Card'),
+                payment_phone: phone
+            })
         });
         
         const data = await response.json();
         
         if(response.ok && data.success){
             showToast('✅ Order placed successfully!');
-            await loadUserData();
+            await loadAllData();
             navigateTo('userOrders');
             renderUserOrders();
-            showModal('✅ Payment Successful','<div style="text-align:center;"><div style="font-size:48px;">✅</div><div style="font-size:20px;font-weight:800;">Order Placed!</div><div>Your order will be processed shortly.</div><button class="btn btn-green" style="margin-top:15px;" onclick="hideModal();navigateTo(\'userOrders\')">View Orders</button></div>');
+            showModal('✅ Payment Successful', 
+                '<div style="text-align:center;">' +
+                    '<div style="font-size:48px;">✅</div>' +
+                    '<div style="font-size:20px;font-weight:800;">Order Placed!</div>' +
+                    '<div>Your order will be processed shortly.</div>' +
+                    '<button class="btn btn-green" style="margin-top:15px;" onclick="hideModal();navigateTo(\'userOrders\')">View Orders</button>' +
+                '</div>');
         } else {
             showToast(data.error || '❌ Order failed');
         }
     } catch(error) {
+        console.error('Payment error:', error);
         showToast('❌ Network error');
     }
 }
 
 function setupPaymentMethodListener(){
-    var radios=document.querySelectorAll('input[name="payMethod"]');
+    var radios = document.querySelectorAll('input[name="payMethod"]');
     for(var i=0;i<radios.length;i++){
-        radios[i].addEventListener('change',function(){
-            var method=document.querySelector('input[name="payMethod"]:checked').value;
-            var cardFields=document.getElementById('cardFields');
-            var phoneDiv=document.getElementById('payPhone').parentElement;
-            var networkBadge=document.getElementById('networkBadge');
-            if(method==='card'){ if(cardFields)cardFields.classList.remove('hidden'); if(phoneDiv)phoneDiv.style.display='none'; if(networkBadge)networkBadge.classList.add('hidden'); }
-            else{ if(cardFields)cardFields.classList.add('hidden'); if(phoneDiv)phoneDiv.style.display='block'; }
+        radios[i].addEventListener('change', function(){
+            var method = document.querySelector('input[name="payMethod"]:checked').value;
+            var cardFields = document.getElementById('cardFields');
+            var phoneDiv = document.getElementById('payPhone').parentElement;
+            if(method === 'card'){ 
+                if(cardFields) cardFields.classList.remove('hidden'); 
+                if(phoneDiv) phoneDiv.style.display = 'none';
+            } else { 
+                if(cardFields) cardFields.classList.add('hidden'); 
+                if(phoneDiv) phoneDiv.style.display = 'block';
+            }
         });
     }
-    var payPhone=document.getElementById('payPhone');
+    var payPhone = document.getElementById('payPhone');
     if(payPhone){
-        payPhone.addEventListener('input',function(){
-            var net=detectNetwork(payPhone.value);
-            var badge=document.getElementById('networkBadge');
-            if(badge){ if(net){ badge.innerHTML='<span class="network-badge network-'+net.toLowerCase()+'">'+net+'</span>'; badge.classList.remove('hidden'); } else{ badge.classList.add('hidden'); } }
+        payPhone.addEventListener('input', function(){
+            var net = detectNetwork(payPhone.value);
+            var badge = document.getElementById('networkBadge');
+            if(badge){ 
+                if(net){ 
+                    badge.innerHTML = '<span class="network-badge network-'+net.toLowerCase()+'">'+net+'</span>'; 
+                    badge.classList.remove('hidden'); 
+                } else { 
+                    badge.classList.add('hidden'); 
+                } 
+            }
         });
     }
 }
 
-// ======================== ORDER FUNCTIONS (BACKEND CONNECTED) ========================
+// ======================== ORDER FUNCTIONS ========================
 async function renderUserOrders() {
     if (!currentUser) return;
     
-    try {
-        const response = await apiCall('/orders');
-        var myOrders = await response.json();
-        
-        var html = '';
-        if(myOrders.length===0) html = '<div class="empty-state">📦 No orders yet</div>';
-        else {
-            for(var i=0;i<myOrders.length;i++){
-                var o = myOrders[i];
-                var deliveryPerson = o.rider_name ? o.rider_name : (o.agent_id ? 'Agent assigned' : 'Not assigned');
-                var deliveryPhone = o.rider_phone ? o.rider_phone : 'N/A';
-                html += '<div class="card"><div style="display:flex; justify-content:space-between;"><div><strong>📦 Order #'+o.id+'</strong></div><div class="status-badge status-'+o.status+'">'+o.status+'</div></div><div>'+o.date+' - '+(o.items ? JSON.parse(o.items).length : 0)+' item(s)</div><div style="font-size:18px;font-weight:800;color:var(--blue);margin:10px 0;">UGX '+o.total.toLocaleString()+'</div><div style="background:#e8f5e9;padding:12px;border-radius:12px;"><div style="font-weight:700;">🚚 DELIVERY PERSON</div><div><strong>Name:</strong> '+deliveryPerson+'</div><div><strong>Phone:</strong> <a href="tel:'+deliveryPhone+'" style="color:var(--blue);">'+deliveryPhone+'</a> (Tap to call)</div><div><strong>Vehicle:</strong> '+(o.rider_vehicle || 'N/A')+'</div><div><strong>Location:</strong> '+(o.delivery_location || 'Being assigned')+'</div></div></div>';
-            }
+    await loadAllData();
+    
+    var myOrders = ordersList.filter(function(o){ return o.user_id === currentUser.id; });
+    
+    var html = '';
+    if(myOrders.length === 0) {
+        html = '<div class="empty-state">📦 No orders yet</div>';
+    } else {
+        for(var i=0;i<myOrders.length;i++){
+            var o = myOrders[i];
+            var deliveryPerson = o.rider_name ? o.rider_name : (o.agent_id ? 'Agent assigned' : 'Not assigned');
+            var deliveryPhone = o.rider_phone ? o.rider_phone : 'N/A';
+            var itemsCount = o.items ? (Array.isArray(o.items) ? o.items.length : JSON.parse(o.items).length) : 0;
+            
+            html += '<div class="card">' +
+                        '<div style="display:flex; justify-content:space-between;">' +
+                            '<div><strong>📦 Order #'+o.id+'</strong></div>' +
+                            '<div class="status-badge status-'+o.status+'">'+o.status+'</div>' +
+                        '</div>' +
+                        '<div>'+ (o.date || 'N/A') +' - '+itemsCount+' item(s)</div>' +
+                        '<div style="font-size:18px;font-weight:800;color:var(--blue);margin:10px 0;">UGX '+(o.total || 0).toLocaleString()+'</div>' +
+                        '<div style="background:#e8f5e9;padding:12px;border-radius:12px;">' +
+                            '<div style="font-weight:700;">🚚 DELIVERY PERSON</div>' +
+                            '<div><strong>Name:</strong> '+deliveryPerson+'</div>' +
+                            '<div><strong>Phone:</strong> <a href="tel:'+deliveryPhone+'" style="color:var(--blue);">'+deliveryPhone+'</a></div>' +
+                            '<div><strong>Vehicle:</strong> '+(o.rider_vehicle || 'N/A')+'</div>' +
+                            '<div><strong>Location:</strong> '+(o.delivery_location || 'Being assigned')+'</div>' +
+                        '</div>' +
+                    '</div>';
         }
-        document.getElementById('userOrderList').innerHTML = html;
-    } catch(error) {
-        console.error('Error fetching orders:', error);
     }
+    document.getElementById('userOrderList').innerHTML = html;
 }
 
-// ======================== ADMIN FUNCTIONS (BACKEND CONNECTED) ========================
+// ======================== PROFILE FUNCTIONS ========================
+function renderUserDashboard(){
+    if(!currentUser) return;
+    document.getElementById('userNameDisplay').textContent = currentUser.name;
+    document.getElementById('userEmailDisplay').textContent = currentUser.email;
+    document.getElementById('profileName').value = currentUser.name || '';
+    document.getElementById('profileEmail').value = currentUser.email || '';
+    document.getElementById('profilePhone').value = currentUser.phone || '';
+    document.getElementById('profileAddress').value = currentUser.address || '';
+    
+    var myOrders = ordersList.filter(function(o){ return o.user_id === currentUser.id; });
+    var pending = myOrders.filter(function(o){ return o.status === 'paid' || o.status === 'processing'; }).length;
+    document.getElementById('userTotalOrders').textContent = myOrders.length;
+    document.getElementById('userPendingOrders').textContent = pending;
+}
+
+function saveUserProfile(){
+    showToast('Profile update will be available soon');
+}
+
+// ======================== ADMIN FUNCTIONS ========================
 async function renderAdminDashboard() {
     if (!currentUser || currentUser.role !== 'admin') return;
     
     try {
-        const statsRes = await apiCall('/admin/stats');
+        const statsRes = await fetch(`${API_BASE_URL}/admin/stats`, {
+            credentials: 'include',
+            mode: 'cors'
+        });
         const stats = await statsRes.json();
         
         document.getElementById('adminTodaySales').textContent = 'UGX ' + (stats.today_sales || 0).toLocaleString();
@@ -760,28 +809,9 @@ async function renderAdminDashboard() {
         document.getElementById('adminTotalProducts').textContent = stats.total_products || 0;
         document.getElementById('adminLowStock').textContent = stats.low_stock || 0;
         
-        // Render agents
-        const agentsRes = await apiCall('/admin/agents');
-        const agents = await agentsRes.json();
-        var agentHtml = '';
-        for(var a=0;a<agents.length;a++){
-            agentHtml += '<div class="agent-card '+agents[a].status+'" onclick="viewAgentChats('+agents[a].id+')"><div class="agent-name">'+agents[a].name+'</div><div class="agent-status '+agents[a].status+'">🟢 '+agents[a].status.toUpperCase()+'</div></div>';
-        }
-        document.getElementById('adminAgentStatus').innerHTML = agentHtml;
-        
-        // Render recent orders
-        const ordersRes = await apiCall('/orders');
-        const orders = await ordersRes.json();
-        var recentHtml = '', recentCount = Math.min(3, orders.length);
-        for(var r=orders.length-1; r>=orders.length-recentCount; r--){
-            recentHtml += '<div class="list-item" onclick="viewTransactionDetails('+orders[r].id+')"><div class="list-info"><h4>📦 Order #'+orders[r].id+'</h4><p>UGX '+orders[r].total.toLocaleString()+'</p></div><div class="status-badge status-'+orders[r].status+'">'+orders[r].status+'</div></div>';
-        }
-        document.getElementById('adminRecentOrders').innerHTML = recentHtml;
-        
-        // Render bar chart
         renderBarChart('adminChart', [120, 200, 150, 300, 250], ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']);
     } catch(error) {
-        console.error('Error loading admin dashboard:', error);
+        console.error('Error loading admin stats:', error);
     }
 }
 
@@ -805,110 +835,170 @@ function renderBarChart(containerId, data, labels){
 async function renderAdminOrders() {
     if (!currentUser || currentUser.role !== 'admin') return;
     
-    try {
-        const response = await apiCall('/orders');
-        var filteredOrders = await response.json();
-        
-        if(currentTransactionFilter){
-            filteredOrders = filteredOrders.filter(function(o){ return o.payment_ref && o.payment_ref.includes(currentTransactionFilter); });
-        }
-        
-        var html = '';
-        for(var i=0;i<filteredOrders.length;i++){
-            var o = filteredOrders[i];
-            html += '<div class="list-item" onclick="viewTransactionDetails('+o.id+')"><div class="list-info"><h4>📦 Transaction #'+o.id+'</h4><p>UGX '+o.total.toLocaleString()+'</p></div><div><div class="status-badge status-'+o.status+'">'+o.status+'</div></div></div>';
-        }
-        document.getElementById('adminOrdersList').innerHTML = html || '<div class="empty-state">No transactions found</div>';
-    } catch(error) {
-        console.error('Error loading orders:', error);
+    await loadAllData();
+    
+    var html = '';
+    for(var i=0;i<ordersList.length;i++){
+        var o = ordersList[i];
+        html += '<div class="list-item" onclick="viewTransactionDetails('+o.id+')">' +
+                    '<div class="list-info">' +
+                        '<h4>📦 Transaction #'+o.id+'</h4>' +
+                        '<p>UGX '+(o.total || 0).toLocaleString()+' - '+o.status+'</p>' +
+                    '</div>' +
+                    '<div><div class="status-badge status-'+o.status+'">'+o.status+'</div></div>' +
+                '</div>';
     }
+    document.getElementById('adminOrdersList').innerHTML = html || '<div class="empty-state">No orders found</div>';
 }
 
 function viewTransactionDetails(orderId){
-    showModal('Transaction Details', 'Viewing order #'+orderId);
+    var order = ordersList.find(function(o){ return o.id === orderId; });
+    if(order){
+        showModal('Transaction Details', 
+            '<div><strong>Order #'+order.id+'</strong><br>' +
+            '<strong>Total:</strong> UGX '+(order.total || 0).toLocaleString()+'<br>' +
+            '<strong>Status:</strong> '+order.status+'<br>' +
+            '<strong>Date:</strong> '+order.date+'</div>');
+    }
 }
 
 function searchTransactionByPhone(){
-    var phone = document.getElementById('transactionSearchPhone').value.trim();
-    if(!phone){ showToast('Enter phone number'); return; }
-    currentTransactionFilter = phone;
-    renderAdminOrders();
+    showToast('Search by phone feature - will search all orders');
 }
 
 function resetTransactionSearch(){
-    currentTransactionFilter = null;
-    document.getElementById('transactionSearchPhone').value = '';
     renderAdminOrders();
 }
 
 function exportTransactionsCSV(){
-    showToast('CSV export feature coming soon');
+    showToast('CSV export coming soon');
 }
 
 function showSalesDetail(){ showModal('Sales Details', 'Today\'s sales data'); }
 function showPendingDetail(){ showModal('Pending Orders', 'List of pending orders'); }
-function showProductsDetail(){ showModal('Products', 'Total products: '+DB.products.length); }
+function showProductsDetail(){ showModal('Products', 'Total products: '+productsList.length); }
 function showLowStockDetail(){ showModal('Low Stock Alert', 'Products with low stock'); }
 
-// ======================== AGENT FUNCTIONS (BACKEND CONNECTED) ========================
+// ======================== AGENT FUNCTIONS ========================
 async function renderAgentPanel() {
     if (!currentUser || currentUser.role !== 'agent') return;
     
-    try {
-        const ordersRes = await apiCall('/orders');
-        const allOrders = await ordersRes.json();
-        
-        var myOrders = allOrders.filter(function(o) { return o.agent_id === currentUser.id && o.status !== 'delivered'; });
-        var html = '';
-        for(var i=0;i<myOrders.length;i++){
-            var o = myOrders[i];
-            html += '<div class="card"><div style="display:flex;justify-content:space-between;"><h4>📦 Order #'+o.id+'</h4><select id="orderStatus_'+o.id+'" onchange="updateOrderStatus('+o.id+', this.value)" class="status-badge status-'+o.status+'"><option value="paid" '+(o.status==='paid'?'selected':'')+'>💰 Paid</option><option value="processing" '+(o.status==='processing'?'selected':'')+'>⚙️ Processing</option><option value="shipped" '+(o.status==='shipped'?'selected':'')+'>🚚 Shipped</option><option value="delivered" '+(o.status==='delivered'?'selected':'')+'>✅ Delivered</option></select></div><p><strong>Total:</strong> UGX '+o.total.toLocaleString()+'</p><button class="btn-sm btn-primary" onclick="viewOrderDetailsForAgent('+o.id+')">👁️ Details</button></div>';
-        }
-        document.getElementById('agentAssignedOrders').innerHTML = html || '<div class="empty-state">No assigned orders</div>';
-        
-        var availableOrders = allOrders.filter(function(o) { return o.status === 'paid' && !o.agent_id; });
-        var availHtml = '';
-        for(var j=0;j<availableOrders.length;j++){
-            var ao = availableOrders[j];
-            availHtml += '<div class="card"><h4>📦 Order #'+ao.id+'</h4><p>Total: UGX '+ao.total.toLocaleString()+'</p><button class="btn-sm btn-add" onclick="claimOrderManually('+ao.id+')">➕ Claim This Order</button></div>';
-        }
-        document.getElementById('agentAvailableOrders').innerHTML = availHtml || '<div class="empty-state">No available orders</div>';
-        
-    } catch(error) {
-        console.error('Error loading agent panel:', error);
+    await loadAllData();
+    
+    var myOrders = ordersList.filter(function(o) { return o.agent_id === currentUser.id && o.status !== 'delivered'; });
+    var html = '';
+    for(var i=0;i<myOrders.length;i++){
+        var o = myOrders[i];
+        html += '<div class="card">' +
+                    '<div style="display:flex;justify-content:space-between;">' +
+                        '<h4>📦 Order #'+o.id+'</h4>' +
+                        '<select id="orderStatus_'+o.id+'" onchange="updateOrderStatus('+o.id+', this.value)" class="status-badge status-'+o.status+'">' +
+                            '<option value="paid" '+(o.status==='paid'?'selected':'')+'>💰 Paid</option>' +
+                            '<option value="processing" '+(o.status==='processing'?'selected':'')+'>⚙️ Processing</option>' +
+                            '<option value="shipped" '+(o.status==='shipped'?'selected':'')+'>🚚 Shipped</option>' +
+                            '<option value="delivered" '+(o.status==='delivered'?'selected':'')+'>✅ Delivered</option>' +
+                        '</select>' +
+                    '</div>' +
+                    '<p><strong>Total:</strong> UGX '+(o.total || 0).toLocaleString()+'</p>' +
+                    '<button class="btn-sm btn-primary" onclick="viewOrderDetailsForAgent('+o.id+')">👁️ Details</button>' +
+                '</div>';
     }
+    document.getElementById('agentAssignedOrders').innerHTML = html || '<div class="empty-state">No assigned orders</div>';
+    
+    var availableOrders = ordersList.filter(function(o) { return o.status === 'paid' && !o.agent_id; });
+    var availHtml = '';
+    for(var j=0;j<availableOrders.length;j++){
+        var ao = availableOrders[j];
+        availHtml += '<div class="card">' +
+                        '<h4>📦 Order #'+ao.id+'</h4>' +
+                        '<p>Total: UGX '+(ao.total || 0).toLocaleString()+'</p>' +
+                        '<button class="btn-sm btn-add" onclick="claimOrderManually('+ao.id+')">➕ Claim This Order</button>' +
+                    '</div>';
+    }
+    document.getElementById('agentAvailableOrders').innerHTML = availHtml || '<div class="empty-state">No available orders</div>';
 }
 
 async function updateOrderStatus(orderId, newStatus){
     try {
-        const response = await apiCall('/orders/'+orderId+'/status', {
+        const response = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
             method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            mode: 'cors',
             body: JSON.stringify({ status: newStatus })
         });
         if(response.ok){
             showToast('✅ Order #'+orderId+' status: '+newStatus);
+            await loadAllData();
             renderAgentPanel();
+        } else {
+            showToast('❌ Failed to update status');
         }
     } catch(error) {
-        showToast('Failed to update status');
+        showToast('❌ Network error');
     }
 }
 
 function claimOrderManually(orderId){
-    showToast('Claim order feature - contact admin');
+    showToast('Claim order - contact admin to assign orders');
 }
 
 function viewOrderDetailsForAgent(orderId){
-    showModal('Order Details', 'Viewing order #'+orderId);
+    var order = ordersList.find(function(o){ return o.id === orderId; });
+    if(order){
+        showModal('Order Details', 
+            '<div><strong>Order #'+order.id+'</strong><br>' +
+            '<strong>Customer ID:</strong> '+order.user_id+'<br>' +
+            '<strong>Total:</strong> UGX '+(order.total || 0).toLocaleString()+'<br>' +
+            '<strong>Status:</strong> '+order.status+'<br>' +
+            '<strong>Items:</strong> '+(order.items ? (Array.isArray(order.items) ? order.items.length : JSON.parse(order.items).length) : 0)+' items</div>');
+    }
 }
 
 function showAssignRiderForm(orderId){
-    showModal('Assign Rider', '<div><input type="text" id="riderName" placeholder="Rider Name"><input type="tel" id="riderPhone" placeholder="Rider Phone"><button class="btn btn-green" onclick="saveRiderAssignment('+orderId+')">Save</button></div>');
+    showModal('Assign Rider', 
+        '<div>' +
+            '<input type="text" id="riderName" placeholder="Rider Name" style="width:100%;padding:10px;margin:5px 0;">' +
+            '<input type="tel" id="riderPhone" placeholder="Rider Phone" style="width:100%;padding:10px;margin:5px 0;">' +
+            '<input type="text" id="riderVehicle" placeholder="Vehicle" style="width:100%;padding:10px;margin:5px 0;">' +
+            '<input type="text" id="deliveryLocation" placeholder="Delivery Location" style="width:100%;padding:10px;margin:5px 0;">' +
+            '<textarea id="deliveryNotes" placeholder="Notes" style="width:100%;padding:10px;margin:5px 0;"></textarea>' +
+            '<button class="btn btn-green" onclick="saveRiderAssignment('+orderId+')">Save</button>' +
+        '</div>');
 }
 
-function saveRiderAssignment(orderId){
-    showToast('Rider assigned');
-    hideModal();
+async function saveRiderAssignment(orderId){
+    var riderName = document.getElementById('riderName').value;
+    var riderPhone = document.getElementById('riderPhone').value;
+    var riderVehicle = document.getElementById('riderVehicle').value;
+    var deliveryLocation = document.getElementById('deliveryLocation').value;
+    var deliveryNotes = document.getElementById('deliveryNotes').value;
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/orders/${orderId}/assign`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            mode: 'cors',
+            body: JSON.stringify({ 
+                rider_name: riderName, 
+                rider_phone: riderPhone,
+                rider_vehicle: riderVehicle,
+                delivery_location: deliveryLocation,
+                delivery_notes: deliveryNotes
+            })
+        });
+        if(response.ok){
+            showToast('✅ Rider assigned successfully!');
+            hideModal();
+            await loadAllData();
+            renderAgentPanel();
+        } else {
+            showToast('❌ Failed to assign rider');
+        }
+    } catch(error) {
+        showToast('❌ Network error');
+    }
 }
 
 function renderAgentConversations(){ document.getElementById('agentChatList').innerHTML = '<div class="empty-state">No conversations yet</div>'; }
@@ -918,7 +1008,7 @@ function openAgentToManagerChat(){ showToast('Message manager feature coming soo
 function showAddRiderModal(){ showToast('Add rider feature coming soon'); }
 function renderAgentRiders(){ document.getElementById('agentRiderList').innerHTML = '<div class="empty-state">No riders added</div>'; }
 
-// ======================== CHAT FUNCTIONS (BACKEND CONNECTED) ========================
+// ======================== CHAT FUNCTIONS ========================
 async function sendChat() {
     var input = document.getElementById('chatInput'), text = input.value.trim();
     if(!text) return;
@@ -926,28 +1016,27 @@ async function sendChat() {
     input.value = '';
     
     try {
-        const response = await apiCall('/chat/customer', {
+        const response = await fetch(`${API_BASE_URL}/chat/customer`, {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            mode: 'cors',
             body: JSON.stringify({ message: text })
         });
         const data = await response.json();
-        addChatMessage('bot', data.response);
-        
-        // Save to local chats for history
-        DB.chats.push({ id: DB.chats.length+1, message: text, isFromUser: true, timestamp: new Date().toLocaleTimeString() });
-        DB.chats.push({ id: DB.chats.length+1, message: data.response, isFromUser: false, is_ai_generated: true, timestamp: new Date().toLocaleTimeString() });
-        saveDBToLocal();
+        addChatMessage('bot', data.response || 'Sorry, I could not process that.');
     } catch(error) {
+        console.error('Chat error:', error);
         addChatMessage('bot', 'Network error. Please try again.');
     }
 }
 
 function addChatMessage(sender, text){
+    var container = document.getElementById('chatMessages');
     var div = document.createElement('div');
     div.className = 'chat-msg '+sender;
     div.textContent = text;
-    document.getElementById('chatMessages').appendChild(div);
-    var container = document.getElementById('chatMessages');
+    container.appendChild(div);
     container.scrollTop = container.scrollHeight;
 }
 
@@ -956,63 +1045,63 @@ function toggleChat(){
     var box = document.getElementById('chatBox');
     if(chatOpen){
         box.classList.remove('hidden');
-        if(document.getElementById('chatMessages').children.length===0){
-            addChatMessage('bot', '👋 Welcome to Tarazo! Ask me about terrazzo prices, types, or type "agent" to speak with a real person.');
+        if(document.getElementById('chatMessages').children.length === 0){
+            addChatMessage('bot', '👋 Welcome to Tarazo! Ask me about terrazzo prices, types, or anything else!');
         }
     } else {
         box.classList.add('hidden');
     }
 }
 
-// ======================== PROFILE FUNCTIONS ========================
-function renderUserDashboard(){
-    if(!currentUser) return;
-    document.getElementById('userNameDisplay').textContent = currentUser.name;
-    document.getElementById('userEmailDisplay').textContent = currentUser.email;
-    document.getElementById('profileName').value = currentUser.name || '';
-    document.getElementById('profileEmail').value = currentUser.email || '';
-    document.getElementById('profilePhone').value = currentUser.phone || '';
-    document.getElementById('profileAddress').value = currentUser.address || '';
-    var myOrders = DB.orders.filter(function(o){ return o.user_id === currentUser.id; });
-    var pending = myOrders.filter(function(o){ return o.status === 'paid' || o.status === 'processing'; }).length;
-    document.getElementById('userTotalOrders').textContent = myOrders.length;
-    document.getElementById('userPendingOrders').textContent = pending;
-    renderWishlist();
-    renderUserReviews();
+// ======================== NOTIFICATION FUNCTIONS ========================
+function addNotification(userId, title, message, type, link) {
+    var notif = { id: notifications.length+1, userId: userId, title: title, message: message, type: type, link: link, read: false, timestamp: new Date().toISOString() };
+    notifications.push(notif);
+    if(currentUser && currentUser.id === userId) {
+        showToast("🔔 "+title+": "+message);
+        updateNotificationBadge(userId);
+    }
 }
 
-function saveUserProfile(){
-    showToast('Profile update will be available soon');
+function showNotifications() {
+    var myNotifs = notifications.filter(function(n){ return n.userId === currentUser.id; }).sort(function(a,b){ return new Date(b.timestamp) - new Date(a.timestamp); });
+    var html = '<div class="notifications-list">';
+    if(myNotifs.length===0) html += '<div class="empty-state">🔔 No notifications</div>';
+    else {
+        for(var i=0;i<myNotifs.length;i++) {
+            var n = myNotifs[i];
+            var unreadClass = n.read ? '' : 'unread';
+            html += '<div class="notification-item '+unreadClass+'" onclick="markNotificationRead('+n.id+'); hideModal();">' +
+                        '<div class="notif-icon">'+(n.type==='order'?'📦':(n.type==='chat'?'💬':'🚚'))+'</div>' +
+                        '<div class="notif-content">' +
+                            '<div class="notif-title">'+n.title+'</div>' +
+                            '<div class="notif-message">'+n.message+'</div>' +
+                            '<div class="notif-time">'+new Date(n.timestamp).toLocaleTimeString()+'</div>' +
+                        '</div>' +
+                    '</div>';
+        }
+    }
+    html += '</div><button class="btn btn-outline" style="margin-top:10px;" onclick="markAllNotificationsRead()">Mark all as read</button>';
+    showModal('🔔 Notifications', html);
 }
 
-function renderWishlist(){
-    var myWishlist = DB.wishlist.filter(function(w){ return w.userId === currentUser.id; });
-    var html = myWishlist.length===0 ? '<div class="empty-state">Your wishlist is empty</div>' : '';
-    document.getElementById('wishlistItems').innerHTML = html;
+function markNotificationRead(id) {
+    var n = notifications.find(function(n){ return n.id === id; });
+    if(n) { n.read = true; updateNotificationBadge(currentUser.id); }
 }
 
-function renderUserReviews(){
-    var myReviews = DB.reviews.filter(function(r){ return r.userId === currentUser.id; });
-    var html = myReviews.length===0 ? '<div class="empty-state">No reviews yet</div>' : '';
-    document.getElementById('userReviews').innerHTML = html;
+function markAllNotificationsRead() {
+    for(var i=0;i<notifications.length;i++) { if(notifications[i].userId === currentUser.id) notifications[i].read = true; }
+    updateNotificationBadge(currentUser.id);
 }
 
-function toggleWishlist(productId){
-    showToast('Wishlist feature coming soon');
+function updateNotificationBadge(userId) {
+    var unread = notifications.filter(function(n){ return n.userId === userId && !n.read; }).length;
+    var badge = document.getElementById('notificationBadge');
+    if(badge) { if(unread>0) { badge.textContent = unread; badge.classList.remove('hidden'); } else badge.classList.add('hidden'); }
 }
 
-// ======================== ADMIN BOOKS & OTHER FUNCTIONS ========================
-function renderAdminBooks(){ showToast('Books feature coming soon'); }
-function changeBookPeriod(){}
-function renderAdminMonitor(){ document.getElementById('monitorFeed').innerHTML = '<div class="empty-state">Agent monitoring coming soon</div>'; }
-function renderAdminChats(){ document.getElementById('allChatsList').innerHTML = '<div class="empty-state">Chat monitoring coming soon</div>'; }
-function renderAdminTeam(){ document.getElementById('teamList').innerHTML = '<div class="empty-state">Team management coming soon</div>'; }
-function renderAdminDelivery(){ document.getElementById('adminDeliveryList').innerHTML = '<div class="empty-state">Delivery management coming soon</div>'; }
-function renderManagerMessages(){ document.getElementById('managerMsgList').innerHTML = '<div class="empty-state">Messages coming soon</div>'; }
-function openManagerToAgentChat(agentId){ showToast('Chat with agent feature coming soon'); }
-function viewAgentChats(agentId){ showModal('Agent Chats', 'Chat history for agent'); }
-
-// ======================== PRODUCT MANAGEMENT (ADMIN) ========================
+// ======================== ADMIN PRODUCT MANAGEMENT ========================
 function resetProductForm(){
     document.getElementById('editProductId').value = '';
     document.getElementById('productFormTitle').textContent = '📤 Upload New Product';
@@ -1049,63 +1138,59 @@ async function saveProduct(){
     
     if(!name || !price){ showToast('Please fill product name and price'); return; }
     
-    showToast('Product save feature - admin only via backend');
+    showToast('Product save - admin feature via backend API');
 }
 
 function editProduct(id){ showToast('Edit product feature coming soon'); }
 function deleteProductItem(id){ showToast('Delete product feature coming soon'); }
 function addStockToProduct(id){ showToast('Add stock feature coming soon'); }
 
-// ======================== HELPER FUNCTIONS ========================
-function escapeHtml(text) {
-    if(!text) return '';
-    return text.replace(/[&<>]/g, function(m) {
-        if(m === '&') return '&amp;';
-        if(m === '<') return '&lt;';
-        if(m === '>') return '&gt;';
-        return m;
-    });
+async function renderAdminProducts() {
+    await loadAllData();
+    var html = '';
+    for(var i=0;i<productsList.length;i++){
+        var p = productsList[i];
+        html += '<div class="list-item">' +
+                    '<div class="list-info" onclick="editProduct('+p.id+')">' +
+                        '<h4>'+p.name+'</h4>' +
+                        '<p>'+p.type+' - Stock: '+(p.stock || 0)+'</p>' +
+                    '</div>' +
+                    '<div style="text-align:right;">' +
+                        '<div style="font-weight:800;color:var(--blue);">UGX '+(p.price || 0).toLocaleString()+'</div>' +
+                        '<div style="display:flex;gap:5px;margin-top:8px;">' +
+                            '<input type="number" id="stockAdd_'+p.id+'" placeholder="+Qty" style="width:70px;padding:5px;border-radius:8px;border:1px solid #ddd;">' +
+                            '<button class="btn-sm btn-green" onclick="addStockToProduct('+p.id+')">➕ Add</button>' +
+                            '<button class="btn-sm btn-red" onclick="deleteProductItem('+p.id+')">🗑️ Delete</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+    }
+    document.getElementById('adminProductList').innerHTML = html || '<div class="empty-state">No products</div>';
 }
 
-function showModal(title, html){
-    document.getElementById('modalTitle').textContent = title;
-    document.getElementById('modalBody').innerHTML = html;
-    document.getElementById('modalOverlay').classList.remove('hidden');
-}
+// ======================== OTHER ADMIN FUNCTIONS ========================
+function renderAdminBooks(){ showToast('Books feature coming soon'); }
+function changeBookPeriod(){}
+function renderAdminMonitor(){ document.getElementById('monitorFeed').innerHTML = '<div class="empty-state">Agent monitoring coming soon</div>'; }
+function renderAdminChats(){ document.getElementById('allChatsList').innerHTML = '<div class="empty-state">Chat monitoring coming soon</div>'; }
+function renderAdminTeam(){ document.getElementById('teamList').innerHTML = '<div class="empty-state">Team management coming soon</div>'; }
+function renderAdminDelivery(){ document.getElementById('adminDeliveryList').innerHTML = '<div class="empty-state">Delivery management coming soon</div>'; }
+function renderManagerMessages(){ document.getElementById('managerMsgList').innerHTML = '<div class="empty-state">Messages coming soon</div>'; }
+function openManagerToAgentChat(agentId){ showToast('Chat with agent feature coming soon'); }
+function viewAgentChats(agentId){ showModal('Agent Chats', 'Chat history for agent'); }
 
-function hideModal(){
-    document.getElementById('modalOverlay').classList.add('hidden');
-}
-
-function closeModal(e){
-    if(e.target === document.getElementById('modalOverlay')) hideModal();
-}
-
-function showToast(msg){
-    var toast = document.getElementById('toast');
-    toast.textContent = msg;
-    toast.classList.add('show');
-    setTimeout(function(){ toast.classList.remove('show'); }, 2500);
-}
-
-function saveDBToLocal(){
-    try{ localStorage.setItem('tarazo_db', JSON.stringify(DB)); } catch(e){}
-}
-
-function loadDBFromLocal(){
-    try{ var saved = localStorage.getItem('tarazo_db'); if(saved){ var loaded = JSON.parse(saved); DB = loaded; } } catch(e){}
-}
-
-// ======================== NAVIGATION (KEPT ORIGINAL) ========================
+// ======================== NAVIGATION ========================
 function navigateTo(pageId){
     var pages = document.querySelectorAll('.page');
     for(var i=0;i<pages.length;i++){ pages[i].classList.add('hidden'); }
     document.getElementById(pageId).classList.remove('hidden');
     currentPage = pageId;
+    
     var navItems = document.querySelectorAll('.nav-item');
     for(var j=0;j<navItems.length;j++){ navItems[j].classList.remove('active'); }
     var navItem = document.querySelector('.nav-item[data-page="'+pageId+'"]');
     if(navItem) navItem.classList.add('active');
+    
     document.body.scrollTop = 0;
     document.documentElement.scrollTop = 0;
     
@@ -1123,23 +1208,32 @@ function navigateTo(pageId){
 function setupNav(){
     var nav = document.getElementById('bottomNav');
     var html = '';
-    if(currentUser.role === 'admin'){
-        html = '<div class="nav-item active" onclick="navigateTo(\'adminDashboard\')" data-page="adminDashboard"><div class="nav-icon">🏠</div>Home</div><div class="nav-item" onclick="navigateTo(\'adminProducts\')" data-page="adminProducts"><div class="nav-icon">📦</div>Products</div><div class="nav-item" onclick="navigateTo(\'adminOrders\')" data-page="adminOrders"><div class="nav-icon">📋</div>Orders</div><div class="nav-item" onclick="navigateTo(\'adminBooks\')" data-page="adminBooks"><div class="nav-icon">📚</div>Books</div><div class="nav-item" onclick="showAdminMenu()" data-page="adminMenu"><div class="nav-icon">⚙️</div>More</div>';
-    } else if(currentUser.role === 'agent'){
-        html = '<div class="nav-item active" onclick="navigateTo(\'agentPanel\')" data-page="agentPanel"><div class="nav-icon">💬</div>Chats</div><div class="nav-item" onclick="navigateTo(\'agentPanel\')" data-page="agentPanel"><div class="nav-icon">🚚</div>Delivery</div><div class="nav-item" onclick="logout()"><div class="nav-icon">🚪</div>Exit</div>';
-    } else {
-        html = '<div class="nav-item active" onclick="navigateTo(\'userShop\')" data-page="userShop"><div class="nav-icon">🏪</div>Shop</div><div class="nav-item" onclick="navigateTo(\'userOrders\')" data-page="userOrders"><div class="nav-icon">📦</div>Orders</div><div class="nav-item" onclick="navigateTo(\'userCart\')" data-page="userCart"><div class="nav-icon">🛒</div>Cart</div><div class="nav-item" onclick="navigateTo(\'userDashboard\')" data-page="userDashboard"><div class="nav-icon">👤</div>Profile</div>';
+    if(currentUser && currentUser.role === 'admin'){
+        html = '<div class="nav-item active" onclick="navigateTo(\'adminDashboard\')" data-page="adminDashboard"><div class="nav-icon">🏠</div>Home</div>' +
+               '<div class="nav-item" onclick="navigateTo(\'adminProducts\')" data-page="adminProducts"><div class="nav-icon">📦</div>Products</div>' +
+               '<div class="nav-item" onclick="navigateTo(\'adminOrders\')" data-page="adminOrders"><div class="nav-icon">📋</div>Orders</div>' +
+               '<div class="nav-item" onclick="navigateTo(\'adminBooks\')" data-page="adminBooks"><div class="nav-icon">📚</div>Books</div>' +
+               '<div class="nav-item" onclick="showAdminMenu()" data-page="adminMenu"><div class="nav-icon">⚙️</div>More</div>';
+    } else if(currentUser && currentUser.role === 'agent'){
+        html = '<div class="nav-item active" onclick="navigateTo(\'agentPanel\')" data-page="agentPanel"><div class="nav-icon">💬</div>Chats</div>' +
+               '<div class="nav-item" onclick="navigateTo(\'agentPanel\')" data-page="agentPanel"><div class="nav-icon">🚚</div>Delivery</div>' +
+               '<div class="nav-item" onclick="logout()"><div class="nav-icon">🚪</div>Exit</div>';
+    } else if(currentUser && currentUser.role === 'user'){
+        html = '<div class="nav-item active" onclick="navigateTo(\'userShop\')" data-page="userShop"><div class="nav-icon">🏪</div>Shop</div>' +
+               '<div class="nav-item" onclick="navigateTo(\'userOrders\')" data-page="userOrders"><div class="nav-icon">📦</div>Orders</div>' +
+               '<div class="nav-item" onclick="navigateTo(\'userCart\')" data-page="userCart"><div class="nav-icon">🛒</div>Cart</div>' +
+               '<div class="nav-item" onclick="navigateTo(\'userDashboard\')" data-page="userDashboard"><div class="nav-icon">👤</div>Profile</div>';
     }
     nav.innerHTML = html;
     
     var chatWidget = document.getElementById('chatWidgetContainer');
     var whatsappWidget = document.getElementById('whatsappWidget');
-    if(currentUser.role === 'user'){
-        chatWidget.classList.remove('hidden');
-        whatsappWidget.classList.remove('hidden');
+    if(currentUser && currentUser.role === 'user'){
+        if(chatWidget) chatWidget.classList.remove('hidden');
+        if(whatsappWidget) whatsappWidget.classList.remove('hidden');
     } else {
-        chatWidget.classList.add('hidden');
-        whatsappWidget.classList.add('hidden');
+        if(chatWidget) chatWidget.classList.add('hidden');
+        if(whatsappWidget) whatsappWidget.classList.add('hidden');
     }
 }
 
@@ -1153,27 +1247,22 @@ function showAdminMenu(){
     ];
     var html = '';
     for(var i=0;i<items.length;i++){
-        html += '<div class="list-item" onclick="navigateTo(\''+items[i].page+'\');hideModal();"><div class="list-info"><h4>'+items[i].icon+' '+items[i].name+'</h4></div><div>➡️</div></div>';
+        html += '<div class="list-item" onclick="navigateTo(\''+items[i].page+'\');hideModal();">' +
+                    '<div class="list-info"><h4>'+items[i].icon+' '+items[i].name+'</h4></div>' +
+                    '<div>➡️</div>' +
+                '</div>';
     }
     showModal('⚙️ Manager Tools', html);
 }
 
-function toggleAuth(){
-    var a=document.getElementById('loginForm'), b=document.getElementById('registerForm'), c=document.getElementById('forgotForm');
-    if(!a.classList.contains('hidden')){ a.classList.add('hidden'); b.classList.remove('hidden'); c.classList.add('hidden'); }
-    else{ a.classList.remove('hidden'); b.classList.add('hidden'); c.classList.add('hidden'); }
-}
-
-function showForgotPassword(){
-    document.getElementById('loginForm').classList.add('hidden');
-    document.getElementById('registerForm').classList.add('hidden');
-    document.getElementById('forgotForm').classList.remove('hidden');
-}
-
-function showLoginForm(){
-    document.getElementById('loginForm').classList.remove('hidden');
-    document.getElementById('registerForm').classList.add('hidden');
-    document.getElementById('forgotForm').classList.add('hidden');
+function escapeHtml(text) {
+    if(!text) return '';
+    return text.replace(/[&<>]/g, function(m) {
+        if(m === '&') return '&amp;';
+        if(m === '<') return '&lt;';
+        if(m === '>') return '&gt;';
+        return m;
+    });
 }
 
 function startPolling(){
@@ -1194,7 +1283,7 @@ async function enterApp(){
     
     setupNav();
     startPolling();
-    await loadUserData();
+    await loadAllData();
     
     if(currentUser.role === 'admin'){
         navigateTo('adminDashboard');
@@ -1203,8 +1292,6 @@ async function enterApp(){
         navigateTo('agentPanel');
         renderAgentPanel();
     } else {
-        document.getElementById('chatWidgetContainer').classList.remove('hidden');
-        document.getElementById('whatsappWidget').classList.remove('hidden');
         navigateTo('userShop');
         renderShop();
     }
@@ -1213,28 +1300,21 @@ async function enterApp(){
 function checkAutoLogin(){
     var saved = localStorage.getItem('tarazo_email');
     if(saved){
-        // Just show login form, user must enter password
         return false;
     }
     return false;
 }
 
 function initApp(){
-    loadDBFromLocal();
-    loadNotificationsFromLocal();
     setupPaymentMethodListener();
     
     var splash = document.getElementById('splashPage');
     setTimeout(function(){
-        if(checkAutoLogin()){
+        splash.style.opacity = '0';
+        setTimeout(function(){
             splash.classList.add('hidden');
-        } else {
-            splash.style.opacity = '0';
-            setTimeout(function(){
-                splash.classList.add('hidden');
-                document.getElementById('loginPage').classList.remove('hidden');
-            }, 600);
-        }
+            document.getElementById('loginPage').classList.remove('hidden');
+        }, 600);
     }, 2000);
 }
 
