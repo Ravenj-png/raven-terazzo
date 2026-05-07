@@ -80,13 +80,16 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # CORS - ALL from env
 ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', 'http://localhost:5500,http://localhost:5000').split(',')
-CORS(app, resources={r"/api/*": {
-    "origins": ALLOWED_ORIGINS,
-    "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    "allow_headers": ["Content-Type", "Authorization", "X-CSRF-Token"],
-    "supports_credentials": True,
-    "max_age": 3600
-}})
+
+# In your Flask app.py, update CORS configuration:
+CORS(app, 
+     resources={r"/api/*": {
+         "origins": ["https://raven-jpeng.github.io", "http://localhost:5500", "http://localhost:5000"],
+         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+         "allow_headers": ["Content-Type", "Authorization"],
+         "supports_credentials": True,
+         "expose_headers": ["Set-Cookie"]
+     }})
 
 # CSRF Protection
 csrf = CSRFProtect()
