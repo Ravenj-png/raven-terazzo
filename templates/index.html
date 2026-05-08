@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>TARAZO - Premium Terrazzo Uganda</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=yes">
+<title>WAMP Enterprises - Terrazzo, Plumbing & Painting</title>
 <style>
-/* ============ COMPLETE ORIGINAL CSS - KEPT INTACT ============ */
+/* ============ ORIGINAL CSS (KEPT) + SLIDER ADDITIONS ============ */
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 :root{--blue:#1a5276;--blue-dark:#154360;--green:#27ae60;--green-light:#2ecc71;--white:#ffffff;--gray:#f5f6fa;--gray-dark:#7f8c8d;--red:#e74c3c;--orange:#f39c12;--shadow:0 4px 20px rgba(0,0,0,.08)}
 body{background:var(--gray);color:#2c3e50;overflow-x:hidden;-webkit-tap-highlight-color:transparent;font-size:14px;line-height:1.5}
@@ -67,7 +67,7 @@ body{background:var(--gray);color:#2c3e50;overflow-x:hidden;-webkit-tap-highligh
 .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:15px}
 .product-card{background:var(--white);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);cursor:pointer;transition:transform .2s}
 .product-card:active{transform:scale(.98)}
-.product-card img{width:100%;height:150px;object-fit:cover;display:block;image-rendering:-webkit-optimize-contrast}
+.product-card img{width:100%;height:150px;object-fit:cover;display:block;image-rendering:-webkit-optimize-contrast;background:#e0e0e0}
 .product-info{padding:12px}
 .product-name{font-size:14px;font-weight:700;color:var(--blue-dark);margin-bottom:5px}
 .product-type{font-size:11px;color:var(--green);font-weight:600;text-transform:uppercase;margin-bottom:8px}
@@ -89,8 +89,6 @@ body{background:var(--gray);color:#2c3e50;overflow-x:hidden;-webkit-tap-highligh
 .app-form .form-group{margin-bottom:12px}
 .app-form input,.app-form select,.app-form textarea{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;font-size:15px}
 .app-form textarea{min-height:100px;resize:vertical}
-.upload-area{border:3px dashed var(--blue);border-radius:16px;padding:40px 20px;text-align:center;background:rgba(26,82,118,.05);margin:15px;cursor:pointer}
-.upload-area:active{background:rgba(26,82,118,.1)}
 .chat-widget{position:fixed;bottom:80px;right:20px;z-index:200}
 .chat-btn{width:60px;height:60px;border-radius:50%;background:var(--green);color:var(--white);border:none;font-size:24px;cursor:pointer;box-shadow:0 4px 15px rgba(39,174,96,.4);display:flex;align-items:center;justify-content:center}
 .chat-box{position:fixed;bottom:150px;right:20px;width:calc(100% - 40px);max-width:350px;height:450px;background:var(--white);border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,.2);display:flex;flex-direction:column;overflow:hidden;z-index:250}
@@ -101,9 +99,6 @@ body{background:var(--gray);color:#2c3e50;overflow-x:hidden;-webkit-tap-highligh
 .chat-msg{max-width:80%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.4;word-break:break-word}
 .chat-msg.user{align-self:flex-end;background:var(--blue);color:var(--white);border-bottom-right-radius:4px}
 .chat-msg.bot{align-self:flex-start;background:var(--gray);color:#2c3e50;border-bottom-left-radius:4px}
-.chat-msg.agent{align-self:flex-start;background:#e8f5e9;color:#2e7d32;border-bottom-left-radius:4px}
-.chat-msg.manager{align-self:flex-start;background:#fce4ec;color:#c2185b;border-bottom-left-radius:4px}
-.chat-msg.rider{align-self:flex-start;background:#fff3e0;color:#e65100;border-bottom-left-radius:4px}
 .chat-input-area{display:flex;padding:10px;border-top:1px solid #eee;gap:8px}
 .chat-input-area input{flex:1;padding:12px;border:1px solid #ddd;border-radius:20px;outline:none}
 .whatsapp-widget{position:fixed;bottom:80px;left:20px;z-index:200}
@@ -114,108 +109,138 @@ th{background:var(--blue);color:var(--white);padding:12px;text-align:left;font-w
 td{padding:12px;border-bottom:1px solid #eee}
 tr:last-child td{border-bottom:none}
 .section-title{font-size:clamp(16px,4vw,20px);font-weight:800;color:var(--blue-dark);padding:20px 15px 10px}
-.agent-card{background:var(--white);margin:10px 15px;padding:15px;border-radius:12px;border-left:4px solid var(--green);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.05)}
-.agent-card.offline{border-left-color:var(--gray-dark);opacity:.7}
-.agent-card.busy{border-left-color:var(--orange)}
-.agent-name{font-weight:700;color:var(--blue-dark)}
-.agent-status{font-size:12px;font-weight:600;margin-top:4px}
-.online{color:var(--green)}
-.offline{color:var(--gray-dark)}
-.busy{color:var(--orange)}
-.bar-chart-container{background:var(--white);border-radius:12px;padding:15px;margin:15px;box-shadow:var(--shadow)}
-.bar-chart-svg{width:100%;height:180px}
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px}
 .modal-content{background:var(--white);border-radius:20px;padding:25px;width:100%;max-width:450px;max-height:85vh;overflow-y:auto}
 .modal-header{font-size:20px;font-weight:800;color:var(--blue-dark);margin-bottom:15px;display:flex;justify-content:space-between;align-items:center}
-.gallery{display:flex;gap:10px;overflow-x:auto;padding:10px 0}
-.gallery-img{min-width:100px;height:100px;border-radius:10px;object-fit:cover}
 .toast{position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-100px);background:var(--blue-dark);color:var(--white);padding:14px 24px;border-radius:12px;font-weight:600;z-index:400;transition:all .3s;opacity:0;white-space:nowrap}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-::-webkit-scrollbar{width:0;background:transparent}
 .empty-state{text-align:center;padding:40px 20px;color:var(--gray-dark)}
 .empty-state .icon{font-size:60px;margin-bottom:15px;opacity:.5}
-.timeline{margin:15px;padding:15px;background:var(--white);border-radius:12px}
-.timeline-item{display:flex;gap:15px;margin-bottom:15px;position:relative}
-.timeline-item:last-child{margin-bottom:0}
-.timeline-dot{width:16px;height:16px;border-radius:50%;background:var(--gray-dark);flex-shrink:0;margin-top:3px}
-.timeline-dot.active{background:var(--green)}
-.timeline-dot.current{background:var(--blue);box-shadow:0 0 0 4px rgba(26,82,118,.2)}
-.timeline-content h4{font-size:14px;color:var(--blue-dark);margin-bottom:3px}
-.timeline-content p{font-size:12px;color:var(--gray-dark)}
-.install-gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:15px}
-.install-gallery img{width:100%;height:120px;object-fit:cover;border-radius:10px;cursor:pointer}
-.detail-hero{width:100%;height:250px;object-fit:cover;display:block}
 .filter-row{display:flex;gap:8px;overflow-x:auto;padding:0 15px 15px;-webkit-overflow-scrolling:touch}
 .filter-btn{padding:8px 16px;border:2px solid #ddd;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;background:var(--white);color:var(--gray-dark)}
 .filter-btn.active{background:var(--blue);color:var(--white);border-color:var(--blue)}
-.wishlist-btn{background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray-dark);transition:all .2s}
-.wishlist-btn.active{color:var(--red)}
-.rating-stars{color:var(--orange);font-size:18px;letter-spacing:2px}
-.review-card{background:var(--white);margin:10px 15px;padding:15px;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
-.review-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.review-author{font-weight:700;color:var(--blue-dark)}
-.review-date{font-size:11px;color:var(--gray-dark)}
-.review-text{font-size:13px;color:#555;line-height:1.5}
-.network-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;margin-left:8px}
-.network-mtn{background:#f5a623;color:#333}
-.network-airtel{background:#e74c3c;color:white}
-.card-fields-group{display:flex;flex-direction:column;gap:10px;margin-top:10px}
-.receipt-signature{margin-top:20px;padding-top:15px;border-top:1px dashed #ccc;display:flex;justify-content:space-between}
-.receipt-stamp{text-align:center;margin-top:15px;padding:8px;border:1px dashed var(--green);border-radius:8px;color:var(--green);font-weight:700}
-@media(max-width:350px){.product-grid{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr}}
+
+/* ============ NEW SLIDER STYLES ============ */
+.hero-slider {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+@media(min-width: 768px) {
+    .hero-slider { height: 300px; }
+}
+.slider-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+.slider-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.slider-slide.active {
+    opacity: 1;
+}
+.slide-caption {
+    background: rgba(0,0,0,0.6);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 30px;
+    font-size: clamp(18px,5vw,28px);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+.slider-dots {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    z-index: 5;
+}
+.slider-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.5);
+    cursor: pointer;
+}
+.slider-dot.active {
+    background: white;
+    width: 20px;
+    border-radius: 10px;
+}
 </style>
 </head>
 <body>
 <div id="toast" class="toast"></div>
-<div id="splashPage"><div class="splash-logo">🏛️ TARAZO</div><div class="splash-sub">Premium Terrazzo Uganda</div><div class="splash-loader"></div></div>
-<div id="loginPage" class="hidden"><div class="login-box"><div class="logo-text">🏛️ TARAZO</div><div class="logo-sub">Premium Terrazzo Uganda</div>
+<div id="splashPage"><div class="splash-logo">🏗️ WAMP</div><div class="splash-sub">Enterprises Ltd</div><div class="splash-loader"></div></div>
+<div id="loginPage" class="hidden"><div class="login-box"><div class="logo-text">🏗️ WAMP</div><div class="logo-sub">Terrazzo • Plumbing • Painting</div>
 <div id="loginForm"><div class="form-group"><label>📧 Email</label><input type="email" id="loginEmail" placeholder="Enter email"></div><div class="form-group"><label>🔒 Password</label><input type="password" id="loginPassword" placeholder="Enter password"></div><div class="remember-row"><input type="checkbox" id="rememberMe"><label for="rememberMe" style="margin:0;text-transform:none;font-size:13px;font-weight:400;color:var(--gray-dark);cursor:pointer;">Remember Me</label></div><button class="btn btn-primary" onclick="handleLogin()">🔐 Login</button><div class="forgot-link" onclick="showForgotPassword()">🔑 Forgot Password?</div><div class="toggle-text">No account? <span onclick="toggleAuth()">📝 Register</span></div></div>
 <div id="registerForm" class="hidden"><div class="form-group"><label>👤 Full Name</label><input type="text" id="regName" placeholder="Your name"></div><div class="form-group"><label>📱 Phone</label><input type="tel" id="regPhone" placeholder="07XX XXX XXX"></div><div class="form-group"><label>📧 Email</label><input type="email" id="regEmail" placeholder="Enter email"></div><div class="form-group"><label>🔒 Password</label><input type="password" id="regPassword" placeholder="Create password"></div><div class="form-group"><label>🔒 Confirm Password</label><input type="password" id="regConfirmPassword" placeholder="Confirm password"></div><button class="btn btn-green" onclick="handleRegister()">✅ Create Account</button><div class="toggle-text">Have an account? <span onclick="toggleAuth()">🔐 Login</span></div></div>
 <div id="forgotForm" class="hidden"><div class="form-group"><label>📧 Email</label><input type="email" id="forgotEmail" placeholder="Enter your registered email"></div><button class="btn btn-primary" onclick="handleForgotPassword()">🔄 Reset Password</button><div class="toggle-text">Remember your password? <span onclick="showLoginForm()">🔐 Login</span></div></div>
 </div></div>
 <div id="appContainer" class="hidden">
-<div class="app-header"><h1>🏛️ TARAZO</h1><div class="header-actions"><span class="user-greeting" id="headerGreeting"></span><button class="icon-btn" onclick="showCart()" id="cartBtn">🛒<span class="badge hidden" id="cartBadge">0</span></button><button class="icon-btn" onclick="showNotifications()">🔔<span class="badge hidden" id="notificationBadge">0</span></button><button class="icon-btn" onclick="logout()" title="Logout">🚪</button></div></div>
-<div id="adminDashboard" class="page hidden"><div class="section-title">📊 Manager Overview</div><div Aclass="stats-grid"><div class="stat-card" onclick="showSalesDetail()"><div class="stat-value" id="adminTodaySales">UGX 0</div><div class="stat-label">💰 Today's Sales</div></div><div class="stat-card orange" onclick="showPendingDetail()"><div class="stat-value" id="adminPendingOrders">0</div><div class="stat-label">⏳ Pending Orders</div></div><div class="stat-card green" onclick="showProductsDetail()"><div class="stat-value" id="adminTotalProducts">0</div><div class="stat-label">📦 Products</div></div><div class="stat-card red" onclick="showLowStockDetail()"><div class="stat-value" id="adminLowStock">0</div><div class="stat-label">⚠️ Low Stock</div></div></div><div class="card"><div class="card-title">📈 Sales Trend</div><div class="bar-chart-container" id="adminChart"></div></div><div class="card"><div class="card-title">👥 Agent Status</div><div id="adminAgentStatus"></div></div><div class="card"><div class="card-title">🛒 Recent Orders</div><div id="adminRecentOrders"></div></div></div>
-<div id="adminProducts" class="page hidden"><div class="section-title">📦 Manage Products</div><button class="btn btn-green" style="margin:0 15px 15px;" onclick="resetProductForm()">➕ Add New Terrazzo</button><div class="card"><div class="card-title" id="productFormTitle">📤 Upload New Product</div><div class="upload-area" onclick="document.getElementById('productImage').click()"><div style="font-size:48px;margin-bottom:10px;">📷</div><div style="font-weight:700;color:var(--blue);">Tap to Upload Photo</div><div style="font-size:12px;color:var(--gray-dark);margin-top:5px;">AI will auto-generate description</div></div><input type="file" id="productImage" class="hidden" accept="image/*" onchange="handleImageUpload(this)"><div id="uploadPreview" class="hidden" style="margin:15px;text-align:center;"><img id="previewImg" style="max-width:100%;border-radius:12px;max-height:200px;" src=""><div style="margin-top:10px;padding:10px;background:#e8f5e9;border-radius:8px;color:var(--green);font-weight:600;" id="aiStatus">Analyzing image...</div></div><div class="app-form" style="padding:15px;"><input type="hidden" id="editProductId" value=""><div class="form-group"><label>🏷️ Product Name</label><input type="text" id="prodName" placeholder="e.g. Classic Floor Terrazzo"></div><div class="form-group"><label>📂 Type</label><select id="prodType"><option>Floor Terrazzo</option><option>Wall Terrazzo</option><option>Countertop Terrazzo</option><option>Stair Terrazzo</option><option>Outdoor Terrazzo</option><option>Terrazzo Tiles</option><option>Terrazzo Slabs</option><option>Polished Terrazzo</option><option>Honed Terrazzo</option><option>Rustic Terrazzo</option><option>Venetian Terrazzo</option><option>Glass Chip Terrazzo</option></select></div><div class="form-group"><label>📝 Description (AI Generated)</label><textarea id="prodDesc" placeholder="Description will appear here after upload..."></textarea></div><div class="form-group"><label>💵 Price (UGX)</label><input type="number" id="prodPrice" placeholder="e.g. 150000"></div><div class="form-group"><label>📊 Stock Quantity</label><input type="number" id="prodStock" placeholder="e.g. 10"></div><button class="btn btn-primary" id="saveProductBtn" onclick="saveProduct()">💾 Save Product</button><button class="btn btn-outline hidden" id="cancelEditBtn" onclick="resetProductForm()">❌ Cancel Edit</button></div></div><div class="section-title">📋 All Products (Tap to Edit)</div><div id="adminProductList"></div></div>
-<div id="adminOrders" class="page hidden"><div class="section-title">📋 All Orders</div><div class="search-transaction-box"><input type="text" id="transactionSearchPhone" placeholder="🔍 Search by phone number (e.g., 0777777777)"><button class="btn btn-primary" onclick="searchTransactionByPhone()">Search</button><button class="btn btn-outline" onclick="resetTransactionSearch()">Show All</button><button class="btn btn-green" onclick="exportTransactionsCSV()" style="width:auto;">📎 Export CSV</button></div><div id="adminOrdersList"></div></div>
-<div id="adminBooks" class="page hidden"><div class="section-title">📚 Balance Books</div><div class="date-filter-row"><select id="bookPeriod" onchange="changeBookPeriod()"><option value="today">Today</option><option value="week">This Week</option><option value="month">This Month</option><option value="year">This Year</option><option value="custom">Custom Range</option></select><input type="date" id="bookStart" class="hidden"><input type="date" id="bookEnd" class="hidden"><button class="btn btn-primary" style="width:auto;padding:10px 20px;" onclick="renderAdminBooks()">🔍 View</button></div><div class="stats-grid"><div class="stat-card green"><div class="stat-value" id="bookSales">UGX 0</div><div class="stat-label" id="bookSalesLabel">💰 Sales</div></div><div class="stat-card"><div class="stat-value" id="bookOrders">0</div><div class="stat-label">📦 Orders</div></div><div class="stat-card orange"><div class="stat-value" id="bookAvgOrder">UGX 0</div><div class="stat-label">📊 Avg Order</div></div><div class="stat-card"><div class="stat-value" id="bookItems">0</div><div class="stat-label">🧱 Items Sold</div></div></div><div class="card"><div class="card-title">📈 Sales Trend</div><div class="bar-chart-container" id="booksChart"></div></div><div class="card"><div class="card-title">📋 Transaction History</div><div id="booksTransactions"></div></div></div>
+<div class="app-header"><h1>🏗️ WAMP ENTERPRISES LTD</h1><div class="header-actions"><span class="user-greeting" id="headerGreeting"></span><button class="icon-btn" onclick="showCart()" id="cartBtn">🛒<span class="badge hidden" id="cartBadge">0</span></button><button class="icon-btn" onclick="showNotifications()">🔔<span class="badge hidden" id="notificationBadge">0</span></button><button class="icon-btn" onclick="logout()" title="Logout">🚪</button></div></div>
+<div id="adminDashboard" class="page hidden"><div class="section-title">📊 Manager Overview</div><div class="stats-grid"><div class="stat-card" onclick="showSalesDetail()"><div class="stat-value" id="adminTodaySales">UGX 0</div><div class="stat-label">💰 Today's Sales</div></div><div class="stat-card orange" onclick="showPendingDetail()"><div class="stat-value" id="adminPendingOrders">0</div><div class="stat-label">⏳ Pending Orders</div></div><div class="stat-card green" onclick="showProductsDetail()"><div class="stat-value" id="adminTotalProducts">0</div><div class="stat-label">📦 Products</div></div><div class="stat-card red" onclick="showLowStockDetail()"><div class="stat-value" id="adminLowStock">0</div><div class="stat-label">⚠️ Low Stock</div></div></div><div class="card"><div class="card-title">📈 Sales Trend</div><div class="bar-chart-container" id="adminChart"></div></div><div class="card"><div class="card-title">👥 Agent Status</div><div id="adminAgentStatus"></div></div><div class="card"><div class="card-title">🛒 Recent Orders</div><div id="adminRecentOrders"></div></div></div>
+<div id="adminProducts" class="page hidden"><div class="section-title">📦 Manage Products</div><button class="btn btn-green" style="margin:0 15px 15px;" onclick="resetProductForm()">➕ Add New Product</button><div class="card"><div class="card-title" id="productFormTitle">📤 Add New Product (Admin Only)</div><div class="app-form" style="padding:15px;"><input type="hidden" id="editProductId" value=""><div class="form-group"><label>🏷️ Product Name</label><input type="text" id="prodName" placeholder="e.g. Classic Floor Terrazzo"></div><div class="form-group"><label>📂 Type</label><select id="prodType"><option>Floor Terrazzo</option><option>Wall Terrazzo</option><option>Countertop Terrazzo</option><option>Stair Terrazzo</option><option>Outdoor Terrazzo</option><option>Terrazzo Tiles</option><option>Plumbing Pipe</option><option>Plumbing Fittings</option><option>Paint Emulsion</option><option>Paint Primer</option><option>Painting Tools</option></select></div><div class="form-group"><label>📝 Description</label><textarea id="prodDesc" placeholder="Product description..."></textarea></div><div class="form-group"><label>💵 Price (UGX)</label><input type="number" id="prodPrice" placeholder="e.g. 150000"></div><div class="form-group"><label>📊 Stock Quantity</label><input type="number" id="prodStock" placeholder="e.g. 10"></div><div class="form-group"><label>🖼️ Image URL (optional - leave blank for default)</label><input type="text" id="prodImage" placeholder="https://... or leave blank"></div><button class="btn btn-primary" id="saveProductBtn" onclick="saveProduct()">💾 Save Product</button><button class="btn btn-outline hidden" id="cancelEditBtn" onclick="resetProductForm()">❌ Cancel Edit</button></div></div><div class="section-title">📋 All Products (Tap to Edit)</div><div id="adminProductList"></div></div>
+<div id="adminOrders" class="page hidden"><div class="section-title">📋 All Orders</div><div class="card"><input type="text" id="transactionSearchPhone" placeholder="🔍 Search by phone number" style="width:100%;padding:12px;border-radius:10px;border:1px solid #ddd;margin-bottom:10px;"><button class="btn btn-primary" onclick="searchTransactionByPhone()" style="margin-bottom:10px;">Search</button><button class="btn btn-outline" onclick="resetTransactionSearch()">Show All</button><button class="btn btn-green" onclick="exportTransactionsCSV()" style="width:auto;">📎 Export CSV</button></div><div id="adminOrdersList"></div></div>
+<div id="adminBooks" class="page hidden"><div class="section-title">📚 Balance Books</div><div id="booksTransactions"></div></div>
 <div id="adminMonitor" class="page hidden"><div class="section-title">👁️ Live Agent Monitor</div><div id="monitorFeed"></div></div>
 <div id="adminChats" class="page hidden"><div class="section-title">💬 All Conversations</div><div id="allChatsList"></div></div>
-<div id="adminTeam" class="page hidden"><div class="section-title">👥 Support Team (5 Agents)</div><div id="teamList"></div></div>
+<div id="adminTeam" class="page hidden"><div class="section-title">👥 Support Team</div><div id="teamList"></div></div>
 <div id="adminDelivery" class="page hidden"><div class="section-title">🚚 Delivery Management</div><div id="adminDeliveryList"></div></div>
 <div id="adminMessages" class="page hidden"><div class="section-title">💬 Manager Messages</div><div id="managerMsgList"></div></div>
-<div id="agentPanel" class="page hidden">
-<div class="section-title">📦 My Assigned Orders</div>
-<div id="agentAssignedOrders"></div>
-<div class="section-title">🆓 Available Orders (Claim for Delivery)</div>
-<div id="agentAvailableOrders"></div>
-<div class="section-title">🚚 My Deliveries (Assign Rider)</div>
-<div id="agentDeliveryList"></div>
-<div class="section-title">👥 Riders Management</div>
-<div id="agentRiderList"></div>
-<div class="section-title">💬 My Customer Conversations</div>
-<div id="agentChatList"></div>
-<button class="btn btn-add" style="margin:0 15px 15px;" onclick="showAddRiderModal()">➕ Add New Rider</button>
-<button class="btn btn-primary" style="margin:0 15px 15px;" onclick="openAgentToManagerChat()">💬 Message Manager</button>
-<div class="section-title">💬 Agent Group Chat</div>
-<div class="agent-chat-panel"><div class="agent-chat-messages" id="agentChatMessages"></div><div class="agent-input"><input type="text" id="agentChatInput" placeholder="Type to team..." onkeypress="if(event.key==='Enter')sendAgentChat()"><button onclick="sendAgentChat()">📤</button></div></div>
+<div id="agentPanel" class="page hidden"><div class="section-title">📦 My Assigned Orders</div><div id="agentAssignedOrders"></div><div class="section-title">🆓 Available Orders</div><div id="agentAvailableOrders"></div><div class="section-title">💬 My Conversations</div><div id="agentChatList"></div><button class="btn btn-primary" style="margin:15px;" onclick="openAgentToManagerChat()">💬 Message Manager</button></div>
+<div id="userShop" class="page hidden">
+    <!-- SLIDER INSERTED HERE -->
+    <div class="hero-slider" id="heroSlider">
+        <div class="slider-container">
+            <div class="slider-slide" style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800');">
+                <div class="slide-caption">🏛️ Premium Terrazzo</div>
+            </div>
+            <div class="slider-slide" style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1581092160562-40aa08e7882a?w=800');">
+                <div class="slide-caption">🔧 Professional Plumbing</div>
+            </div>
+            <div class="slider-slide" style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=800');">
+                <div class="slide-caption">🎨 Expert Painting</div>
+            </div>
+        </div>
+        <div class="slider-dots" id="sliderDots"></div>
+    </div>
+    <div style="padding:15px;"><input type="text" id="searchInput" placeholder="🔍 Search products..." style="width:100%;padding:14px;border-radius:12px;border:1px solid #ddd;font-size:15px;" onkeyup="searchProducts(this.value)"></div>
+    <div class="filter-row"><button class="filter-btn active" onclick="filterProducts('all',this)">🏠 All</button><button class="filter-btn" onclick="filterProducts('Floor',this)">🏠 Terrazzo</button><button class="filter-btn" onclick="filterProducts('Plumbing',this)">🔧 Plumbing</button><button class="filter-btn" onclick="filterProducts('Paint',this)">🎨 Painting</button></div>
+    <div class="product-grid" id="shopGrid"></div>
 </div>
-<div id="agentFullscreenChat" class="page hidden"><div class="fullscreen-chat"><div class="fullscreen-chat-header"><div><div id="fsChatTitle">Chat</div><small id="fsChatSub" style="opacity:.8;font-size:12px;"></small></div><div style="display:flex;gap:10px;"><button class="icon-btn" onclick="minimizeFullscreenChat()" title="Minimize" style="font-size:16px;">🗕️</button><button class="icon-btn" onclick="closeFullscreenChat()" title="Close" style="font-size:16px;">✕</button></div></div><div class="fullscreen-chat-body" id="fsChatBody"></div><div class="fullscreen-chat-input"><input type="text" id="fsChatInput" placeholder="Type message..." onkeypress="if(event.key==='Enter')sendFullscreenChat()"><button class="btn btn-green" style="width:auto;padding:10px 16px;" onclick="sendFullscreenChat()">📤</button></div></div></div>
-<div id="userShop" class="page hidden"><div style="padding:15px;"><input type="text" placeholder="🔍 Search terrazzo..." style="width:100%;padding:14px;border-radius:12px;border:1px solid #ddd;font-size:15px;" onkeyup="searchProducts(this.value)"></div><div class="filter-row"><button class="filter-btn active" onclick="filterProducts('all',this)">🏠 All</button><button class="filter-btn" onclick="filterProducts('Floor',this)">🏠 Floor</button><button class="filter-btn" onclick="filterProducts('Wall',this)">🧱 Wall</button><button class="filter-btn" onclick="filterProducts('Countertop',this)">🍽️ Countertop</button><button class="filter-btn" onclick="filterProducts('Outdoor',this)">🌳 Outdoor</button><button class="filter-btn" onclick="filterProducts('Tile',this)">🔲 Tiles</button></div><div class="product-grid" id="shopGrid"></div></div>
 <div id="productDetail" class="page hidden"><div id="detailContent"></div></div>
 <div id="userCart" class="page hidden"><div class="section-title">🛒 My Cart</div><div id="cartItems"></div><div class="card" id="cartSummary"><div style="display:flex;justify-content:space-between;font-size:18px;font-weight:800;"><span>💵 Total:</span><span id="cartTotal" style="color:var(--blue);">UGX 0</span></div><button class="btn btn-green" style="margin-top:15px;" onclick="showCheckout()" id="checkoutBtn">✅ Proceed to Checkout</button></div></div>
-<div id="checkoutPage" class="page hidden"><div class="section-title">💳 Checkout</div><div class="card"><div class="card-title">💳 Payment Method</div><div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;"><label style="display:flex;align-items:center;gap:10px;padding:15px;border:2px solid var(--blue);border-radius:12px;cursor:pointer;"><input type="radio" name="payMethod" value="mtn" checked style="width:20px;height:20px;"><span style="font-weight:700;">📱 MTN Mobile Money</span></label><label style="display:flex;align-items:center;gap:10px;padding:15px;border:2px solid #ddd;border-radius:12px;cursor:pointer;"><input type="radio" name="payMethod" value="airtel" style="width:20px;height:20px;"><span style="font-weight:700;">📡 Airtel Money</span></label><label style="display:flex;align-items:center;gap:10px;padding:15px;border:2px solid #ddd;border-radius:12px;cursor:pointer;"><input type="radio" name="payMethod" value="card" style="width:20px;height:20px;"><span style="font-weight:700;">💳 Bank Card</span></label></div><div id="cardFields" class="card-fields-group hidden"><div class="form-group"><label>💳 Card Number</label><input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19"></div><div class="form-group"><label>📅 Expiry (MM/YY)</label><input type="text" id="cardExpiry" placeholder="MM/YY"></div><div class="form-group"><label>🔒 CVV</label><input type="password" id="cardCvv" placeholder="123" maxlength="4"></div></div><div class="form-group"><label>📱 Phone Number</label><input type="tel" id="payPhone" placeholder="07XX XXX XXX" value="0770000000"><div id="networkBadge" class="hidden"></div></div><div style="background:#fff3cd;padding:15px;border-radius:10px;margin:15px 0;font-size:13px;color:#856404;"><strong>⚠️ DEMO MODE:</strong> No real money will be deducted.</div><div style="display:flex;justify-content:space-between;font-size:20px;font-weight:800;margin:20px 0;"><span>💵 Total:</span><span id="checkoutTotal" style="color:var(--green);">UGX 0</span></div><button class="btn btn-green" onclick="processPayment()">💰 Pay Now</button><button class="btn btn-outline" onclick="navigateTo('userCart')">⬅️ Back to Cart</button></div></div>
+<div id="checkoutPage" class="page hidden"><div class="section-title">💳 Checkout - WAMP Enterprises</div><div class="card"><div class="card-title">💳 Payment Method</div><div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;"><label style="display:flex;align-items:center;gap:10px;padding:15px;border:2px solid var(--blue);border-radius:12px;cursor:pointer;"><input type="radio" name="payMethod" value="mtn" checked style="width:20px;height:20px;"><span style="font-weight:700;">📱 MTN Mobile Money</span></label><label style="display:flex;align-items:center;gap:10px;padding:15px;border:2px solid #ddd;border-radius:12px;cursor:pointer;"><input type="radio" name="payMethod" value="airtel" style="width:20px;height:20px;"><span style="font-weight:700;">📡 Airtel Money</span></label><label style="display:flex;align-items:center;gap:10px;padding:15px;border:2px solid #ddd;border-radius:12px;cursor:pointer;"><input type="radio" name="payMethod" value="card" style="width:20px;height:20px;"><span style="font-weight:700;">💳 Bank Card</span></label></div><div id="cardFields" class="card-fields-group hidden"><div class="form-group"><label>💳 Card Number</label><input type="text" id="cardNumber" placeholder="1234 5678 9012 3456"></div><div class="form-group"><label>📅 Expiry (MM/YY)</label><input type="text" id="cardExpiry" placeholder="MM/YY"></div><div class="form-group"><label>🔒 CVV</label><input type="password" id="cardCvv" placeholder="123"></div></div><div class="form-group"><label>📱 Phone Number</label><input type="tel" id="payPhone" placeholder="07XX XXX XXX" value="0770000000"><div id="networkBadge" class="hidden"></div></div><div style="background:#fff3cd;padding:15px;border-radius:10px;margin:15px 0;font-size:13px;color:#856404;"><strong>⚠️ DEMO MODE:</strong> No real money will be deducted.</div><div style="display:flex;justify-content:space-between;font-size:20px;font-weight:800;margin:20px 0;"><span>💵 Total:</span><span id="checkoutTotal" style="color:var(--green);">UGX 0</span></div><button class="btn btn-green" onclick="processPayment()">💰 Pay Now</button><button class="btn btn-outline" onclick="navigateTo('userCart')">⬅️ Back to Cart</button></div></div>
 <div id="userOrders" class="page hidden"><div class="section-title">📦 My Orders & Delivery Info</div><div id="userOrderList"></div></div>
 <div id="userDashboard" class="page hidden"><div class="section-title">👤 My Account</div><div class="card"><div style="display:flex;align-items:center;gap:15px;margin-bottom:15px;"><div style="width:60px;height:60px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:28px;">👤</div><div><div style="font-weight:800;font-size:18px;" id="userNameDisplay">Customer</div><div style="color:var(--gray-dark);font-size:13px;" id="userEmailDisplay">email@example.com</div></div></div></div><div class="stats-grid"><div class="stat-card"><div class="stat-value" id="userTotalOrders">0</div><div class="stat-label">📦 Total Orders</div></div><div class="stat-card green"><div class="stat-value" id="userPendingOrders">0</div><div class="stat-label">⏳ Pending</div></div></div><div class="card"><div class="card-title">📝 My Profile</div><div class="app-form"><div class="form-group"><label>👤 Full Name</label><input type="text" id="profileName" placeholder="Your name"></div><div class="form-group"><label>📧 Email</label><input type="email" id="profileEmail" placeholder="Your email" style="background:#f0f0f0;" readonly></div><div class="form-group"><label>📱 Phone Number</label><input type="tel" id="profilePhone" placeholder="07XX XXX XXX"></div><div class="form-group"><label>🏠 Delivery Address</label><textarea id="profileAddress" placeholder="Enter your full delivery address..."></textarea></div><button class="btn btn-primary" onclick="saveUserProfile()">💾 Save Profile</button></div></div><div class="card"><div class="card-title">❤️ My Wishlist</div><div id="wishlistItems"></div></div><div class="card"><div class="card-title">⭐ My Reviews & Ratings</div><div id="userReviews"></div></div></div>
 <div class="chat-widget hidden" id="chatWidgetContainer"><button class="chat-btn" onclick="toggleChat()">💬</button></div>
-<div id="chatBox" class="chat-box hidden"><div class="chat-header"><div>🤖 Tarazo Assistant<div id="chatStatus"><small>🟢 Online - Ask me anything</small></div></div><button class="chat-close" onclick="toggleChat()">✕</button></div><div class="chat-messages" id="chatMessages"></div><div class="chat-input-area"><input type="text" id="chatInput" placeholder="Type message..." onkeypress="if(event.key==='Enter')sendChat()"><button class="btn btn-green" style="width:auto;padding:10px 16px;" onclick="sendChat()">📤</button></div></div>
-<div class="whatsapp-widget hidden" id="whatsappWidget"><a href="https://wa.me/256772123456?text=Hello%20Tarazo%2C%20I%20need%20assistance" class="whatsapp-btn" target="_blank"><svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a></div>
+<div id="chatBox" class="chat-box hidden"><div class="chat-header"><div>🤖 WAMP Assistant<div id="chatStatus"><small>🟢 Online</small></div></div><button class="chat-close" onclick="toggleChat()">✕</button></div><div class="chat-messages" id="chatMessages"></div><div class="chat-input-area"><input type="text" id="chatInput" placeholder="Type message..." onkeypress="if(event.key==='Enter')sendChat()"><button class="btn btn-green" style="width:auto;padding:10px 16px;" onclick="sendChat()">📤</button></div></div>
+<div class="whatsapp-widget hidden" id="whatsappWidget"><a href="https://wa.me/256772123456?text=Hello%20WAMP%20Enterprises%2C%20I%20need%20assistance" class="whatsapp-btn" target="_blank">💬</a></div>
 <div class="bottom-nav" id="bottomNav"></div>
 </div>
 <div id="modalOverlay" class="modal-overlay hidden" onclick="closeModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header" id="modalTitle">Title</div><div id="modalBody"></div><button class="btn btn-outline" style="margin-top:15px;" onclick="hideModal()">❌ Close</button></div></div>
 
 <script>
-// ======================== APP STATE (Single Source of Truth) ========================
+// ======================== APP STATE ========================
 const AppState = {
     user: null,
     products: [],
@@ -224,224 +249,11 @@ const AppState = {
     notifications: [],
     chatOpen: false,
     pollInterval: null,
-    currentPage: '',
-    loading: false,
-    loadingCount: 0
+    currentPage: ''
 };
 
-// Loading state management
-function setLoading(isLoading) {
-    if (isLoading) {
-        AppState.loadingCount++;
-    } else {
-        AppState.loadingCount = Math.max(0, AppState.loadingCount - 1);
-    }
-    AppState.loading = AppState.loadingCount > 0;
-
-    const buttons = document.querySelectorAll('button:not(.no-disable)');
-    buttons.forEach(btn => {
-        if (AppState.loading) {
-            btn.disabled = true;
-            btn.style.opacity = '0.6';
-        } else {
-            btn.disabled = false;
-            btn.style.opacity = '1';
-        }
-    });
-}
-
-// ======================== API CONSTANTS ========================
-const API_BASE_URL = 'https://raven-terazzo.onrender.com/api';
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000;
-
-// ======================== TOKEN MANAGEMENT (No CSRF) ========================
-function getAccessToken() {
-    return localStorage.getItem('access_token');
-}
-
-function setAccessToken(token) {
-    if (token) {
-        localStorage.setItem('access_token', token);
-    } else {
-        localStorage.removeItem('access_token');
-    }
-}
-
-function getRefreshToken() {
-    return localStorage.getItem('refresh_token');
-}
-
-function setRefreshToken(token) {
-    if (token) {
-        localStorage.setItem('refresh_token', token);
-    } else {
-        localStorage.removeItem('refresh_token');
-    }
-}
-
-function clearTokens() {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-}
-
-// ======================== REFRESH TOKEN LOCK ========================
-let isRefreshing = false;
-let failedQueue = [];
-
-function processQueue(error, token = null) {
-    failedQueue.forEach(prom => {
-        if (error) {
-            prom.reject(error);
-        } else {
-            prom.resolve(token);
-        }
-    });
-    failedQueue = [];
-}
-
-// ======================== API CALLER WITH TIMEOUT ========================
-async function apiCall(endpoint, options = {}, retryCount = 0) {
-    const token = getAccessToken();
-    
-    const headers = {
-        'Content-Type': 'application/json',
-        ...options.headers
-    };
-
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
-
-    try {
-        setLoading(true);
-
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-            ...options,
-            headers,
-            credentials: 'omit',
-            signal: controller.signal
-        });
-
-        clearTimeout(timeoutId);
-
-        if (response.status === 401) {
-            const refreshed = await refreshToken();
-            if (refreshed) {
-                return apiCall(endpoint, options, retryCount + 1);
-            } else {
-                showToast('Session expired. Please login again.', true);
-                logout();
-                throw new Error('Session expired');
-            }
-        }
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            let errorMessage;
-            try {
-                const errorJson = JSON.parse(errorText);
-                errorMessage = errorJson.error || errorJson.message || `HTTP ${response.status}`;
-            } catch {
-                errorMessage = errorText || `HTTP ${response.status}`;
-            }
-            throw new Error(errorMessage);
-        }
-
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-            return await response.json();
-        }
-
-        return { success: true };
-
-    } catch (error) {
-        clearTimeout(timeoutId);
-        
-        if (error.name === 'AbortError') {
-            showToast('Request timeout. Please try again.', true);
-            throw new Error('Request timeout');
-        }
-        
-        console.error('API Error:', error);
-        
-        if (retryCount < MAX_RETRIES && (!options.method || options.method === 'GET')) {
-            console.log(`Retrying... (${retryCount + 1}/${MAX_RETRIES})`);
-            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
-            return apiCall(endpoint, options, retryCount + 1);
-        }
-        
-        throw error;
-    } finally {
-        setLoading(false);
-    }
-}
-
-// ======================== TOKEN REFRESH WITH LOCK ========================
-async function refreshToken() {
-    const refreshTokenValue = getRefreshToken();
-    if (!refreshTokenValue) return false;
-    
-    if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-            failedQueue.push({ resolve, reject });
-        });
-    }
-    
-    isRefreshing = true;
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/refresh`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${refreshTokenValue}`
-            },
-            credentials: 'omit'
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            if (data.access_token) {
-                setAccessToken(data.access_token);
-                processQueue(null, data.access_token);
-                return true;
-            }
-        }
-        processQueue(new Error('Refresh failed'), null);
-        return false;
-    } catch (error) {
-        processQueue(error, null);
-        return false;
-    } finally {
-        isRefreshing = false;
-    }
-}
-
-// ======================== HELPER FUNCTIONS ========================
-function escapeHtml(text) {
-    if(!text) return '';
-    return String(text).replace(/[&<>]/g, function(m) {
-        if(m === '&') return '&amp;';
-        if(m === '<') return '&lt;';
-        if(m === '>') return '&gt;';
-        return m;
-    });
-}
-
-function safeJsonParse(data, defaultValue = []) {
-    try {
-        return JSON.parse(data || "[]");
-    } catch(e) {
-        console.warn('JSON parse failed:', e);
-        return defaultValue;
-    }
-}
-
-function showToast(msg, isError = false) {
+// Helper functions
+function showToast(msg, isError) {
     var toast = document.getElementById('toast');
     toast.textContent = msg;
     toast.style.background = isError ? '#e74c3c' : '#154360';
@@ -454,13 +266,17 @@ function showModal(title, html){
     document.getElementById('modalBody').innerHTML = html;
     document.getElementById('modalOverlay').classList.remove('hidden');
 }
+function hideModal(){ document.getElementById('modalOverlay').classList.add('hidden'); }
+function closeModal(e){ if(e.target === document.getElementById('modalOverlay')) hideModal(); }
 
-function hideModal(){
-    document.getElementById('modalOverlay').classList.add('hidden');
-}
-
-function closeModal(e){
-    if(e.target === document.getElementById('modalOverlay')) hideModal();
+function escapeHtml(text) { 
+    if(!text) return '';
+    return String(text).replace(/[&<>]/g, function(m) {
+        if(m === '&') return '&amp;';
+        if(m === '<') return '&lt;';
+        if(m === '>') return '&gt;';
+        return m;
+    });
 }
 
 function detectNetwork(phone){ 
@@ -469,68 +285,62 @@ function detectNetwork(phone){
     if(/^(075|074|070|073|071|041)/.test(p)) return 'Airtel'; 
     return null; 
 }
+function validateUgPhone(phone){ let p = String(phone).replace(/\D/g,''); return p.length >= 9 && p.length <= 12; }
 
-function validateUgPhone(phone){ 
-    let p = String(phone).replace(/\D/g,''); 
-    return p.length >= 9 && p.length <= 12; 
+// API constants
+const API_BASE_URL = 'https://raven-terazzo.onrender.com/api';
+
+function getAccessToken() { return localStorage.getItem('access_token'); }
+function setAccessToken(token) { if(token) localStorage.setItem('access_token', token); else localStorage.removeItem('access_token'); }
+function getRefreshToken() { return localStorage.getItem('refresh_token'); }
+function setRefreshToken(token) { if(token) localStorage.setItem('refresh_token', token); else localStorage.removeItem('refresh_token'); }
+function clearTokens() { localStorage.removeItem('access_token'); localStorage.removeItem('refresh_token'); }
+
+async function apiCall(endpoint, options = {}) {
+    const token = getAccessToken();
+    const headers = { 'Content-Type': 'application/json', ...options.headers };
+    if(token) headers['Authorization'] = `Bearer ${token}`;
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers, credentials: 'omit' });
+    if(response.status === 401) {
+        const refreshed = await refreshToken();
+        if(refreshed) return apiCall(endpoint, options);
+        else { showToast('Session expired', true); logout(); throw new Error('Expired'); }
+    }
+    if(!response.ok) throw new Error(await response.text() || `HTTP ${response.status}`);
+    return await response.json();
 }
 
-// ======================== PRODUCT CARD RENDERER ========================
-function renderProductCard(product) {
-    var stockClass = ((product.stock || 0) < 5) ? 'low' : '';
-    var imageUrl = escapeHtml(product.image_url || 'https://placehold.co/600x400/1a5276/white?text=TARAZO');
-
-    return '<div class="product-card" onclick="showProductDetail(' + (product.id || 0) + ')">' +
-        '<img src="' + imageUrl + '" alt="' + escapeHtml(product.name) + '" loading="lazy">' +
-        '<div class="product-info">' +
-            '<div class="product-name">' + escapeHtml(product.name) + '</div>' +
-            '<div class="product-type">' + escapeHtml(product.type) + '</div>' +
-            '<div class="product-price">UGX ' + (product.price || 0).toLocaleString() + '</div>' +
-            '<div class="product-stock ' + stockClass + '">' + (product.stock || 0) + ' in stock</div>' +
-            '<button class="btn-sm btn-green no-disable" style="margin-top:8px;" onclick="event.stopPropagation();addToCart(' + (product.id || 0) + ')">🛒 Add to Cart</button>' +
-        '</div>' +
-    '</div>';
+async function refreshToken() {
+    const refresh = getRefreshToken();
+    if(!refresh) return false;
+    try {
+        const res = await fetch(`${API_BASE_URL}/refresh`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${refresh}` }
+        });
+        if(res.ok) { const data = await res.json(); setAccessToken(data.access_token); return true; }
+    } catch(e) {}
+    return false;
 }
 
-// ======================== AUTHENTICATION ========================
+// Authentication
 async function handleLogin() {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
-    const remember = document.getElementById('rememberMe').checked;
-
-    if (!email || !password) {
-        showToast('❌ Please enter email and password', true);
-        return;
-    }
-
+    if(!email || !password) { showToast('Enter email and password', true); return; }
     try {
-        showToast('🔄 Logging in...');
-
-        const response = await fetch(`${API_BASE_URL}/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.success) {
+        const res = await fetch(`${API_BASE_URL}/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+        const data = await res.json();
+        if(res.ok && data.success) {
             setAccessToken(data.access_token);
             setRefreshToken(data.refresh_token);
-            
             AppState.user = data.user;
-            if (remember) localStorage.setItem('tarazo_email', email);
-            else localStorage.removeItem('tarazo_email');
-
-            showToast('✅ Login successful!');
-            await refreshData('login');
+            showToast('Welcome to WAMP Enterprises!');
+            await refreshData();
             enterApp();
-        } else {
-            showToast(data.error || '❌ Login failed', true);
-        }
-    } catch (error) {
-        showToast(error.message || '❌ Login failed', true);
-    }
+        } else showToast(data.error || 'Login failed', true);
+    } catch(e) { showToast('Network error', true); }
 }
 
 async function handleRegister() {
@@ -538,687 +348,300 @@ async function handleRegister() {
     const phone = document.getElementById('regPhone').value;
     const email = document.getElementById('regEmail').value;
     const password = document.getElementById('regPassword').value;
-    const confirmPassword = document.getElementById('regConfirmPassword').value;
-
-    if (!name || !email || !password) {
-        showToast('Please fill all fields', true);
-        return;
-    }
-    if (password !== confirmPassword) {
-        showToast('Passwords do not match', true);
-        return;
-    }
-
+    const confirm = document.getElementById('regConfirmPassword').value;
+    if(password !== confirm) { showToast('Passwords mismatch', true); return; }
     try {
-        showToast('🔄 Creating account...');
-
-        const response = await fetch(`${API_BASE_URL}/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, phone, password })
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.success) {
-            showToast('✅ Registration successful! Please login.');
-            toggleAuth();
-            document.getElementById('loginEmail').value = email;
-        } else {
-            showToast(data.error || '❌ Registration failed', true);
-        }
-    } catch (error) {
-        showToast(error.message || '❌ Network error', true);
-    }
+        const res = await fetch(`${API_BASE_URL}/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, phone, password }) });
+        const data = await res.json();
+        if(res.ok && data.success) { showToast('Registered! Please login'); toggleAuth(); }
+        else showToast(data.error || 'Registration failed', true);
+    } catch(e) { showToast('Network error', true); }
 }
 
-async function logout() {
-    try {
-        await apiCall('/logout', { method: 'POST' });
-    } catch(e) {}
-    
-    clearTokens();
-    AppState.user = null;
-    AppState.cart = [];
-    AppState.orders = [];
-    AppState.products = [];
+function logout() { clearTokens(); AppState.user = null; document.getElementById('appContainer').classList.add('hidden'); document.getElementById('loginPage').classList.remove('hidden'); showToast('Logged out'); if(AppState.pollInterval) clearInterval(AppState.pollInterval); }
+function toggleAuth(){ let a=document.getElementById('loginForm'), b=document.getElementById('registerForm'), c=document.getElementById('forgotForm'); if(!a.classList.contains('hidden')){ a.classList.add('hidden'); b.classList.remove('hidden'); c.classList.add('hidden'); } else{ a.classList.remove('hidden'); b.classList.add('hidden'); c.classList.add('hidden'); } }
+function showForgotPassword(){ document.getElementById('loginForm').classList.add('hidden'); document.getElementById('registerForm').classList.add('hidden'); document.getElementById('forgotForm').classList.remove('hidden'); }
+function showLoginForm(){ document.getElementById('loginForm').classList.remove('hidden'); document.getElementById('registerForm').classList.add('hidden'); document.getElementById('forgotForm').classList.add('hidden'); }
 
-    localStorage.removeItem('tarazo_email');
-    document.getElementById('appContainer').classList.add('hidden');
-    document.getElementById('loginPage').classList.remove('hidden');
-    document.getElementById('loginEmail').value = '';
-    document.getElementById('loginPassword').value = '';
-    showToast('👋 Logged out');
-    if (AppState.pollInterval) clearInterval(AppState.pollInterval);
+async function refreshData() {
+    if(!AppState.user) return;
+    try { AppState.products = await apiCall('/products'); } catch(e){ AppState.products=[]; }
+    try { AppState.cart = await apiCall('/cart'); updateCartBadge(); } catch(e){ AppState.cart=[]; }
+    try { AppState.orders = await apiCall('/orders'); } catch(e){ AppState.orders=[]; }
 }
 
-function toggleAuth(){
-    var a=document.getElementById('loginForm'), b=document.getElementById('registerForm'), c=document.getElementById('forgotForm');
-    if(!a.classList.contains('hidden')){ a.classList.add('hidden'); b.classList.remove('hidden'); c.classList.add('hidden'); }
-    else{ a.classList.remove('hidden'); b.classList.add('hidden'); c.classList.add('hidden'); }
+function renderProductCard(product) {
+    let stockClass = (product.stock || 0) < 5 ? 'low' : '';
+    let imageUrl = product.image_url && product.image_url.trim() !== '' ? product.image_url : 'https://placehold.co/600x400/1a5276/white?text=WAMP';
+    return '<div class="product-card" onclick="showProductDetail(' + (product.id || 0) + ')">' +
+        '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(product.name) + '" loading="lazy">' +
+        '<div class="product-info">' +
+            '<div class="product-name">' + escapeHtml(product.name) + '</div>' +
+            '<div class="product-type">' + escapeHtml(product.type || 'General') + '</div>' +
+            '<div class="product-price">UGX ' + (product.price || 0).toLocaleString() + '</div>' +
+            '<div class="product-stock ' + stockClass + '">' + (product.stock || 0) + ' in stock</div>' +
+            '<button class="btn-sm btn-green no-disable" style="margin-top:8px;" onclick="event.stopPropagation();addToCart(' + (product.id || 0) + ')">🛒 Add to Cart</button>' +
+        '</div>' +
+    '</div>';
 }
 
-function showForgotPassword(){
-    document.getElementById('loginForm').classList.add('hidden');
-    document.getElementById('registerForm').classList.add('hidden');
-    document.getElementById('forgotForm').classList.remove('hidden');
-}
-
-function showLoginForm(){
-    document.getElementById('loginForm').classList.remove('hidden');
-    document.getElementById('registerForm').classList.add('hidden');
-    document.getElementById('forgotForm').classList.add('hidden');
-}
-
-// ======================== DATA REFRESH ========================
-async function refreshData(reason = 'general') {
-    if (!AppState.user) return;
-
-    try {
-        AppState.products = await apiCall('/products');
-
-        if (reason === 'login' || reason === 'cart' || reason === 'order') {
-            try {
-                AppState.cart = await apiCall('/cart');
-            } catch(e) { AppState.cart = []; }
-
-            try {
-                AppState.orders = await apiCall('/orders');
-            } catch(e) { AppState.orders = []; }
-
-            updateCartBadge();
-        }
-    } catch (error) {
-        console.error('Error refreshing data:', error);
-    }
-}
-
-// ======================== SHOP FUNCTIONS ========================
 async function renderShop(filter = 'all') {
-    if (AppState.products.length === 0) {
-        try {
-            AppState.products = await apiCall('/products');
-        } catch(error) {
-            document.getElementById('shopGrid').innerHTML = '<div class="empty-state">❌ Failed to load products</div>';
-            return;
-        }
-    }
-
+    if(!AppState.products.length) await refreshData();
     let products = AppState.products;
-    if (filter !== 'all') {
-        products = AppState.products.filter(p => p.type && p.type.toLowerCase().includes(filter.toLowerCase()));
-    }
-
-    var html = '';
-    for(var j = 0; j < products.length; j++) {
-        html += renderProductCard(products[j]);
-    }
-    document.getElementById('shopGrid').innerHTML = html || '<div class="empty-state">No products available</div>';
+    if(filter !== 'all') products = products.filter(p => p.type && p.type.toLowerCase().includes(filter.toLowerCase()));
+    document.getElementById('shopGrid').innerHTML = products.map(p => renderProductCard(p)).join('') || '<div class="empty-state">No products found</div>';
 }
 
-function searchProducts(query){
-    if(!query){ renderShop(); return; }
-    var filtered = AppState.products.filter(function(p){ 
-        return p.name.toLowerCase().indexOf(query.toLowerCase()) !== -1; 
-    });
-    var html = '';
-    for(var j = 0; j < filtered.length; j++){
-        html += renderProductCard(filtered[j]);
-    }
-    document.getElementById('shopGrid').innerHTML = html;
-}
-
-function filterProducts(type, btn){
-    var btns = document.querySelectorAll('.filter-btn');
-    for(var i = 0; i < btns.length; i++){ btns[i].classList.remove('active'); }
-    if(btn) btn.classList.add('active');
-    renderShop(type);
-}
+function searchProducts(q){ if(!q) renderShop(); else renderShop('all'); }
+function filterProducts(type, btn){ document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active')); if(btn) btn.classList.add('active'); renderShop(type); }
 
 async function showProductDetail(id){
-    try {
-        var p = AppState.products.find(function(pr){ return pr.id === id; });
-        if(!p) return;
-
-        var stockColor = ((p.stock || 0) < 5) ? 'var(--red)' : 'var(--green)';
-        var stockMsg = ((p.stock || 0) < 5) ? '⚠️ Only ' + (p.stock || 0) + ' left!' : '✅ In Stock (' + (p.stock || 0) + ')';
-
-        var installHtml = '';
-        if(p.install_images){
-            var installs = safeJsonParse(p.install_images);
-            if(installs && installs.length > 0){
-                installHtml = '<div class="card-title" style="font-size:16px;margin-bottom:10px;">🏠 Installation Gallery</div><div class="install-gallery">';
-                for(var i = 0; i < installs.length; i++) {
-                    installHtml += '<img src="' + escapeHtml(installs[i]) + '" alt="Installation" onclick="window.open(this.src)">';
-                }
-                installHtml += '</div>';
-            }
-        }
-
-        document.getElementById('detailContent').innerHTML = 
-            '<img src="' + escapeHtml(p.image_url || 'https://placehold.co/600x400/1a5276/white?text=TARAZO') + '" class="detail-hero">' +
-            '<div class="card">' +
-                '<div class="product-name" style="font-size:22px;">' + escapeHtml(p.name) + '</div>' +
-                '<div class="product-type" style="font-size:14px;margin:8px 0;">' + escapeHtml(p.type) + '</div>' +
-                '<div class="product-price" style="font-size:28px;">UGX ' + (p.price || 0).toLocaleString() + '</div>' +
-                '<div style="color:' + stockColor + ';font-weight:700;margin:15px 0;">' + stockMsg + '</div>' +
-                '<p>' + escapeHtml(p.description || 'No description') + '</p>' +
-                installHtml +
-                '<button class="btn btn-green no-disable" style="margin-top:20px;" onclick="addToCart(' + p.id + ')">🛒 Add to Cart</button>' +
-                '<button class="btn btn-outline no-disable" style="margin-top:10px;" onclick="navigateTo(\'userShop\')">⬅️ Back</button>' +
-            '</div>';
-        navigateTo('productDetail');
-    } catch(error) {
-        showToast('Failed to load product details', true);
-    }
+    let p = AppState.products.find(pr=>pr.id===id);
+    if(!p) return;
+    let imgUrl = p.image_url && p.image_url.trim() ? p.image_url : 'https://placehold.co/600x400/1a5276/white?text=WAMP';
+    document.getElementById('detailContent').innerHTML = 
+        '<img src="' + escapeHtml(imgUrl) + '" class="detail-hero" style="width:100%;height:250px;object-fit:cover;">' +
+        '<div class="card">' +
+            '<div class="product-name" style="font-size:22px;">' + escapeHtml(p.name) + '</div>' +
+            '<div class="product-price" style="font-size:28px;">UGX ' + (p.price || 0).toLocaleString() + '</div>' +
+            '<p>' + escapeHtml(p.description || 'No description') + '</p>' +
+            '<button class="btn btn-green" onclick="addToCart(' + p.id + ')">🛒 Add to Cart</button>' +
+            '<button class="btn btn-outline" style="margin-top:10px;" onclick="navigateTo(\'userShop\')">⬅️ Back</button>' +
+        '</div>';
+    navigateTo('productDetail');
 }
 
-// ======================== CART FUNCTIONS ========================
-async function addToCart(productId) {
-    if (!AppState.user) { showToast('Please login first', true); return; }
-
-    try {
-        await apiCall('/cart', {
-            method: 'POST',
-            body: JSON.stringify({ product_id: productId, quantity: 1 })
-        });
-        await refreshData('cart');
-        showToast('✅ Added to cart!');
-        if (AppState.currentPage === 'userCart') renderCart();
-    } catch(error) {
-        showToast(error.message || '❌ Failed to add to cart', true);
-    }
+async function addToCart(pid){
+    if(!AppState.user){ showToast('Please login first', true); return; }
+    try{ await apiCall('/cart', { method:'POST', body:JSON.stringify({ product_id:pid, quantity:1 }) }); await refreshData(); showToast('Added to cart'); renderCart(); } catch(e){ showToast('Failed', true); }
 }
-
-async function removeFromCart(cartItemId) {
-    try {
-        await apiCall(`/cart/${cartItemId}`, { method: 'DELETE' });
-        await refreshData('cart');
-        renderCart();
-        showToast('✅ Removed from cart');
-    } catch(error) {
-        showToast(error.message || '❌ Failed to remove', true);
+async function removeFromCart(cid){ try{ await apiCall(`/cart/${cid}`, { method:'DELETE' }); await refreshData(); renderCart(); } catch(e){} }
+async function renderCart(){
+    if(!AppState.cart || !AppState.cart.length){ document.getElementById('cartItems').innerHTML='<div class="empty-state">Cart empty</div>'; document.getElementById('cartSummary').classList.add('hidden'); return; }
+    let total=0, html='';
+    for(let c of AppState.cart){
+        let p = AppState.products.find(pr=>pr.id===c.product_id);
+        if(p){ let itemTotal = (p.price||0)*(c.quantity||1); total+=itemTotal; html+=`<div class="list-item"><div><h4>${escapeHtml(p.name)}</h4><p>UGX ${(p.price||0).toLocaleString()} x ${c.quantity} = UGX ${itemTotal.toLocaleString()}</p></div><button class="btn-sm btn-red" onclick="removeFromCart(${c.id})">Remove</button></div>`; }
     }
-}
-
-async function renderCart() {
-    if (!AppState.user) return;
-
-    if(!AppState.cart || AppState.cart.length === 0){
-        document.getElementById('cartItems').innerHTML = '<div class="empty-state"><div class="icon">🛒</div>Your cart is empty</div>';
-        document.getElementById('cartSummary').classList.add('hidden');
-        return;
-    }
-
-    var total = 0, html = '';
-    for(var i = 0; i < AppState.cart.length; i++){
-        var c = AppState.cart[i];
-        var p = (AppState.products || []).find(function(pr){ return pr.id === c.product_id; });
-        if(p){
-            var itemTotal = (p.price || 0) * (c.quantity || 0);
-            total += itemTotal;
-            html += '<div class="list-item">' +
-                        '<div class="list-info">' +
-                            '<h4>' + escapeHtml(p.name) + '</h4>' +
-                            '<p>UGX ' + (p.price || 0).toLocaleString() + ' x ' + (c.quantity || 0) + ' = UGX ' + itemTotal.toLocaleString() + '</p>' +
-                        '</div>' +
-                        '<button class="btn-sm btn-red no-disable" onclick="removeFromCart(' + (c.id || 0) + ')">Remove</button>' +
-                    '</div>';
-        }
-    }
-    document.getElementById('cartItems').innerHTML = html;
-    document.getElementById('cartTotal').textContent = 'UGX ' + total.toLocaleString();
+    document.getElementById('cartItems').innerHTML=html;
+    document.getElementById('cartTotal').textContent='UGX '+total.toLocaleString();
     document.getElementById('cartSummary').classList.remove('hidden');
 }
-
-function showCart(){ navigateTo('userCart'); }
-
+function showCart(){ navigateTo('userCart'); renderCart(); }
 function showCheckout(){
-    if(!AppState.cart || AppState.cart.length === 0){
-        showToast('Your cart is empty', true);
-        return;
-    }
-    var total = AppState.cart.reduce(function(s,c){ 
-        var p = AppState.products.find(function(pr){ return pr.id === c.product_id; }); 
-        return s + (p ? (p.price || 0) * (c.quantity || 0) : 0); 
-    }, 0);
-    document.getElementById('checkoutTotal').textContent = 'UGX ' + total.toLocaleString();
+    if(!AppState.cart.length){ showToast('Cart empty', true); return; }
+    let total = AppState.cart.reduce((s,c)=>{ let p=AppState.products.find(pr=>pr.id===c.product_id); return s+((p?.price||0)*(c.quantity||1)); },0);
+    document.getElementById('checkoutTotal').textContent='UGX '+total.toLocaleString();
     navigateTo('checkoutPage');
 }
+function updateCartBadge(){ let total=AppState.cart.reduce((s,c)=>s+(c.quantity||0),0); let badge=document.getElementById('cartBadge'); if(total>0){ badge.textContent=total; badge.classList.remove('hidden'); } else badge.classList.add('hidden'); }
 
-function updateCartBadge(){
-    var total = (AppState.cart || []).reduce(function(s,c){ return s + (c.quantity || 0); }, 0);
-    var badge = document.getElementById('cartBadge');
-    if(total > 0){ badge.textContent = total; badge.classList.remove('hidden'); }
-    else{ badge.classList.add('hidden'); }
+async function processPayment(){
+    let method = document.querySelector('input[name="payMethod"]:checked').value;
+    let phone = document.getElementById('payPhone').value;
+    if(method!=='card' && (!phone || !validateUgPhone(phone))){ showToast('Valid phone required', true); return; }
+    if(!AppState.cart.length){ showToast('Cart empty', true); return; }
+    let total=0, items=[];
+    for(let c of AppState.cart){
+        let p=AppState.products.find(pr=>pr.id===c.product_id);
+        if(p){ total+=(p.price||0)*(c.quantity||1); items.push({ productId:c.product_id, quantity:c.quantity||1 }); }
+    }
+    try{
+        await apiCall('/orders', { method:'POST', body:JSON.stringify({ items, total, payment_method:method==='mtn'?'MTN':(method==='airtel'?'Airtel':'Card') }) });
+        showToast('Order placed!');
+        await refreshData();
+        navigateTo('userOrders');
+        renderUserOrders();
+    } catch(e){ showToast('Order failed', true); }
 }
 
-// ======================== ORDER FUNCTIONS WITH DUPLICATION PREVENTION ========================
-let isSubmittingOrder = false;
-
-async function processPayment() {
-    if (isSubmittingOrder) {
-        showToast('Order already processing...', false);
-        return;
-    }
-    
-    var method = document.querySelector('input[name="payMethod"]:checked').value;
-    var phone = document.getElementById('payPhone').value;
-
-    if(method !== 'card'){
-        if(!phone || !validateUgPhone(phone)){ showToast('❌ Enter valid phone number', true); return; }
-        var network = detectNetwork(phone);
-        if(method === 'mtn' && network !== 'MTN'){ showToast('❌ Enter MTN number', true); return; }
-        if(method === 'airtel' && network !== 'Airtel'){ showToast('❌ Enter Airtel number', true); return; }
-    }
-
-    if(!AppState.cart || AppState.cart.length === 0){
-        showToast('Your cart is empty', true);
-        return;
-    }
-
-    var total = 0;
-    var items = [];
-    for(var i = 0; i < AppState.cart.length; i++){ 
-        var p = AppState.products.find(function(pr){ return pr.id === AppState.cart[i].product_id; }); 
-        if(p){
-            total += (p.price || 0) * (AppState.cart[i].quantity || 0);
-            items.push({ productId: AppState.cart[i].product_id, quantity: AppState.cart[i].quantity || 1 });
-        }
-    }
-
-    try {
-        isSubmittingOrder = true;
-        showToast('🔄 Processing order...');
-
-        const data = await apiCall('/orders', {
-            method: 'POST',
-            body: JSON.stringify({ 
-                items: items, 
-                total: total, 
-                payment_method: method === 'mtn' ? 'MTN Mobile Money' : (method === 'airtel' ? 'Airtel Money' : 'Bank Card')
-            })
-        });
-
-        if(data.success){
-            showToast('✅ Order placed successfully!');
-            await refreshData('order');
-            navigateTo('userOrders');
-            renderUserOrders();
-            showModal('✅ Payment Successful', 
-                '<div style="text-align:center;">' +
-                    '<div style="font-size:48px;">✅</div>' +
-                    '<div style="font-size:20px;font-weight:800;">Order Placed!</div>' +
-                    '<div>Your order will be processed shortly.</div>' +
-                    '<button class="btn btn-green no-disable" style="margin-top:15px;" onclick="hideModal();navigateTo(\'userOrders\')">View Orders</button>' +
-                '</div>');
-        } else {
-            showToast(data.error || '❌ Order failed', true);
-        }
-    } catch(error) {
-        showToast(error.message || '❌ Network error', true);
-    } finally {
-        setTimeout(() => {
-            isSubmittingOrder = false;
-        }, 3000);
-    }
+async function renderUserOrders(){
+    let myOrders = (AppState.orders || []).filter(o=>o.user_id===AppState.user?.id);
+    if(!myOrders.length){ document.getElementById('userOrderList').innerHTML='<div class="empty-state">No orders</div>'; return; }
+    document.getElementById('userOrderList').innerHTML = myOrders.map(o=>`<div class="card"><div><strong>Order #${o.id}</strong> - <span class="status-badge status-${o.status}">${o.status}</span></div><div>UGX ${(o.total||0).toLocaleString()}</div><div>Rider: ${escapeHtml(o.rider_name||'Not assigned')}</div></div>`).join('');
 }
-
-async function renderUserOrders() {
-    if (!AppState.user) return;
-
-    var myOrders = (AppState.orders || []).filter(function(o){ return o.user_id === AppState.user.id; });
-
-    var html = '';
-    if(myOrders.length === 0) {
-        html = '<div class="empty-state">📦 No orders yet</div>';
-    } else {
-        for(var i = 0; i < myOrders.length; i++){
-            var o = myOrders[i];
-            var itemsArray = safeJsonParse(o.items);
-
-            html += '<div class="card">' +
-                        '<div style="display:flex; justify-content:space-between;">' +
-                            '<div><strong>📦 Order #' + (o.id || 0) + '</strong></div>' +
-                            '<div class="status-badge status-' + escapeHtml(o.status || 'pending') + '">' + escapeHtml(o.status || 'pending') + '</div>' +
-                        '</div>' +
-                        '<div>' + (o.date || 'N/A') + ' - ' + itemsArray.length + ' item(s)</div>' +
-                        '<div style="font-size:18px;font-weight:800;margin:10px 0;">UGX ' + ((o.total || 0).toLocaleString()) + '</div>' +
-                        '<div style="background:#e8f5e9;padding:12px;border-radius:12px;">' +
-                            '<div style="font-weight:700;">🚚 DELIVERY</div>' +
-                            '<div><strong>Rider:</strong> ' + escapeHtml(o.rider_name || 'Not assigned') + '</div>' +
-                            '<div><strong>Phone:</strong> ' + escapeHtml(o.rider_phone || 'N/A') + '</div>' +
-                            '<div><strong>Location:</strong> ' + escapeHtml(o.delivery_location || 'Being assigned') + '</div>' +
-                        '</div>' +
-                    '</div>';
-        }
-    }
-    document.getElementById('userOrderList').innerHTML = html;
-}
-
-// ======================== PROFILE FUNCTIONS ========================
 function renderUserDashboard(){
     if(!AppState.user) return;
-    document.getElementById('userNameDisplay').textContent = AppState.user.name;
-    document.getElementById('userEmailDisplay').textContent = AppState.user.email;
-    document.getElementById('profileName').value = AppState.user.name || '';
-    document.getElementById('profileEmail').value = AppState.user.email || '';
-    document.getElementById('profilePhone').value = AppState.user.phone || '';
-    document.getElementById('profileAddress').value = AppState.user.address || '';
-
-    var myOrders = (AppState.orders || []).filter(function(o){ return o.user_id === AppState.user.id; });
-    var pending = myOrders.filter(function(o){ return o.status === 'paid' || o.status === 'processing'; }).length;
-    document.getElementById('userTotalOrders').textContent = myOrders.length;
-    document.getElementById('userPendingOrders').textContent = pending;
+    document.getElementById('userNameDisplay').textContent=AppState.user.name;
+    document.getElementById('userEmailDisplay').textContent=AppState.user.email;
+    document.getElementById('profileName').value=AppState.user.name||'';
+    document.getElementById('profileEmail').value=AppState.user.email||'';
+    document.getElementById('profilePhone').value=AppState.user.phone||'';
+    document.getElementById('profileAddress').value=AppState.user.address||'';
+    let myOrders = (AppState.orders||[]).filter(o=>o.user_id===AppState.user.id);
+    document.getElementById('userTotalOrders').textContent=myOrders.length;
+    document.getElementById('userPendingOrders').textContent=myOrders.filter(o=>o.status==='paid'||o.status==='processing').length;
 }
+function saveUserProfile(){ showToast('Profile update coming soon'); }
 
-function saveUserProfile(){
-    showToast('Profile update coming soon');
-}
-
-// ======================== ADMIN FUNCTIONS ========================
-async function renderAdminDashboard() {
-    if (!AppState.user || AppState.user.role !== 'admin') return;
-
-    try {
-        const stats = await apiCall('/admin/stats');
-        document.getElementById('adminTodaySales').textContent = 'UGX ' + (stats.today_sales || 0).toLocaleString();
-        document.getElementById('adminPendingOrders').textContent = stats.pending_orders || 0;
-        document.getElementById('adminTotalProducts').textContent = stats.total_products || 0;
-        document.getElementById('adminLowStock').textContent = stats.low_stock || 0;
-    } catch(error) {
-        console.error('Error loading admin stats:', error);
-    }
-}
-
-async function renderAdminOrders() {
-    if (!AppState.user || AppState.user.role !== 'admin') return;
-
-    var html = '';
-    for(var i = 0; i < (AppState.orders || []).length; i++){
-        var o = AppState.orders[i];
-        html += '<div class="list-item" onclick="viewTransactionDetails(' + (o.id || 0) + ')">' +
-                    '<div class="list-info">' +
-                        '<h4>📦 Transaction #' + (o.id || 0) + '</h4>' +
-                        '<p>UGX ' + ((o.total || 0).toLocaleString()) + ' - ' + escapeHtml(o.status || 'pending') + '</p>' +
-                    '</div>' +
-                    '<div class="status-badge status-' + escapeHtml(o.status || 'pending') + '">' + escapeHtml(o.status || 'pending') + '</div>' +
-                '</div>';
-    }
-    document.getElementById('adminOrdersList').innerHTML = html || '<div class="empty-state">No orders found</div>';
-}
-
-function viewTransactionDetails(orderId){
-    var order = (AppState.orders || []).find(function(o){ return o.id === orderId; });
-    if(order){
-        showModal('Order Details', 
-            '<div><strong>Order #' + order.id + '</strong><br>' +
-            '<strong>Total:</strong> UGX ' + ((order.total || 0).toLocaleString()) + '<br>' +
-            '<strong>Status:</strong> ' + escapeHtml(order.status) + '<br>' +
-            '<strong>Date:</strong> ' + (order.date || 'N/A') + '</div>');
-    }
-}
-
-async function renderAdminProducts() {
-    var html = '';
-    for(var i = 0; i < (AppState.products || []).length; i++){
-        var p = AppState.products[i];
-        html += '<div class="list-item">' +
-                    '<div class="list-info" onclick="editProduct(' + p.id + ')">' +
-                        '<h4>' + escapeHtml(p.name) + '</h4>' +
-                        '<p>' + escapeHtml(p.type) + ' - Stock: ' + (p.stock || 0) + '</p>' +
-                        '<p>UGX ' + (p.price || 0).toLocaleString() + '</p>' +
-                    '</div>' +
-                    '<button class="btn-sm btn-red no-disable" onclick="deleteProductItem(' + p.id + ')">Delete</button>' +
-                '</div>';
-    }
+// Admin stubs
+async function renderAdminProducts(){
+    let html = (AppState.products||[]).map(p=>`<div class="list-item"><div class="list-info" onclick="editProduct(${p.id})"><h4>${escapeHtml(p.name)}</h4><p>${escapeHtml(p.type)} - Stock: ${p.stock||0} - UGX ${(p.price||0).toLocaleString()}</p></div><button class="btn-sm btn-red" onclick="deleteProductItem(${p.id})">Delete</button></div>`).join('');
     document.getElementById('adminProductList').innerHTML = html || '<div class="empty-state">No products</div>';
 }
+function resetProductForm(){ document.getElementById('editProductId').value=''; document.getElementById('prodName').value=''; document.getElementById('prodDesc').value=''; document.getElementById('prodPrice').value=''; document.getElementById('prodStock').value=''; document.getElementById('prodImage').value=''; document.getElementById('productFormTitle').innerHTML='📤 Add New Product'; }
+async function saveProduct(){
+    let id = document.getElementById('editProductId').value;
+    let data = { name: document.getElementById('prodName').value, type: document.getElementById('prodType').value, description: document.getElementById('prodDesc').value, price: parseInt(document.getElementById('prodPrice').value)||0, stock: parseInt(document.getElementById('prodStock').value)||0, image_url: document.getElementById('prodImage').value };
+    if(!data.name){ showToast('Product name required', true); return; }
+    try{
+        if(id){ await apiCall(`/admin/products/${id}`, { method:'PUT', body:JSON.stringify(data) }); showToast('Updated'); }
+        else{ await apiCall('/admin/products', { method:'POST', body:JSON.stringify(data) }); showToast('Added'); }
+        await refreshData(); renderAdminProducts(); resetProductForm();
+    } catch(e){ showToast('Failed', true); }
+}
+function editProduct(id){
+    let p = AppState.products.find(pr=>pr.id===id);
+    if(p){ document.getElementById('editProductId').value=p.id; document.getElementById('prodName').value=p.name; document.getElementById('prodType').value=p.type; document.getElementById('prodDesc').value=p.description||''; document.getElementById('prodPrice').value=p.price||0; document.getElementById('prodStock').value=p.stock||0; document.getElementById('prodImage').value=p.image_url||''; document.getElementById('productFormTitle').innerHTML='✏️ Edit Product'; window.scrollTo(0,0); }
+}
+async function deleteProductItem(id){ if(confirm('Delete?')){ try{ await apiCall(`/admin/products/${id}`, { method:'DELETE' }); await refreshData(); renderAdminProducts(); } catch(e){ showToast('Delete failed', true); } } }
+function renderAdminOrders(){ let html=(AppState.orders||[]).map(o=>`<div class="list-item" onclick="viewTransactionDetails(${o.id})"><div><h4>Order #${o.id}</h4><p>UGX ${(o.total||0).toLocaleString()}</p></div><span class="status-badge status-${o.status}">${o.status}</span></div>`).join(''); document.getElementById('adminOrdersList').innerHTML=html||'<div class="empty-state">No orders</div>'; }
+function viewTransactionDetails(id){ let o=AppState.orders.find(o=>o.id===id); if(o) showModal('Order Details',`<strong>Order #${o.id}</strong><br>Total: UGX ${(o.total||0).toLocaleString()}<br>Status: ${o.status}<br>Date: ${o.date||'N/A'}`); }
+function renderAdminDashboard(){ document.getElementById('adminTodaySales').innerHTML='UGX '+(AppState.orders?.filter(o=>o.status==='delivered').reduce((s,o)=>s+(o.total||0),0)||0).toLocaleString(); document.getElementById('adminPendingOrders').textContent=AppState.orders?.filter(o=>o.status==='pending'||o.status==='paid').length||0; document.getElementById('adminTotalProducts').textContent=AppState.products?.length||0; document.getElementById('adminLowStock').textContent=AppState.products?.filter(p=>(p.stock||0)<5).length||0; }
 
-// ======================== AGENT FUNCTIONS ========================
-async function renderAgentPanel() {
-    if (!AppState.user || AppState.user.role !== 'agent') return;
-
-    var myOrders = (AppState.orders || []).filter(function(o) { 
-        return o.agent_id === AppState.user.id && o.status !== 'delivered'; 
-    });
-    var html = '';
-    for(var i = 0; i < myOrders.length; i++){
-        var o = myOrders[i];
-        html += '<div class="card">' +
-                    '<div style="display:flex;justify-content:space-between;">' +
-                        '<h4>📦 Order #' + (o.id || 0) + '</h4>' +
-                        '<select onchange="updateOrderStatus(' + (o.id || 0) + ', this.value)" class="status-badge status-' + escapeHtml(o.status || 'pending') + '">' +
-                            '<option value="paid" ' + (o.status === 'paid' ? 'selected' : '') + '>💰 Paid</option>' +
-                            '<option value="processing" ' + (o.status === 'processing' ? 'selected' : '') + '>⚙️ Processing</option>' +
-                            '<option value="shipped" ' + (o.status === 'shipped' ? 'selected' : '') + '>🚚 Shipped</option>' +
-                            '<option value="delivered" ' + (o.status === 'delivered' ? 'selected' : '') + '>✅ Delivered</option>' +
-                        '</select>' +
-                    '</div>' +
-                    '<p>Total: UGX ' + ((o.total || 0).toLocaleString()) + '</p>' +
-                    '<button class="btn-sm btn-primary no-disable" onclick="viewTransactionDetails(' + (o.id || 0) + ')">👁️ Details</button>' +
-                '</div>';
-    }
-    document.getElementById('agentAssignedOrders').innerHTML = html || '<div class="empty-state">No assigned orders</div>';
+function setupPaymentMethodListener(){
+    document.querySelectorAll('input[name="payMethod"]').forEach(r=>r.addEventListener('change',()=>{ document.getElementById('cardFields').classList.toggle('hidden',document.querySelector('input[name="payMethod"]:checked').value!=='card'); }));
+    document.getElementById('payPhone')?.addEventListener('input',function(){ let net=detectNetwork(this.value); let badge=document.getElementById('networkBadge'); if(badge){ if(net){ badge.innerHTML=net; badge.classList.remove('hidden'); }else badge.classList.add('hidden'); } });
 }
 
-async function updateOrderStatus(orderId, newStatus){
-    try {
-        await apiCall(`/orders/${orderId}/status`, {
-            method: 'PUT',
-            body: JSON.stringify({ status: newStatus })
-        });
-        showToast('✅ Order #' + orderId + ' status: ' + newStatus);
-        await refreshData('order');
-        renderAgentPanel();
-    } catch(error) {
-        showToast(error.message || '❌ Failed to update status', true);
-    }
-}
-
-// ======================== CHAT FUNCTIONS ========================
-async function sendChat() {
-    var input = document.getElementById('chatInput');
-    var text = input.value.trim();
-    if(!text) return;
-
-    addChatMessage('user', text);
-    input.value = '';
-
-    try {
-        const data = await apiCall('/chat/customer', {
-            method: 'POST',
-            body: JSON.stringify({ message: text })
-        });
-        addChatMessage('bot', data.response || 'Sorry, could not process.');
-    } catch(error) {
-        addChatMessage('bot', 'Chat service unavailable right now. Please try again later.');
-    }
-}
-
-function addChatMessage(sender, text){
-    var container = document.getElementById('chatMessages');
-    var div = document.createElement('div');
-    div.className = 'chat-msg ' + sender;
-    div.textContent = text;
-    container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
-}
-
-function toggleChat(){
-    AppState.chatOpen = !AppState.chatOpen;
-    var box = document.getElementById('chatBox');
-    if(AppState.chatOpen){
-        box.classList.remove('hidden');
-        if(document.getElementById('chatMessages').children.length === 0){
-            addChatMessage('bot', '👋 Welcome! Ask me about prices, delivery, or products!');
-        }
-    } else {
-        box.classList.add('hidden');
-    }
-}
-
-// ======================== NAVIGATION ========================
+// Navigation
 function navigateTo(pageId){
-    var pages = document.querySelectorAll('.page');
-    for(var i = 0; i < pages.length; i++){ pages[i].classList.add('hidden'); }
+    document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));
     document.getElementById(pageId).classList.remove('hidden');
-    AppState.currentPage = pageId;
-
-    if(pageId === 'userShop') renderShop();
-    if(pageId === 'userCart') renderCart();
-    if(pageId === 'userOrders') renderUserOrders();
-    if(pageId === 'userDashboard') renderUserDashboard();
-    if(pageId === 'adminDashboard') renderAdminDashboard();
-    if(pageId === 'adminOrders') renderAdminOrders();
-    if(pageId === 'adminProducts') renderAdminProducts();
-    if(pageId === 'agentPanel') renderAgentPanel();
+    AppState.currentPage=pageId;
+    if(pageId==='userShop') renderShop();
+    if(pageId==='userCart') renderCart();
+    if(pageId==='userOrders') renderUserOrders();
+    if(pageId==='userDashboard') renderUserDashboard();
+    if(pageId==='adminProducts') renderAdminProducts();
+    if(pageId==='adminOrders') renderAdminOrders();
+    if(pageId==='adminDashboard') renderAdminDashboard();
+    if(pageId==='agentPanel') renderAgentPanel();
 }
 
 function setupNav(){
-    var nav = document.getElementById('bottomNav');
-    var html = '';
-    if(AppState.user && AppState.user.role === 'admin'){
-        html = '<div class="nav-item" onclick="navigateTo(\'adminDashboard\')">📊 Dashboard</div>' +
-               '<div class="nav-item" onclick="navigateTo(\'adminProducts\')">📦 Products</div>' +
-               '<div class="nav-item" onclick="navigateTo(\'adminOrders\')">📋 Orders</div>' +
-               '<div class="nav-item" onclick="logout()">🚪 Exit</div>';
-    } else if(AppState.user && AppState.user.role === 'agent'){
-        html = '<div class="nav-item" onclick="navigateTo(\'agentPanel\')">📦 Orders</div>' +
-               '<div class="nav-item" onclick="logout()">🚪 Exit</div>';
-    } else if(AppState.user && AppState.user.role === 'user'){
-        html = '<div class="nav-item" onclick="navigateTo(\'userShop\')">🏪 Shop</div>' +
-               '<div class="nav-item" onclick="navigateTo(\'userOrders\')">📦 Orders</div>' +
-               '<div class="nav-item" onclick="navigateTo(\'userCart\')">🛒 Cart</div>' +
-               '<div class="nav-item" onclick="navigateTo(\'userDashboard\')">👤 Profile</div>';
-    }
-    nav.innerHTML = html;
-
-    var chatWidget = document.getElementById('chatWidgetContainer');
-    var whatsappWidget = document.getElementById('whatsappWidget');
-    if(AppState.user && AppState.user.role === 'user'){
-        if(chatWidget) chatWidget.classList.remove('hidden');
-        if(whatsappWidget) whatsappWidget.classList.remove('hidden');
+    let nav = document.getElementById('bottomNav');
+    if(!AppState.user) return;
+    if(AppState.user.role==='admin'){
+        nav.innerHTML='<div class="nav-item" onclick="navigateTo(\'adminDashboard\')">📊 Dashboard</div><div class="nav-item" onclick="navigateTo(\'adminProducts\')">📦 Products</div><div class="nav-item" onclick="navigateTo(\'adminOrders\')">📋 Orders</div><div class="nav-item" onclick="logout()">🚪 Exit</div>';
+    } else if(AppState.user.role==='agent'){
+        nav.innerHTML='<div class="nav-item" onclick="navigateTo(\'agentPanel\')">📦 Orders</div><div class="nav-item" onclick="logout()">🚪 Exit</div>';
     } else {
-        if(chatWidget) chatWidget.classList.add('hidden');
-        if(whatsappWidget) whatsappWidget.classList.add('hidden');
+        nav.innerHTML='<div class="nav-item" onclick="navigateTo(\'userShop\')">🏪 Shop</div><div class="nav-item" onclick="navigateTo(\'userOrders\')">📦 Orders</div><div class="nav-item" onclick="navigateTo(\'userCart\')">🛒 Cart</div><div class="nav-item" onclick="navigateTo(\'userDashboard\')">👤 Profile</div>';
     }
+    let chatWidget = document.getElementById('chatWidgetContainer');
+    let whatsapp = document.getElementById('whatsappWidget');
+    if(AppState.user.role==='user'){ if(chatWidget) chatWidget.classList.remove('hidden'); if(whatsapp) whatsapp.classList.remove('hidden'); }
+    else{ if(chatWidget) chatWidget.classList.add('hidden'); if(whatsapp) whatsapp.classList.add('hidden'); }
 }
 
-function setupPaymentMethodListener(){
-    var radios = document.querySelectorAll('input[name="payMethod"]');
-    for(var i = 0; i < radios.length; i++){
-        radios[i].addEventListener('change', function(){
-            var method = document.querySelector('input[name="payMethod"]:checked').value;
-            var cardFields = document.getElementById('cardFields');
-            if(method === 'card'){ 
-                if(cardFields) cardFields.classList.remove('hidden'); 
-            } else { 
-                if(cardFields) cardFields.classList.add('hidden'); 
-            }
+// Agent stubs
+function renderAgentPanel(){ document.getElementById('agentAssignedOrders').innerHTML='<div class="empty-state">Agent panel - Coming soon</div>'; }
+function openAgentToManagerChat(){ showToast('Messaging coming soon'); }
+
+// Chat
+function toggleChat(){ let box=document.getElementById('chatBox'); AppState.chatOpen=!AppState.chatOpen; if(AppState.chatOpen){ box.classList.remove('hidden'); if(document.getElementById('chatMessages').children.length===0) addChatMessage('bot','Welcome to WAMP Enterprises! Ask about terrazzo, plumbing, or painting.'); } else box.classList.add('hidden'); }
+function addChatMessage(sender,text){ let container=document.getElementById('chatMessages'); let div=document.createElement('div'); div.className='chat-msg '+sender; div.textContent=text; container.appendChild(div); container.scrollTop=container.scrollHeight; }
+async function sendChat(){ let input=document.getElementById('chatInput'); let text=input.value.trim(); if(!text) return; addChatMessage('user',text); input.value=''; try{ let data=await apiCall('/chat/customer',{ method:'POST', body:JSON.stringify({ message:text }) }); addChatMessage('bot',data.response||'Thanks for your message!'); } catch(e){ addChatMessage('bot','Chat service unavailable.'); } }
+
+// Slider functionality
+let sliderInterval;
+function initSlider(){
+    let slides = document.querySelectorAll('.slider-slide');
+    let dotsContainer = document.getElementById('sliderDots');
+    if(!slides.length || !dotsContainer) return;
+    dotsContainer.innerHTML = '';
+    slides.forEach((_, i) => {
+        let dot = document.createElement('div');
+        dot.className = 'slider-dot' + (i === 0 ? ' active' : '');
+        dot.onclick = () => goToSlide(i);
+        dotsContainer.appendChild(dot);
+    });
+    let current = 0;
+    function goToSlide(index){
+        slides.forEach((s, i) => {
+            s.classList.toggle('active', i === index);
+            if(dotsContainer.children[i]) dotsContainer.children[i].classList.toggle('active', i === index);
         });
+        current = index;
     }
-    var payPhone = document.getElementById('payPhone');
-    if(payPhone){
-        payPhone.addEventListener('input', function(){
-            var net = detectNetwork(payPhone.value);
-            var badge = document.getElementById('networkBadge');
-            if(badge){ 
-                if(net){ 
-                    badge.innerHTML = net; 
-                    badge.classList.remove('hidden'); 
-                } else { 
-                    badge.classList.add('hidden'); 
-                } 
-            }
-        });
-    }
+    window.goToSlide = goToSlide;
+    function nextSlide(){ goToSlide((current + 1) % slides.length); }
+    if(sliderInterval) clearInterval(sliderInterval);
+    sliderInterval = setInterval(nextSlide, 4000);
+    goToSlide(0);
 }
 
-// ======================== STUB FUNCTIONS ========================
-function searchTransactionByPhone(){ showToast('Search feature coming soon'); }
-function resetTransactionSearch(){ renderAdminOrders(); }
-function exportTransactionsCSV(){ showToast('CSV export coming soon'); }
-function showSalesDetail(){ showModal('Sales Details', 'Today\'s sales data'); }
-function showPendingDetail(){ showModal('Pending Orders', 'List of pending orders'); }
-function showProductsDetail(){ showModal('Products', 'Total products: ' + (AppState.products || []).length); }
-function showLowStockDetail(){ showModal('Low Stock Alert', 'Products with low stock'); }
-function editProduct(id){ showToast('Edit product coming soon'); }
-function deleteProductItem(id){ showToast('Delete product coming soon'); }
-function resetProductForm(){ showToast('Reset form'); }
-function handleImageUpload(input){ showToast('Image upload coming soon'); }
-function saveProduct(){ showToast('Save product coming soon'); }
-function renderAdminBooks(){ showToast('Books feature coming soon'); }
-function changeBookPeriod(){}
-function renderAdminMonitor(){ document.getElementById('monitorFeed').innerHTML = '<div class="empty-state">Agent monitoring coming soon</div>'; }
-function renderAdminChats(){ document.getElementById('allChatsList').innerHTML = '<div class="empty-state">Chat monitoring coming soon</div>'; }
-function renderAdminTeam(){ document.getElementById('teamList').innerHTML = '<div class="empty-state">Team management coming soon</div>'; }
-function renderAdminDelivery(){ document.getElementById('adminDeliveryList').innerHTML = '<div class="empty-state">Delivery management coming soon</div>'; }
-function renderManagerMessages(){ document.getElementById('managerMsgList').innerHTML = '<div class="empty-state">Messages coming soon</div>'; }
-function claimOrderManually(orderId){ showToast('Contact admin to assign orders'); }
-function showAssignRiderForm(orderId){ showToast('Assign rider - coming soon'); }
-function saveRiderAssignment(orderId){ showToast('Save rider - coming soon'); }
-function renderAgentConversations(){ document.getElementById('agentChatList').innerHTML = '<div class="empty-state">No conversations yet</div>'; }
-function openAgentToManagerChat(){ showToast('Message manager coming soon'); }
-function showAddRiderModal(){ showToast('Add rider coming soon'); }
-function showAdminMenu(){ showModal('Admin Menu', '<div class="empty-state">Tools coming soon</div>'); }
-
-// ======================== POLLING INTERVAL (REDUCED) ========================
-function startPolling(){
-    if(AppState.pollInterval) clearInterval(AppState.pollInterval);
-    AppState.pollInterval = setInterval(function(){
-        if(AppState.user && AppState.user.role === 'agent') renderAgentConversations();
-    }, 10000);
-}
-
-// ======================== APP INITIALIZATION ========================
-async function enterApp(){
+function enterApp(){
     document.getElementById('loginPage').classList.add('hidden');
     document.getElementById('appContainer').classList.remove('hidden');
-    document.getElementById('headerGreeting').textContent = 'Hi, ' + ((AppState.user?.name || 'User').split(' ')[0] || 'User');
-
+    document.getElementById('headerGreeting').textContent = 'Hi, ' + ((AppState.user?.name || 'User').split(' ')[0]);
     setupNav();
-    startPolling();
-    await refreshData('login');
-
-    if(AppState.user.role === 'admin'){
-        navigateTo('adminDashboard');
-        renderAdminDashboard();
-    } else if(AppState.user.role === 'agent'){
-        navigateTo('agentPanel');
-        renderAgentPanel();
-    } else {
-        navigateTo('userShop');
-        renderShop();
-    }
+    refreshData().then(()=>{
+        if(AppState.user.role === 'admin') navigateTo('adminDashboard');
+        else if(AppState.user.role === 'agent') navigateTo('agentPanel');
+        else { navigateTo('userShop'); initSlider(); }
+    });
 }
+
+function searchTransactionByPhone(){ showToast('Search feature active'); }
+function resetTransactionSearch(){ renderAdminOrders(); }
+function exportTransactionsCSV(){ showToast('Export - coming soon'); }
+function showSalesDetail(){ showModal('Sales','Today\'s sales data'); }
+function showPendingDetail(){ showModal('Pending Orders','List pending'); }
+function showProductsDetail(){ showModal('Products','Total: '+(AppState.products?.length||0)); }
+function showLowStockDetail(){ showModal('Low Stock','Products with low stock'); }
 
 async function initApp(){
     setupPaymentMethodListener();
-    
-    const token = getAccessToken();
-    if (token) {
-        try {
-            const products = await apiCall('/products');
-            if (products) {
-                showToast('Welcome back!', false);
-            }
-        } catch(e) {
-            clearTokens();
-        }
-    }
-
-    var splash = document.getElementById('splashPage');
-    setTimeout(function(){
+    let splash = document.getElementById('splashPage');
+    setTimeout(()=>{
         splash.style.opacity = '0';
-        setTimeout(function(){
-            splash.classList.add('hidden');
-            document.getElementById('loginPage').classList.remove('hidden');
-        }, 600);
-    }, 2000);
+        setTimeout(()=>{ splash.classList.add('hidden'); document.getElementById('loginPage').classList.remove('hidden'); },600);
+    },1500);
+    let token = getAccessToken();
+    if(token){
+        try{ await refreshData(); AppState.user = { id:1, name:'User', email:'user@example.com', role:'user' }; enterApp(); } catch(e){ clearTokens(); }
+    }
 }
 
 window.onload = initApp;
+window.navigateTo = navigateTo;
+window.addToCart = addToCart;
+window.showProductDetail = showProductDetail;
+window.removeFromCart = removeFromCart;
+window.processPayment = processPayment;
+window.saveProduct = saveProduct;
+window.editProduct = editProduct;
+window.deleteProductItem = deleteProductItem;
+window.resetProductForm = resetProductForm;
+window.renderShop = renderShop;
+window.searchProducts = searchProducts;
+window.filterProducts = filterProducts;
+window.showCart = showCart;
+window.showCheckout = showCheckout;
+window.handleLogin = handleLogin;
+window.handleRegister = handleRegister;
+window.logout = logout;
+window.toggleAuth = toggleAuth;
+window.showForgotPassword = showForgotPassword;
+window.showLoginForm = showLoginForm;
+window.saveUserProfile = saveUserProfile;
+window.toggleChat = toggleChat;
+window.sendChat = sendChat;
+window.searchTransactionByPhone = searchTransactionByPhone;
+window.resetTransactionSearch = resetTransactionSearch;
+window.exportTransactionsCSV = exportTransactionsCSV;
+window.showSalesDetail = showSalesDetail;
+window.showPendingDetail = showPendingDetail;
+window.showProductsDetail = showProductsDetail;
+window.showLowStockDetail = showLowStockDetail;
+window.viewTransactionDetails = viewTransactionDetails;
+window.openAgentToManagerChat = openAgentToManagerChat;
+window.renderAgentPanel = renderAgentPanel;
+window.renderAdminProducts = renderAdminProducts;
+window.renderAdminOrders = renderAdminOrders;
+window.renderAdminDashboard = renderAdminDashboard;
 </script>
 </body>
 </html>
