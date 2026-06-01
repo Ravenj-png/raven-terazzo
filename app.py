@@ -1,4 +1,4 @@
-# WAMP BACKEND - PRODUCTION READY
+# WAMP BACKEND - PRODUCTION READY (FIXED)
 # ==========================================
 
 import os
@@ -19,7 +19,7 @@ from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_jwt_extended import (
     JWTManager, create_access_token, create_refresh_token,
-    jwt_required, get_jwt_identity, get_jwt
+    jwt_required, get_jwt_identity, get_jwt, verify_jwt_in_request
 )
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
@@ -75,6 +75,9 @@ app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'fallback-jwt-se
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=60)
 app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=7)
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB
+app.config['JWT_TOKEN_LOCATION'] = ['headers']
+app.config['JWT_HEADER_NAME'] = 'Authorization'
+app.config['JWT_HEADER_TYPE'] = 'Bearer'
 
 # Database
 database_url = os.environ.get('DATABASE_URL')
@@ -117,9 +120,12 @@ ALLOWED_ORIGINS = [
     "https://raven-terazzo.onrender.com"
 ]
 
-CORS(app, origins=ALLOWED_ORIGINS, supports_credentials=False,
+CORS(app, 
+     origins=ALLOWED_ORIGINS, 
+     supports_credentials=True,  # Changed to True for better cookie/token support
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
      allow_headers=["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+     expose_headers=["Content-Type", "Authorization"],
      max_age=3600)
 
 
@@ -172,6 +178,39 @@ FLUTTERWAVE_WEBHOOK_SECRET = os.environ.get('FLUTTERWAVE_WEBHOOK_SECRET')
 FLUTTERWAVE_ENABLED = bool(FLUTTERWAVE_SECRET_KEY and FLUTTERWAVE_PUBLIC_KEY)
 
 logger.info(f"✅ Payments: {'LIVE' if FLUTTERWAVE_ENABLED else 'DEMO'} mode")
+
+
+# ==================== JWT ERROR HANDLERS ====================
+
+@jwt.unauthorized_loader
+def custom_unauthorized_response(callback):
+    """Handle missing JWT token"""
+    logger.warning("JWT unauthorized: Missing or invalid token")
+    return jsonify({'error': 'Authorization token is missing or invalid'}), 401
+
+@jwt.invalid_token_loader
+def custom_invalid_token_response(error_string):
+    """Handle invalid JWT token"""
+    logger.warning(f"JWT invalid token: {error_string}")
+    return jsonify({'error': f'Invalid token: {error_string}'}), 422
+
+@jwt.expired_token_loader
+def custom_expired_token_response(jwt_header, jwt_payload):
+    """Handle expired JWT token"""
+    logger.warning("JWT token expired")
+    return jsonify({'error': 'Token has expired', 'expired': True}), 401
+
+@jwt.revoked_token_loader
+def custom_revoked_token_response(jwt_header, jwt_payload):
+    """Handle revoked JWT token"""
+    logger.warning("JWT token revoked")
+    return jsonify({'error': 'Token has been revoked'}), 401
+
+@jwt.needs_fresh_token_loader
+def custom_needs_fresh_token_response(jwt_header, jwt_payload):
+    """Handle when fresh token is needed"""
+    logger.warning("Fresh token required")
+    return jsonify({'error': 'Fresh token required'}), 401
 
 
 # ==================== BRUTE FORCE PROTECTION ====================
@@ -390,13 +429,13 @@ def ensure_all_tables_and_columns_exist():
 
     # Add unique constraints
     try:
-        db.session.execute(text("ALTER TABLE wishlist ADD CONSTRAINT unique_user_product UNIQUE (user_id, product_id)"))
+        db.session.execute(text("ALTER TABLE wishlist ADD CONSTRAINT IF NOT EXISTS unique_user_product UNIQUE (user_id, product_id)"))
         db.session.commit()
     except:
         pass
 
     try:
-        db.session.execute(text("ALTER TABLE reviews ADD CONSTRAINT unique_user_product_review UNIQUE (user_id, product_id)"))
+        db.session.execute(text("ALTER TABLE reviews ADD CONSTRAINT IF NOT EXISTS unique_user_product_review UNIQUE (user_id, product_id)"))
         db.session.commit()
     except:
         pass
@@ -721,8 +760,12 @@ def login():
 
         reset_failed_attempts(client_ip)
 
+        # Create tokens with additional claims
         access_token = create_access_token(identity=user.id)
         refresh_token = create_refresh_token(identity=user.id)
+
+        # Log successful login
+        log_audit(user.id, 'LOGIN', 'user', user.id)
 
         return jsonify({
             'success': True,
@@ -761,6 +804,28 @@ def logout():
     db.session.commit()
     log_audit(user_id, 'LOGOUT', 'user', user_id)
     return jsonify({'success': True})
+
+
+# ==================== TEST AUTH ENDPOINT ====================
+
+@app.route('/api/verify-token', methods=['GET'])
+@jwt_required()
+def verify_token():
+    """Endpoint to test if token is valid"""
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    
+    if not user:
+        return jsonify({'valid': False, 'error': 'User not found'}), 401
+    
+    return jsonify({
+        'valid': True,
+        'user': {
+            'id': user.id,
+            'email': user.email,
+            'role': user.role
+        }
+    })
 
 
 # ==================== PRODUCT ROUTES ====================
@@ -907,16 +972,27 @@ def delete_product(product_id):
 # ==================== CART ROUTES ====================
 
 @app.route('/api/cart', methods=['GET'])
-@user_required
+@jwt_required()
 def get_cart():
     try:
         user_id = get_jwt_identity()
         cart = CartItem.query.filter_by(user_id=user_id).all()
-        return jsonify([{
-            'id': c.id,
-            'product_id': c.product_id,
-            'quantity': c.quantity
-        } for c in cart])
+        
+        # Get product details for each cart item
+        cart_data = []
+        for item in cart:
+            product = Product.query.get(item.product_id)
+            if product:
+                cart_data.append({
+                    'id': item.id,
+                    'product_id': item.product_id,
+                    'quantity': item.quantity,
+                    'product_name': product.name,
+                    'product_price': product.price,
+                    'product_image': product.image_url
+                })
+        
+        return jsonify(cart_data)
     
     except Exception as e:
         logger.error(f"Get cart error: {e}")
@@ -924,7 +1000,7 @@ def get_cart():
 
 
 @app.route('/api/cart', methods=['POST'])
-@user_required
+@jwt_required()
 def add_to_cart():
     try:
         if not request.is_json:
@@ -951,7 +1027,7 @@ def add_to_cart():
             db.session.add(cart_item)
 
         db.session.commit()
-        return jsonify({'success': True}), 201
+        return jsonify({'success': True, 'message': 'Added to cart'}), 201
     
     except Exception as e:
         logger.error(f"Add to cart error: {e}")
@@ -959,7 +1035,7 @@ def add_to_cart():
 
 
 @app.route('/api/cart/<int:cart_item_id>', methods=['DELETE'])
-@user_required
+@jwt_required()
 def remove_from_cart(cart_item_id):
     try:
         user_id = get_jwt_identity()
@@ -977,10 +1053,24 @@ def remove_from_cart(cart_item_id):
         return jsonify({'error': 'Failed to remove from cart'}), 500
 
 
+@app.route('/api/cart/clear', methods=['DELETE'])
+@jwt_required()
+def clear_cart():
+    try:
+        user_id = get_jwt_identity()
+        CartItem.query.filter_by(user_id=user_id).delete()
+        db.session.commit()
+        return jsonify({'success': True})
+    
+    except Exception as e:
+        logger.error(f"Clear cart error: {e}")
+        return jsonify({'error': 'Failed to clear cart'}), 500
+
+
 # ==================== WISHLIST ROUTES ====================
 
 @app.route('/api/wishlist', methods=['GET'])
-@user_required
+@jwt_required()
 def get_wishlist():
     try:
         user_id = get_jwt_identity()
@@ -1007,7 +1097,7 @@ def get_wishlist():
 
 
 @app.route('/api/wishlist', methods=['POST'])
-@user_required
+@jwt_required()
 def toggle_wishlist():
     try:
         if not request.is_json:
@@ -1043,7 +1133,7 @@ def toggle_wishlist():
 # ==================== REVIEWS ROUTES ====================
 
 @app.route('/api/reviews', methods=['POST'])
-@user_required
+@jwt_required()
 def submit_review():
     try:
         if not request.is_json:
@@ -1111,7 +1201,7 @@ def get_product_reviews(product_id):
 
 
 @app.route('/api/reviews/user', methods=['GET'])
-@user_required
+@jwt_required()
 def get_user_reviews():
     try:
         user_id = get_jwt_identity()
@@ -1158,7 +1248,9 @@ def get_orders():
             'total': o.total,
             'status': o.status,
             'payment_method': o.payment_method,
+            'payment_status': o.payment_status,
             'rider_name': o.rider_name,
+            'items': json.loads(o.items) if o.items else [],
             'created_at': o.created_at.isoformat()
         } for o in orders])
     
@@ -1168,7 +1260,7 @@ def get_orders():
 
 
 @app.route('/api/orders', methods=['POST'])
-@user_required
+@jwt_required()
 def create_order():
     try:
         if not request.is_json:
@@ -1205,6 +1297,7 @@ def create_order():
             product.reserved_stock += quantity
 
         payment_method = data.get('payment_method', 'MTN')
+        delivery_location = data.get('delivery_location', '')
         
         order = Order(
             user_id=user_id,
@@ -1213,14 +1306,17 @@ def create_order():
             status='pending',
             payment_status='pending',
             payment_method=payment_method,
+            delivery_location=delivery_location,
             stock_reserved_until=datetime.utcnow() + timedelta(hours=1)
         )
         db.session.add(order)
         db.session.commit()
 
+        # Clear cart after order
         CartItem.query.filter_by(user_id=user_id).delete()
         db.session.commit()
 
+        # Assign agent
         agent = get_least_busy_agent()
         if agent:
             order.agent_id = agent.id
@@ -1503,6 +1599,10 @@ if __name__ == '__main__':
 ║  ✅ Admin: {os.environ.get('ADMIN_EMAIL', 'admin@tarazo.com')}   ║
 ║  ✅ Password: {os.environ.get('ADMIN_PASSWORD', 'Admin123456')}  ║
 ║  ✅ Environment variables loaded from .env or Render             ║
+╠══════════════════════════════════════════════════════════════════╣
+║  🔧 TEST AUTH: GET /api/verify-token                            ║
+║  🔧 LOGIN: POST /api/login                                      ║
+║  🔧 CART: GET /api/cart                                         ║
 ╚══════════════════════════════════════════════════════════════════╝
 """)
     
