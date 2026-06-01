@@ -333,7 +333,7 @@ def ensure_all_columns_exist():
         ('address', 'TEXT'),
         ('status', 'VARCHAR(20) DEFAULT \'online\'')
     ]
-    
+
     for col_name, col_def in user_columns:
         try:
             db.session.execute(text(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col_name} {col_def}"))
@@ -342,14 +342,14 @@ def ensure_all_columns_exist():
         except Exception as e:
             db.session.rollback()
             logger.warning(f"Could not add users.{col_name}: {e}")
-    
+
     # Product table columns for hybrid storage
     product_columns = [
         ('image_data', 'TEXT'),
         ('image_type', 'VARCHAR(20) DEFAULT \'url\''),
         ('image_mime', 'VARCHAR(50)')
     ]
-    
+
     for col_name, col_def in product_columns:
         try:
             db.session.execute(text(f"ALTER TABLE products ADD COLUMN IF NOT EXISTS {col_name} {col_def}"))
@@ -459,10 +459,10 @@ def send_password_reset_email(user):
 def create_default_accounts():
     # First ensure all columns exist
     ensure_all_columns_exist()
-    
+
     admin_email = os.environ.get('ADMIN_EMAIL', 'admin@tarazo.com')
     admin_password = os.environ.get('ADMIN_PASSWORD', 'Admin123456')
-    
+
     admin = User.query.filter_by(email=admin_email).first()
     if not admin and admin_password:
         admin = User(
@@ -695,7 +695,7 @@ def get_products():
 @admin_required
 def admin_create_product():
     data = request.get_json()
-    
+
     product = Product(
         name=data.get('name'),
         type=data.get('type'),
@@ -705,7 +705,7 @@ def admin_create_product():
         image_url=data.get('image_url', ''),
         image_type='url'
     )
-    
+
     db.session.add(product)
     db.session.commit()
     return jsonify({'success': True, 'id': product.id}), 201
@@ -716,32 +716,32 @@ def admin_upload_product_image():
     """Upload image - stores in DB if under 90%, otherwise Cloudinary"""
     if 'image' not in request.files:
         return jsonify({'error': 'No image file'}), 400
-    
+
     file = request.files['image']
     product_id = request.form.get('product_id')
-    
+
     if not product_id:
         return jsonify({'error': 'Product ID required'}), 400
-    
+
     product = Product.query.get(product_id)
     if not product:
         return jsonify({'error': 'Product not found'}), 404
-    
+
     # Check file size (5MB max)
     file.seek(0, 2)
     file_size = file.tell()
     file.seek(0)
-    
+
     if file_size > 5 * 1024 * 1024:
         return jsonify({'error': 'Image too large. Max 5MB'}), 400
-    
+
     # Read file content
     file_content = file.read()
     mime_type = file.mimetype
-    
+
     # Decide storage location
     use_cloudinary = should_use_cloudinary()
-    
+
     if use_cloudinary and CLOUDINARY_ENABLED:
         # Upload to Cloudinary
         try:
@@ -762,7 +762,7 @@ def admin_upload_product_image():
         product.image_mime = mime_type
         product.image_url = None
         logger.info(f"Image stored in database for product {product_id}")
-    
+
     db.session.commit()
     return jsonify({'success': True, 'image_type': product.image_type})
 
@@ -776,12 +776,12 @@ def admin_update_product(product_id):
     product.price = data.get('price', product.price)
     product.stock = data.get('stock', product.stock)
     product.description = data.get('description', product.description)
-    
+
     # Only update URL if provided and not using DB storage
     if data.get('image_url') and product.image_type != 'db':
         product.image_url = data.get('image_url')
         product.image_type = 'url'
-    
+
     db.session.commit()
     return jsonify({'success': True})
 
