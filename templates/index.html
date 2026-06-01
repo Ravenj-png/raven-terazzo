@@ -4,21 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
 <title>WAMP Enterprises - Terrazzo, Plumbing & Painting</title>
-
-<button id="installBtn" class="btn btn-primary" style="display: none; position: fixed; bottom: 80px; right: 20px; z-index: 300; width: auto; padding: 12px 20px;">
-  📱 Install App
-</button>
-
-<link rel="manifest" href="/raven-terazzo/manifest.json">
-<meta name="theme-color" content="#1a5276">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="WAMP">
-<meta name="mobile-web-app-capable" content="yes">
-
-<!-- QR Code Library -->
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAZdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuMTM0A1t6AAAAAklEQVQ4T2P8//8AAy/5YQAAAABJRU5ErkJggg==">
 <style>
 /* ==================== RESET & VARIABLES ==================== */
 * {
@@ -392,6 +378,8 @@ body {
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .list-item h4 {
@@ -524,10 +512,260 @@ body {
   display: none;
 }
 
-/* ==================== RECEIPT STYLES ==================== */
+/* ==================== REDESIGNED AI CHAT ==================== */
+.chat-widget {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  z-index: 200;
+}
+
+.chat-toggle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--green), var(--green-light));
+  color: white;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.chat-toggle:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(39, 174, 96, 0.5);
+}
+
+.chat-window {
+  position: fixed;
+  bottom: 150px;
+  right: 20px;
+  width: 380px;
+  height: 550px;
+  background: var(--white);
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 250;
+  animation: slideUp 0.3s ease;
+  transition: all 0.3s;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chat-header {
+  background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+  color: var(--white);
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-header h3 {
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-header h3 span {
+  font-size: 24px;
+}
+
+.chat-header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.chat-header-actions button {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.chat-messages-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  background: var(--gray);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chat-message {
+  display: flex;
+  flex-direction: column;
+  max-width: 85%;
+}
+
+.chat-message.user {
+  align-self: flex-end;
+}
+
+.chat-message.bot {
+  align-self: flex-start;
+}
+
+.chat-bubble {
+  padding: 12px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.chat-message.user .chat-bubble {
+  background: var(--blue);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.chat-message.bot .chat-bubble {
+  background: white;
+  color: #2c3e50;
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.chat-time {
+  font-size: 10px;
+  color: var(--gray-dark);
+  margin-top: 4px;
+  margin-left: 8px;
+}
+
+.chat-input-area {
+  display: flex;
+  padding: 12px 16px;
+  gap: 10px;
+  background: white;
+  border-top: 1px solid #eee;
+}
+
+.chat-input-area input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 25px;
+  outline: none;
+  font-size: 14px;
+}
+
+.chat-input-area input:focus {
+  border-color: var(--green);
+}
+
+.chat-input-area button {
+  background: var(--green);
+  border: none;
+  color: white;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 18px;
+  transition: background 0.2s;
+}
+
+.chat-input-area button:hover {
+  background: var(--green-light);
+}
+
+.quick-replies {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  flex-wrap: wrap;
+  background: white;
+  border-top: 1px solid #eee;
+}
+
+.quick-reply-btn {
+  background: var(--gray);
+  border: none;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.quick-reply-btn:hover {
+  background: var(--blue);
+  color: white;
+}
+
+.typing-indicator {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 18px;
+  width: fit-content;
+}
+
+.typing-indicator span {
+  width: 8px;
+  height: 8px;
+  background: #999;
+  border-radius: 50%;
+  animation: typing 1.4s infinite;
+}
+
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-8px); opacity: 1; }
+}
+
+/* ==================== RECEIPT PRINT STYLES ==================== */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .receipt-print-area,
+  .receipt-print-area * {
+    visibility: visible;
+  }
+  .receipt-print-area {
+    position: absolute;
+    inset: 0;
+    padding: 20px;
+    background: white;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
 .receipt-print-area {
   font-family: 'Courier New', monospace;
-  max-width: 400px;
+  max-width: 350px;
   margin: 0 auto;
   padding: 20px;
   background: white;
@@ -541,36 +779,38 @@ body {
 }
 
 .receipt-header h2 {
-  color: var(--blue);
+  color: #1a5276;
   margin-bottom: 5px;
+  font-size: 18px;
 }
 
 .receipt-header p {
-  font-size: 11px;
+  font-size: 10px;
   color: #666;
+  margin: 3px 0;
 }
 
 .receipt-details {
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   border-bottom: 1px solid #ddd;
-  padding-bottom: 15px;
+  padding-bottom: 10px;
+  font-size: 11px;
 }
 
 .receipt-details p {
-  margin: 5px 0;
-  font-size: 12px;
+  margin: 4px 0;
 }
 
 .receipt-items {
   width: 100%;
-  margin: 15px 0;
-  font-size: 12px;
+  margin: 12px 0;
+  font-size: 11px;
   border-collapse: collapse;
 }
 
 .receipt-items th,
 .receipt-items td {
-  padding: 8px;
+  padding: 6px 4px;
   text-align: left;
   border-bottom: 1px dotted #ddd;
 }
@@ -582,36 +822,30 @@ body {
 
 .receipt-total {
   text-align: right;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 800;
-  margin: 15px 0;
-  padding-top: 10px;
+  margin: 12px 0;
+  padding-top: 8px;
   border-top: 2px dashed #ccc;
 }
 
 .receipt-barcode {
   text-align: center;
-  margin: 20px 0;
-  padding: 15px;
+  margin: 15px 0;
+  padding: 12px;
   background: #f9f9f9;
   border-radius: 8px;
 }
 
-.receipt-barcode p {
-  font-size: 11px;
-  margin-top: 8px;
-  color: #666;
-}
-
 .receipt-footer {
   text-align: center;
-  font-size: 11px;
-  margin-top: 20px;
-  padding-top: 15px;
+  font-size: 10px;
+  margin-top: 15px;
+  padding-top: 10px;
   border-top: 2px dashed #ccc;
 }
 
-/* ==================== CHAT STYLES ==================== */
+/* ==================== CHAT STYLES (Agent-Customer) ==================== */
 .chat-container {
   height: 400px;
   display: flex;
@@ -621,28 +855,28 @@ body {
   overflow: hidden;
 }
 
-.chat-messages-area {
+.chat-messages-area-custom {
   flex: 1;
   overflow-y: auto;
   padding: 15px;
   background: var(--gray);
 }
 
-.chat-message {
+.chat-message-custom {
   margin-bottom: 12px;
   display: flex;
   flex-direction: column;
 }
 
-.chat-message.sent {
+.chat-message-custom.sent {
   align-items: flex-end;
 }
 
-.chat-message.received {
+.chat-message-custom.received {
   align-items: flex-start;
 }
 
-.chat-bubble {
+.chat-bubble-custom {
   max-width: 75%;
   padding: 10px 14px;
   border-radius: 18px;
@@ -650,39 +884,23 @@ body {
   word-wrap: break-word;
 }
 
-.chat-message.sent .chat-bubble {
+.chat-message-custom.sent .chat-bubble-custom {
   background: var(--blue);
   color: white;
   border-bottom-right-radius: 4px;
 }
 
-.chat-message.received .chat-bubble {
+.chat-message-custom.received .chat-bubble-custom {
   background: white;
   color: #2c3e50;
   border-bottom-left-radius: 4px;
   box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
-.chat-meta {
+.chat-meta-custom {
   font-size: 10px;
   margin-top: 4px;
   color: var(--gray-dark);
-}
-
-.chat-input-area {
-  display: flex;
-  padding: 12px;
-  gap: 8px;
-  background: white;
-  border-top: 1px solid #eee;
-}
-
-.chat-input-area input {
-  flex: 1;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 20px;
-  outline: none;
 }
 
 .client-list-item {
@@ -709,6 +927,34 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* ==================== RIDER CARD ==================== */
+.rider-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rider-status {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.rider-status.available {
+  background: #d4edda;
+  color: #155724;
+}
+
+.rider-status.busy {
+  background: #f8d7da;
+  color: #721c24;
 }
 
 /* ==================== WHATSAPP WIDGET ==================== */
@@ -759,17 +1005,6 @@ body {
 .whatsapp-menu.show {
   display: flex;
   animation: slideUp 0.2s ease;
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .whatsapp-option {
@@ -824,11 +1059,23 @@ body {
   padding: 40px 20px;
   color: var(--gray-dark);
 }
+
+/* ==================== INSTALL BUTTON ==================== */
+#installBtn {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  z-index: 300;
+  width: auto;
+  padding: 12px 20px;
+  display: none;
+}
 </style>
 </head>
 <body>
 
 <div id="toast" class="toast"></div>
+<button id="installBtn" class="btn btn-primary">📱 Install App</button>
 
 <!-- SPLASH SCREEN -->
 <div id="splashPage">
@@ -847,7 +1094,7 @@ body {
     <div id="loginFormContent">
       <div class="form-group">
         <label>📧 Email</label>
-        <input type="email" id="loginEmail" placeholder="admin@tarazo.com">
+        <input type="email" id="loginEmail" placeholder="admin@wamp.com">
       </div>
       <div class="form-group">
         <label>🔒 Password</label>
@@ -894,7 +1141,6 @@ body {
     <div class="header-actions">
       <button class="icon-btn" onclick="showCart()">🛒<span class="badge hidden" id="cartBadge">0</span></button>
       <button class="icon-btn" onclick="showNotifications()">🔔<span class="badge hidden" id="notificationBadge">0</span></button>
-      <button class="icon-btn" onclick="showReceiptsHistory()">🧾</button>
       <button class="icon-btn" onclick="logout()">🚪</button>
     </div>
   </div>
@@ -970,13 +1216,7 @@ body {
     <div id="userOrderList"></div>
   </div>
 
-  <!-- RECEIPTS HISTORY PAGE -->
-  <div id="receiptsHistory" class="page hidden">
-    <div class="section-title">🧾 My Receipts</div>
-    <div id="receiptsList"></div>
-  </div>
-
-  <!-- USER DASHBOARD PAGE -->
+  <!-- USER DASHBOARD (NO RECEIPTS HERE) -->
   <div id="userDashboard" class="page hidden">
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-value" id="userTotalOrders">0</div><div class="stat-label">Total Orders</div></div>
@@ -1002,8 +1242,8 @@ body {
     </div>
     <div class="card">
       <div class="card-title">💬 Chat with My Agent</div>
-      <div id="customerChatArea" class="chat-container" style="height: 300px;">
-        <div id="customerChatMessages" class="chat-messages-area" style="height: 240px;"></div>
+      <div id="customerChatArea" class="chat-container" style="height: 350px;">
+        <div id="customerChatMessages" class="chat-messages-area-custom" style="height: 280px;"></div>
         <div class="chat-input-area">
           <input type="text" id="customerChatInput" placeholder="Message your agent..." onkeypress="if(event.key==='Enter')sendCustomerMessage()">
           <button class="btn-sm btn-primary" onclick="sendCustomerMessage()">📤 Send</button>
@@ -1064,6 +1304,10 @@ body {
       <button class="btn btn-primary" onclick="sendBroadcast()">📢 Send Broadcast</button>
     </div>
     <div class="card">
+      <div class="card-title">📋 All Receipts</div>
+      <div id="adminReceiptsList"></div>
+    </div>
+    <div class="card">
       <div class="card-title">💬 Monitor Agent-Client Chats</div>
       <div id="adminMonitorChats"></div>
     </div>
@@ -1112,11 +1356,20 @@ body {
       <div id="agentAvailableOrders"></div>
     </div>
     <div class="card">
+      <div class="card-title">🏍️ Manage Riders</div>
+      <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+        <input type="text" id="newRiderName" placeholder="Rider name" style="flex: 2; padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
+        <input type="tel" id="newRiderPhone" placeholder="Phone" style="flex: 2; padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
+        <button class="btn-sm btn-green" onclick="createRider()">➕ Add Rider</button>
+      </div>
+      <div id="ridersList"></div>
+    </div>
+    <div class="card">
       <div class="card-title">💬 My Clients (Shielded Chat)</div>
       <div id="agentClientsList" style="max-height: 300px; overflow-y: auto;"></div>
       <div id="agentClientChatArea" class="chat-container" style="height: 350px; margin-top: 15px; display: none;">
         <div id="agentClientChatHeader" style="padding: 10px; background: var(--blue); color: white; border-radius: 10px; margin-bottom: 10px;"></div>
-        <div id="agentClientChatMessages" class="chat-messages-area" style="height: 220px;"></div>
+        <div id="agentClientChatMessages" class="chat-messages-area-custom" style="height: 220px;"></div>
         <div class="chat-input-area">
           <input type="text" id="agentClientChatInput" placeholder="Type message..." onkeypress="if(event.key==='Enter')sendAgentClientMessage()">
           <button class="btn-sm btn-primary" onclick="sendAgentClientMessage()">📤 Send</button>
@@ -1138,9 +1391,14 @@ body {
         </select>
       </div>
       <div class="form-group">
+        <select id="riderSelect" class="form-control">
+          <option value="">Assign a rider (optional)</option>
+        </select>
+      </div>
+      <div class="form-group">
         <textarea id="agentCustomerMessage" placeholder="Message to customer (e.g., Your order is on the way!)" rows="2"></textarea>
       </div>
-      <button class="btn btn-primary" onclick="sendOrderUpdate()">📤 Send Update to Customer</button>
+      <button class="btn btn-primary" onclick="sendOrderUpdate()">📤 Send Update</button>
     </div>
     <div class="card">
       <div class="card-title">💬 Agent Group Chat (All Agents)</div>
@@ -1162,19 +1420,38 @@ body {
     </div>
   </div>
 
-  <!-- CHAT WIDGET -->
-  <div class="chat-widget">
-    <button class="chat-btn" onclick="toggleChat()">💬</button>
+  <!-- REDESIGNED AI CHAT WIDGET -->
+  <div class="chat-widget" id="aiChatWidget">
+    <button class="chat-toggle" id="chatToggleBtn" onclick="toggleAIChat()">
+      💬
+    </button>
   </div>
-  <div id="chatBox" class="chat-box hidden">
+  
+  <div id="aiChatWindow" class="chat-window hidden">
     <div class="chat-header">
-      🤖 WAMP Assistant (AI-Powered)
-      <span style="cursor:pointer" onclick="toggleChat()">✕</span>
+      <h3>
+        <span>🤖</span> WAMP AI Assistant
+      </h3>
+      <div class="chat-header-actions">
+        <button onclick="toggleAIChat()" title="Minimize">−</button>
+        <button onclick="closeAIChat()" title="Close">✕</button>
+      </div>
     </div>
-    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-messages-area" id="aiChatMessages">
+      <div class="chat-message bot">
+        <div class="chat-bubble">👋 Hello! I'm WAMP's AI assistant. Ask me about prices, delivery, payments, or anything about our products!</div>
+        <div class="chat-time">Just now</div>
+      </div>
+    </div>
+    <div class="quick-replies" id="quickReplies">
+      <button class="quick-reply-btn" onclick="sendQuickReply('What are your prices?')">💰 Prices</button>
+      <button class="quick-reply-btn" onclick="sendQuickReply('Delivery time?')">🚚 Delivery</button>
+      <button class="quick-reply-btn" onclick="sendQuickReply('Payment methods?')">💳 Payments</button>
+      <button class="quick-reply-btn" onclick="sendQuickReply('Contact support')">📞 Support</button>
+    </div>
     <div class="chat-input-area">
-      <input type="text" id="chatInput" placeholder="Ask about prices, delivery..." onkeypress="if(event.key==='Enter')sendChat()">
-      <button class="btn-sm btn-green" onclick="sendChat()">Send</button>
+      <input type="text" id="aiChatInput" placeholder="Type your message..." onkeypress="if(event.key==='Enter')sendAIChatMessage()">
+      <button onclick="sendAIChatMessage()">📤</button>
     </div>
   </div>
 
@@ -1197,7 +1474,8 @@ body {
   <div class="bottom-nav" id="bottomNav"></div>
 </div>
 
-<script>  
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script>
 // ==================== CONFIGURATION ====================
 const API_BASE = 'https://raven-terazzo.onrender.com/api';
 const RECEIPT_PHONE_NUMBERS = ['0741227707', '0741333544'];
@@ -1213,12 +1491,13 @@ let AppState = {
   notifications: [],
   pendingAction: null,
   receipts: [],
+  riders: [],
   agentClientChats: {},
   customerChats: {}
 };
 
 // ==================== INDEXEDDB SETUP ====================
-let dbRequest = indexedDB.open('WAMPOfflineDB', 2);
+let dbRequest = indexedDB.open('WAMPOfflineDB', 3);
 
 dbRequest.onupgradeneeded = function(event) {
   let db = event.target.result;
@@ -1273,7 +1552,7 @@ async function apiCall(endpoint, opts = {}) {
   return res.json();
 }
 
-// ==================== WHATSAPP CONTACTS ====================
+// ==================== WHATSAPP ====================
 function toggleWhatsAppMenu() {
   const menu = document.getElementById('whatsappMenu');
   menu.classList.toggle('show');
@@ -1286,6 +1565,87 @@ document.addEventListener('click', function(event) {
     if (menu) menu.classList.remove('show');
   }
 });
+
+// ==================== REDESIGNED AI CHAT ====================
+function toggleAIChat() {
+  const window = document.getElementById('aiChatWindow');
+  const btn = document.getElementById('chatToggleBtn');
+  if (window.classList.contains('hidden')) {
+    window.classList.remove('hidden');
+    btn.style.display = 'none';
+  } else {
+    window.classList.add('hidden');
+    btn.style.display = 'flex';
+  }
+}
+
+function closeAIChat() {
+  document.getElementById('aiChatWindow').classList.add('hidden');
+  document.getElementById('chatToggleBtn').style.display = 'flex';
+}
+
+async function sendAIChatMessage() {
+  const input = document.getElementById('aiChatInput');
+  const message = input.value.trim();
+  if (!message) return;
+
+  const messagesDiv = document.getElementById('aiChatMessages');
+  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  
+  messagesDiv.innerHTML += `
+    <div class="chat-message user">
+      <div class="chat-bubble">${escapeHtml(message)}</div>
+      <div class="chat-time">${time}</div>
+    </div>
+  `;
+  input.value = '';
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+  // Show typing indicator
+  const typingId = 'typing-' + Date.now();
+  messagesDiv.innerHTML += `
+    <div class="chat-message bot" id="${typingId}">
+      <div class="typing-indicator">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  `;
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+  try {
+    const res = await fetch(`${API_BASE}/chat/customer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message })
+    });
+    const data = await res.json();
+    
+    // Remove typing indicator
+    document.getElementById(typingId)?.remove();
+    
+    const aiBadge = data.ai_used ? ' 🤖' : '';
+    messagesDiv.innerHTML += `
+      <div class="chat-message bot">
+        <div class="chat-bubble">${escapeHtml(data.response)}${aiBadge}</div>
+        <div class="chat-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+      </div>
+    `;
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  } catch(e) {
+    document.getElementById(typingId)?.remove();
+    messagesDiv.innerHTML += `
+      <div class="chat-message bot">
+        <div class="chat-bubble">Sorry, I'm having trouble connecting. Please try again or contact support at 0741227707.</div>
+        <div class="chat-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+      </div>
+    `;
+  }
+}
+
+function sendQuickReply(message) {
+  document.getElementById('aiChatInput').value = message;
+  sendAIChatMessage();
+}
 
 // ==================== AUTHENTICATION ====================
 function openAuthModal(callback) {
@@ -1332,6 +1692,7 @@ async function submitLogin() {
       showToast(`Welcome ${data.user.name}!`);
       await refreshAllData();
       loadReceiptsFromIndexedDB();
+      loadRiders();
       setupNavigation();
 
       if (AppState.user.role === 'admin') navigateTo('adminDashboard');
@@ -1485,7 +1846,6 @@ function navigateTo(pageId) {
   if (pageId === 'adminDashboard') renderAdminDashboard();
   if (pageId === 'adminOrders') renderAdminOrders();
   if (pageId === 'agentPanel') renderAgentPanel();
-  if (pageId === 'receiptsHistory') renderReceiptsHistory();
 }
 
 function setupNavigation() {
@@ -1495,7 +1855,7 @@ function setupNavigation() {
   } else if (AppState.user.role === 'admin') {
     nav.innerHTML = '<div class="nav-item" onclick="navigateTo(\'adminDashboard\')"><span class="nav-icon">📊</span>Dashboard</div><div class="nav-item" onclick="navigateTo(\'adminOrders\')"><span class="nav-icon">📋</span>Orders</div><div class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span>Exit</div>';
   } else if (AppState.user.role === 'agent') {
-    nav.innerHTML = '<div class="nav-item" onclick="navigateTo(\'agentPanel\')"><span class="nav-icon">📦</span>Orders</div><div class="nav-item" onclick="navigateTo(\'userOrders\')"><span class="nav-icon">📜</span>My Orders</div><div class="nav-item" onclick="navigateTo(\'receiptsHistory\')"><span class="nav-icon">🧾</span>Receipts</div><div class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span>Exit</div>';
+    nav.innerHTML = '<div class="nav-item" onclick="navigateTo(\'agentPanel\')"><span class="nav-icon">📦</span>Orders</div><div class="nav-item" onclick="navigateTo(\'userOrders\')"><span class="nav-icon">📜</span>My Orders</div><div class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span>Exit</div>';
   } else {
     nav.innerHTML = '<div class="nav-item" onclick="navigateTo(\'userShop\')"><span class="nav-icon">🏪</span>Shop</div><div class="nav-item" onclick="navigateTo(\'userOrders\')"><span class="nav-icon">📦</span>Orders</div><div class="nav-item" onclick="navigateTo(\'userCart\')"><span class="nav-icon">🛒</span>Cart</div><div class="nav-item" onclick="navigateTo(\'userDashboard\')"><span class="nav-icon">👤</span>Profile</div>';
   }
@@ -1747,11 +2107,11 @@ async function processPayment() {
       }),
       delivery_address: deliveryAddress,
       customer_name: AppState.user?.name,
-      customer_phone: AppState.user?.phone
+      customer_phone: AppState.user?.phone,
+      user_id: AppState.user?.id
     };
     
     saveReceiptToIndexedDB(newOrder);
-    printReceipt(newOrder);
     navigateTo('userOrders');
     renderUserOrders();
   } catch(e) {
@@ -1759,7 +2119,7 @@ async function processPayment() {
   }
 }
 
-// ==================== RECEIPT SYSTEM ====================
+// ==================== RECEIPT SYSTEM (Admin & Agent only) ====================
 function saveReceiptToIndexedDB(order) {
   const receipt = {
     id: `RCP-${order.id}-${Date.now()}`,
@@ -1773,21 +2133,21 @@ function saveReceiptToIndexedDB(order) {
     total: order.total,
     payment_method: order.payment_method,
     barcode_numbers: RECEIPT_PHONE_NUMBERS,
-    issued_at: new Date().toISOString()
+    issued_at: new Date().toISOString(),
+    user_id: order.user_id
   };
   
-  let request = indexedDB.open('WAMPOfflineDB', 2);
+  let request = indexedDB.open('WAMPOfflineDB', 3);
   request.onsuccess = function(event) {
     let db = event.target.result;
     let tx = db.transaction('receipts', 'readwrite');
     let store = tx.objectStore('receipts');
     store.put(receipt);
-    tx.oncomplete = () => showToast('Receipt saved to history');
   };
 }
 
 function loadReceiptsFromIndexedDB() {
-  let request = indexedDB.open('WAMPOfflineDB', 2);
+  let request = indexedDB.open('WAMPOfflineDB', 3);
   request.onsuccess = function(event) {
     let db = event.target.result;
     let tx = db.transaction('receipts', 'readonly');
@@ -1797,44 +2157,6 @@ function loadReceiptsFromIndexedDB() {
       AppState.receipts = getAll.result || [];
     };
   };
-}
-
-function showReceiptsHistory() {
-  navigateTo('receiptsHistory');
-  renderReceiptsHistory();
-}
-
-function renderReceiptsHistory() {
-  const container = document.getElementById('receiptsList');
-  if (!container) return;
-  
-  if (!AppState.receipts.length) {
-    container.innerHTML = '<div class="empty-state">No receipts yet. Place an order to get your first receipt!</div>';
-    return;
-  }
-  
-  container.innerHTML = AppState.receipts.map(r => `
-    <div class="card">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-          <strong>🧾 ${escapeHtml(r.receipt_number)}</strong><br>
-          <small>Order #${r.order_id}</small><br>
-          <small>${new Date(r.order_date).toLocaleDateString()}</small>
-        </div>
-        <button class="btn-sm btn-primary" onclick="printReceiptFromHistory('${r.id}')">🖨️ Print</button>
-      </div>
-      <div style="margin-top: 10px;">
-        <strong>Total:</strong> UGX ${(r.total || 0).toLocaleString()}
-      </div>
-    </div>
-  `).join('');
-}
-
-function printReceiptFromHistory(receiptId) {
-  const receipt = AppState.receipts.find(r => r.id === receiptId);
-  if (receipt) {
-    printReceipt(receipt);
-  }
 }
 
 function printReceipt(order) {
@@ -1854,8 +2176,8 @@ function printReceipt(order) {
         <p><strong>Receipt #:</strong> ${order.receipt_number || `WAMP-${order.id}`}</p>
         <p><strong>Order #:</strong> ${order.order_id || order.id}</p>
         <p><strong>Date:</strong> ${new Date(order.order_date || order.created_at || Date.now()).toLocaleString()}</p>
-        <p><strong>Customer:</strong> ${escapeHtml(order.customer_name || AppState.user?.name || 'Customer')}</p>
-        <p><strong>Phone:</strong> ${order.customer_phone || AppState.user?.phone || ''}</p>
+        <p><strong>Customer:</strong> ${escapeHtml(order.customer_name || 'Customer')}</p>
+        <p><strong>Phone:</strong> ${order.customer_phone || ''}</p>
         <p><strong>Delivery:</strong> ${escapeHtml(order.delivery_address || 'N/A')}</p>
         <p><strong>Payment:</strong> ${order.payment_method || 'N/A'}</p>
       </div>
@@ -1899,33 +2221,20 @@ function printReceipt(order) {
       <head>
         <title>Receipt ${order.receipt_number || order.id}</title>
         <style>
-          body {
-            font-family: 'Courier New', monospace;
-            margin: 0;
-            padding: 20px;
-            background: white;
-          }
-          .receipt-print-area {
-            max-width: 400px;
-            margin: 0 auto;
-            padding: 20px;
-          }
+          body { font-family: 'Courier New', monospace; margin: 0; padding: 20px; background: white; }
+          .receipt-print-area { max-width: 350px; margin: 0 auto; padding: 20px; }
           .receipt-header { text-align: center; border-bottom: 2px dashed #ccc; padding-bottom: 15px; margin-bottom: 15px; }
-          .receipt-header h2 { color: #1a5276; margin-bottom: 5px; }
-          .receipt-header p { font-size: 11px; color: #666; margin: 3px 0; }
-          .receipt-details { margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 15px; }
-          .receipt-details p { margin: 5px 0; font-size: 12px; }
-          .receipt-items { width: 100%; margin: 15px 0; font-size: 12px; border-collapse: collapse; }
-          .receipt-items th, .receipt-items td { padding: 8px; text-align: left; border-bottom: 1px dotted #ddd; }
+          .receipt-header h2 { color: #1a5276; margin-bottom: 5px; font-size: 18px; }
+          .receipt-header p { font-size: 10px; color: #666; margin: 3px 0; }
+          .receipt-details { margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 10px; font-size: 11px; }
+          .receipt-details p { margin: 4px 0; }
+          .receipt-items { width: 100%; margin: 12px 0; font-size: 11px; border-collapse: collapse; }
+          .receipt-items th, .receipt-items td { padding: 6px 4px; text-align: left; border-bottom: 1px dotted #ddd; }
           .receipt-items th { font-weight: 800; background: #f5f5f5; }
-          .receipt-total { text-align: right; font-size: 16px; font-weight: 800; margin: 15px 0; padding-top: 10px; border-top: 2px dashed #ccc; }
-          .receipt-barcode { text-align: center; margin: 20px 0; padding: 15px; background: #f9f9f9; border-radius: 8px; }
-          .receipt-barcode p { font-size: 11px; margin-top: 8px; color: #666; }
-          .receipt-footer { text-align: center; font-size: 11px; margin-top: 20px; padding-top: 15px; border-top: 2px dashed #ccc; }
-          @media print {
-            body { margin: 0; padding: 0; }
-            .receipt-print-area { margin: 0; padding: 10px; }
-          }
+          .receipt-total { text-align: right; font-size: 14px; font-weight: 800; margin: 12px 0; padding-top: 8px; border-top: 2px dashed #ccc; }
+          .receipt-barcode { text-align: center; margin: 15px 0; padding: 12px; background: #f9f9f9; border-radius: 8px; }
+          .receipt-footer { text-align: center; font-size: 10px; margin-top: 15px; padding-top: 10px; border-top: 2px dashed #ccc; }
+          @media print { body { margin: 0; padding: 0; } .receipt-print-area { margin: 0; padding: 10px; } }
         </style>
         <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"><\/script>
       </head>
@@ -1937,12 +2246,7 @@ function printReceipt(order) {
             width: 120,
             height: 120
           });
-        <\/script>
-        <script>
-          setTimeout(() => {
-            window.print();
-            window.onafterprint = () => window.close();
-          }, 500);
+          setTimeout(() => { window.print(); window.onafterprint = () => window.close(); }, 500);
         <\/script>
       </body>
     </html>
@@ -1967,24 +2271,8 @@ async function renderUserOrders() {
       <div>Payment: ${o.payment_method || 'N/A'}</div>
       ${o.rider_name ? `<div>Rider: ${escapeHtml(o.rider_name)} (${o.rider_phone || ''})</div>` : ''}
       <button class="btn-sm btn-primary" style="margin-top:10px;" onclick="trackOrder(${o.id})">📍 Track Order</button>
-      <button class="btn-sm btn-outline" style="margin-top:10px;" onclick='printReceiptFromOrder(${JSON.stringify(o).replace(/'/g, "&apos;")})'>🖨️ Print Receipt</button>
     </div>
   `).join('');
-}
-
-function printReceiptFromOrder(order) {
-  const enrichedOrder = {
-    id: order.id,
-    order_id: order.id,
-    total: order.total,
-    payment_method: order.payment_method,
-    created_at: order.created_at,
-    items: order.items || [],
-    delivery_address: order.delivery_location,
-    customer_name: AppState.user?.name,
-    customer_phone: AppState.user?.phone
-  };
-  printReceipt(enrichedOrder);
 }
 
 async function trackOrder(orderId) {
@@ -2074,7 +2362,7 @@ function loadCustomerChatMessages() {
   if (!AppState.user) return;
   
   const conversationId = `customer_${AppState.user.id}`;
-  let request = indexedDB.open('WAMPOfflineDB', 2);
+  let request = indexedDB.open('WAMPOfflineDB', 3);
   request.onsuccess = function(event) {
     let db = event.target.result;
     let tx = db.transaction('agentClientChats', 'readonly');
@@ -2086,9 +2374,9 @@ function loadCustomerChatMessages() {
       const container = document.getElementById('customerChatMessages');
       if (container) {
         container.innerHTML = messages.map(m => `
-          <div class="chat-message ${m.sender === 'customer' ? 'sent' : 'received'}">
-            <div class="chat-bubble">${escapeHtml(m.message)}</div>
-            <div class="chat-meta">${new Date(m.timestamp).toLocaleTimeString()}</div>
+          <div class="chat-message-custom ${m.sender === 'customer' ? 'sent' : 'received'}">
+            <div class="chat-bubble-custom">${escapeHtml(m.message)}</div>
+            <div class="chat-meta-custom">${new Date(m.timestamp).toLocaleTimeString()}</div>
           </div>
         `).join('') || '<div class="empty-state">No messages yet. Your agent will respond soon.</div>';
         container.scrollTop = container.scrollHeight;
@@ -2111,7 +2399,7 @@ function sendCustomerMessage() {
     timestamp: new Date().toISOString()
   };
   
-  let request = indexedDB.open('WAMPOfflineDB', 2);
+  let request = indexedDB.open('WAMPOfflineDB', 3);
   request.onsuccess = function(event) {
     let db = event.target.result;
     let tx = db.transaction('agentClientChats', 'readwrite');
@@ -2179,7 +2467,7 @@ function openAgentClientChat(customerId, customerName) {
   chatArea.style.display = 'flex';
   chatArea.style.flexDirection = 'column';
   
-  let request = indexedDB.open('WAMPOfflineDB', 2);
+  let request = indexedDB.open('WAMPOfflineDB', 3);
   request.onsuccess = function(event) {
     let db = event.target.result;
     let tx = db.transaction('agentClientChats', 'readonly');
@@ -2190,9 +2478,9 @@ function openAgentClientChat(customerId, customerName) {
       const messages = chat ? chat.messages : [];
       
       messagesContainer.innerHTML = messages.map(m => `
-        <div class="chat-message ${m.sender === 'agent' ? 'sent' : 'received'}">
-          <div class="chat-bubble">${escapeHtml(m.message)}</div>
-          <div class="chat-meta">${new Date(m.timestamp).toLocaleTimeString()} - ${m.sender === 'agent' ? 'You' : escapeHtml(m.sender_name)}</div>
+        <div class="chat-message-custom ${m.sender === 'agent' ? 'sent' : 'received'}">
+          <div class="chat-bubble-custom">${escapeHtml(m.message)}</div>
+          <div class="chat-meta-custom">${new Date(m.timestamp).toLocaleTimeString()} - ${m.sender === 'agent' ? 'You' : escapeHtml(m.sender_name)}</div>
         </div>
       `).join('') || '<div class="empty-state">No messages yet. Start the conversation!</div>';
       
@@ -2215,7 +2503,7 @@ function sendAgentClientMessage() {
     timestamp: new Date().toISOString()
   };
   
-  let request = indexedDB.open('WAMPOfflineDB', 2);
+  let request = indexedDB.open('WAMPOfflineDB', 3);
   request.onsuccess = function(event) {
     let db = event.target.result;
     let tx = db.transaction('agentClientChats', 'readwrite');
@@ -2234,9 +2522,87 @@ function sendAgentClientMessage() {
   };
 }
 
+// ==================== RIDER MANAGEMENT (Agents & Admin) ====================
+async function loadRiders() {
+  try {
+    const res = await apiCall('/riders');
+    AppState.riders = res;
+    renderRidersList();
+    renderRiderSelect();
+  } catch(e) {
+    AppState.riders = [];
+  }
+}
+
+function renderRidersList() {
+  const container = document.getElementById('ridersList');
+  if (!container) return;
+  
+  if (!AppState.riders.length) {
+    container.innerHTML = '<div class="empty-state">No riders yet. Add one above.</div>';
+    return;
+  }
+  
+  container.innerHTML = AppState.riders.map(r => `
+    <div class="rider-card">
+      <div>
+        <strong>${escapeHtml(r.name)}</strong><br>
+        📱 ${r.phone}
+      </div>
+      <span class="rider-status ${r.status}">${r.status === 'available' ? '✅ Available' : '🔴 Busy'}</span>
+    </div>
+  `).join('');
+}
+
+function renderRiderSelect() {
+  const select = document.getElementById('riderSelect');
+  if (!select) return;
+  
+  select.innerHTML = '<option value="">Assign a rider (optional)</option>' + 
+    AppState.riders.filter(r => r.status === 'available').map(r => `<option value="${r.id}">${escapeHtml(r.name)} - ${r.phone}</option>`).join('');
+}
+
+async function createRider() {
+  const name = document.getElementById('newRiderName').value.trim();
+  const phone = document.getElementById('newRiderPhone').value.trim();
+  
+  if (!name || !phone) {
+    showToast('Enter rider name and phone', true);
+    return;
+  }
+  
+  try {
+    await apiCall('/riders', {
+      method: 'POST',
+      body: JSON.stringify({ name, phone })
+    });
+    showToast('Rider created successfully');
+    document.getElementById('newRiderName').value = '';
+    document.getElementById('newRiderPhone').value = '';
+    loadRiders();
+  } catch(e) {
+    showToast('Failed to create rider: ' + e.message, true);
+  }
+}
+
+async function assignRiderToOrder(orderId, riderId) {
+  if (!riderId) return;
+  
+  try {
+    await apiCall(`/orders/${orderId}/assign-rider`, {
+      method: 'PUT',
+      body: JSON.stringify({ rider_id: riderId })
+    });
+    showToast('Rider assigned to order');
+    loadRiders();
+  } catch(e) {
+    showToast('Failed to assign rider', true);
+  }
+}
+
 // ==================== ADMIN MONITOR CHATS ====================
 function loadAdminMonitorChats() {
-  let request = indexedDB.open('WAMPOfflineDB', 2);
+  let request = indexedDB.open('WAMPOfflineDB', 3);
   request.onsuccess = function(event) {
     let db = event.target.result;
     let tx = db.transaction('agentClientChats', 'readonly');
@@ -2292,8 +2658,36 @@ async function renderAdminDashboard() {
     `).join('') || '<div class="empty-state">No products</div>';
   }
 
+  // Admin receipts list
+  const receiptsContainer = document.getElementById('adminReceiptsList');
+  if (receiptsContainer) {
+    const receipts = AppState.receipts.filter(r => r.user_id !== AppState.user?.id);
+    if (!receipts.length) {
+      receiptsContainer.innerHTML = '<div class="empty-state">No receipts yet</div>';
+    } else {
+      receiptsContainer.innerHTML = receipts.map(r => `
+        <div class="list-item">
+          <div>
+            <strong>${escapeHtml(r.receipt_number)}</strong><br>
+            Customer: ${escapeHtml(r.customer_name)}<br>
+            Order #${r.order_id} | UGX ${(r.total || 0).toLocaleString()}
+          </div>
+          <button class="btn-sm btn-primary" onclick="printReceiptFromData('${r.id}')">🖨️ Print</button>
+        </div>
+      `).join('');
+    }
+  }
+
   loadAgentConversations();
   loadAdminMonitorChats();
+  loadRiders();
+}
+
+function printReceiptFromData(receiptId) {
+  const receipt = AppState.receipts.find(r => r.id === receiptId);
+  if (receipt) {
+    printReceipt(receipt);
+  }
 }
 
 function clearProductForm() {
@@ -2404,20 +2798,65 @@ async function renderAdminOrders() {
       <div>Total: UGX ${(o.total || 0).toLocaleString()}</div>
       <div>Payment: ${o.payment_method || 'N/A'}</div>
       ${o.rider_name ? `<div>Rider: ${escapeHtml(o.rider_name)} (${o.rider_phone || ''})</div>` : ''}
-      <div style="margin-top:10px;">
-        <input type="text" id="riderName_${o.id}" placeholder="Rider Name" style="padding:8px; border-radius:8px; border:1px solid #ddd; margin-right:5px;">
-        <input type="text" id="riderPhone_${o.id}" placeholder="Rider Phone" style="padding:8px; border-radius:8px; border:1px solid #ddd; margin-right:5px;">
-        <select id="orderStatus_${o.id}" style="padding:8px; border-radius:8px; border:1px solid #ddd; margin-right:5px;">
+      <div style="margin-top:10px; display: flex; flex-wrap: wrap; gap: 8px;">
+        <input type="text" id="riderName_${o.id}" placeholder="Rider Name" style="padding:8px; border-radius:8px; border:1px solid #ddd; flex:1;">
+        <input type="text" id="riderPhone_${o.id}" placeholder="Rider Phone" style="padding:8px; border-radius:8px; border:1px solid #ddd; flex:1;">
+        <select id="orderStatus_${o.id}" style="padding:8px; border-radius:8px; border:1px solid #ddd;">
           <option value="pending" ${o.status === 'pending' ? 'selected' : ''}>Pending</option>
           <option value="processing" ${o.status === 'processing' ? 'selected' : ''}>Processing</option>
           <option value="shipped" ${o.status === 'shipped' ? 'selected' : ''}>Shipped</option>
           <option value="delivered" ${o.status === 'delivered' ? 'selected' : ''}>Delivered</option>
         </select>
         <button class="btn-sm btn-primary" onclick="updateOrder(${o.id})">Update</button>
-        <button class="btn-sm btn-green" onclick="assignRider(${o.id})">Assign Rider</button>
+        <button class="btn-sm btn-green" onclick="assignRiderToOrderField(${o.id})">Assign Rider</button>
+        <button class="btn-sm btn-outline" onclick="printAdminReceipt(${o.id})">🖨️ Print Receipt</button>
       </div>
     </div>
   `).join('') || '<div class="empty-state">No orders</div>';
+}
+
+function printAdminReceipt(orderId) {
+  const order = AppState.orders.find(o => o.id === orderId);
+  if (order) {
+    const receiptData = {
+      id: order.id,
+      order_id: order.id,
+      total: order.total,
+      payment_method: order.payment_method,
+      created_at: order.created_at,
+      items: order.items || [],
+      delivery_address: order.delivery_location,
+      customer_name: `Customer #${order.user_id}`,
+      customer_phone: '',
+      receipt_number: `WAMP-${new Date().getFullYear()}-${order.id}`
+    };
+    printReceipt(receiptData);
+  }
+}
+
+function assignRiderToOrderField(orderId) {
+  const riderName = document.getElementById(`riderName_${orderId}`)?.value;
+  const riderPhone = document.getElementById(`riderPhone_${orderId}`)?.value;
+  if (!riderName || !riderPhone) {
+    showToast('Enter rider name and phone', true);
+    return;
+  }
+  assignRiderToOrder(orderId, riderName, riderPhone);
+}
+
+async function assignRiderToOrder(orderId, riderName, riderPhone) {
+  try {
+    await apiCall(`/admin/orders/${orderId}/assign-rider`, {
+      method: 'PUT',
+      body: JSON.stringify({ rider_name: riderName, rider_phone: riderPhone })
+    });
+    showToast('Rider assigned');
+    const ordersRes = await apiCall('/orders');
+    AppState.orders = ordersRes;
+    renderAdminOrders();
+  } catch(e) {
+    showToast('Assignment failed', true);
+  }
 }
 
 async function updateOrder(orderId) {
@@ -2433,27 +2872,6 @@ async function updateOrder(orderId) {
     renderAdminOrders();
   } catch(e) {
     showToast('Update failed', true);
-  }
-}
-
-async function assignRider(orderId) {
-  const riderName = document.getElementById(`riderName_${orderId}`).value;
-  const riderPhone = document.getElementById(`riderPhone_${orderId}`).value;
-  if (!riderName || !riderPhone) {
-    showToast('Enter rider name and phone', true);
-    return;
-  }
-  try {
-    await apiCall(`/admin/orders/${orderId}/assign-rider`, {
-      method: 'PUT',
-      body: JSON.stringify({ rider_name: riderName, rider_phone: riderPhone })
-    });
-    showToast('Rider assigned');
-    const ordersRes = await apiCall('/orders');
-    AppState.orders = ordersRes;
-    renderAdminOrders();
-  } catch(e) {
-    showToast('Assignment failed', true);
   }
 }
 
@@ -2511,9 +2929,8 @@ async function loadChatWithAgent(agentId) {
 
   try {
     const messages = await apiCall(`/admin/conversations/${agentId}`);
-    const agent = await fetch(`${API_BASE}/user/profile`, { headers: { 'Authorization': `Bearer ${getToken()}` } }).then(r => r.json());
-
-    document.getElementById('adminChatHeader').innerHTML = `💬 Chat with ${escapeHtml(agent.name || 'Agent')}`;
+    
+    document.getElementById('adminChatHeader').innerHTML = `💬 Chat with Agent #${agentId}`;
 
     const container = document.getElementById('adminChatMessages');
     container.innerHTML = messages.map(m => `
@@ -2569,7 +2986,10 @@ async function renderAgentPanel() {
       assignedContainer.innerHTML = (data.assigned || []).map(o => `
         <div class="list-item">
           <div><strong>Order #${o.id}</strong><br>UGX ${o.total.toLocaleString()}<br>Status: ${o.status}</div>
-          <button class="btn-sm btn-primary" onclick="trackOrder(${o.id})">📍 Track</button>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-sm btn-primary" onclick="trackOrder(${o.id})">📍 Track</button>
+            <button class="btn-sm btn-outline" onclick="printAgentReceipt(${o.id})">🖨️ Receipt</button>
+          </div>
         </div>
       `).join('') || '<div class="empty-state">No assigned orders</div>';
     }
@@ -2592,6 +3012,7 @@ async function renderAgentPanel() {
 
     loadGroupMessages();
     loadAgentClients();
+    loadRiders();
 
     const messages = await apiCall('/communications');
     const chatContainer = document.getElementById('agentChatMessages');
@@ -2604,6 +3025,25 @@ async function renderAgentPanel() {
     }
   } catch(e) {
     console.error('Agent panel error:', e);
+  }
+}
+
+function printAgentReceipt(orderId) {
+  const order = AppState.orders.find(o => o.id === orderId);
+  if (order) {
+    const receiptData = {
+      id: order.id,
+      order_id: order.id,
+      total: order.total,
+      payment_method: order.payment_method,
+      created_at: order.created_at,
+      items: order.items || [],
+      delivery_address: order.delivery_location,
+      customer_name: `Customer #${order.user_id}`,
+      customer_phone: '',
+      receipt_number: `WAMP-${new Date().getFullYear()}-${order.id}`
+    };
+    printReceipt(receiptData);
   }
 }
 
@@ -2623,6 +3063,7 @@ async function sendOrderUpdate() {
   const orderId = document.getElementById('agentOrderSelect').value;
   const newStatus = document.getElementById('agentStatusSelect').value;
   const message = document.getElementById('agentCustomerMessage').value;
+  const riderId = document.getElementById('riderSelect').value;
 
   if (!orderId) {
     showToast('Select an order first', true);
@@ -2634,6 +3075,11 @@ async function sendOrderUpdate() {
       method: 'POST',
       body: JSON.stringify({ order_id: parseInt(orderId), status: newStatus, customer_message: message })
     });
+    
+    if (riderId) {
+      await assignRiderToOrder(orderId, riderId);
+    }
+    
     showToast(`Update sent! Order #${orderId} is now ${newStatus}`);
     document.getElementById('agentCustomerMessage').value = '';
     renderAgentPanel();
@@ -2713,36 +3159,6 @@ function startGroupChatPolling() {
       loadAgentClients();
     }
   }, 5000);
-}
-
-// ==================== CHAT WIDGET (AI-POWERED) ====================
-function toggleChat() {
-  document.getElementById('chatBox').classList.toggle('hidden');
-}
-
-async function sendChat() {
-  const input = document.getElementById('chatInput');
-  const message = input.value.trim();
-  if (!message) return;
-
-  const messagesDiv = document.getElementById('chatMessages');
-  messagesDiv.innerHTML += `<div class="chat-msg user">${escapeHtml(message)}</div>`;
-  input.value = '';
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
-  try {
-    const res = await fetch(`${API_BASE}/chat/customer`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message })
-    });
-    const data = await res.json();
-    const aiBadge = data.ai_used ? ' 🤖' : '';
-    messagesDiv.innerHTML += `<div class="chat-msg bot">${escapeHtml(data.response)}${aiBadge}</div>`;
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-  } catch(e) {
-    messagesDiv.innerHTML += `<div class="chat-msg bot">Sorry, I'm having trouble connecting.</div>`;
-  }
 }
 
 // ==================== PWA SERVICE WORKER ====================
@@ -2882,15 +3298,17 @@ window.saveProduct = saveProduct;
 window.editProduct = editProduct;
 window.deleteProduct = deleteProduct;
 window.clearProductForm = clearProductForm;
-window.assignRider = assignRider;
+window.assignRiderToOrder = assignRiderToOrder;
 window.updateOrder = updateOrder;
 window.exportOrdersCSV = exportOrdersCSV;
 window.claimOrder = claimOrder;
 window.sendOrderUpdate = sendOrderUpdate;
 window.sendAgentMessage = sendAgentMessage;
 window.sendGroupMessage = sendGroupMessage;
-window.toggleChat = toggleChat;
-window.sendChat = sendChat;
+window.toggleAIChat = toggleAIChat;
+window.closeAIChat = closeAIChat;
+window.sendAIChatMessage = sendAIChatMessage;
+window.sendQuickReply = sendQuickReply;
 window.saveProfile = saveProfile;
 window.printReceipt = printReceipt;
 window.trackOrder = trackOrder;
@@ -2899,13 +3317,14 @@ window.sendBroadcast = sendBroadcast;
 window.loadChatWithAgent = loadChatWithAgent;
 window.sendAdminMessage = sendAdminMessage;
 window.toggleWhatsAppMenu = toggleWhatsAppMenu;
-window.showReceiptsHistory = showReceiptsHistory;
-window.printReceiptFromOrder = printReceiptFromOrder;
-window.printReceiptFromHistory = printReceiptFromHistory;
 window.previewImage = previewImage;
 window.openAgentClientChat = openAgentClientChat;
 window.sendAgentClientMessage = sendAgentClientMessage;
 window.sendCustomerMessage = sendCustomerMessage;
+window.createRider = createRider;
+window.printAdminReceipt = printAdminReceipt;
+window.printAgentReceipt = printAgentReceipt;
+window.assignRiderToOrderField = assignRiderToOrderField;
 
 initApp();
 </script>
