@@ -1,6 +1,6 @@
 # ==========================================
 # WAMP BACKEND - PRODUCTION READY
-# AUTO-FIXES MISSING COLUMNS ON STARTUP
+# AUTO-CREATES MISSING COLUMNS + HYBRID IMAGE STORAGE
 # ==========================================
 import os
 import re
@@ -10,6 +10,7 @@ import logging
 import hmac
 import hashlib
 import time
+import base64
 from datetime import datetime, timedelta
 from functools import wraps
 from collections import defaultdict
@@ -34,6 +35,10 @@ import requests
 from dotenv import load_dotenv
 from apscheduler.schedulers.background import BackgroundScheduler
 from werkzeug.middleware.proxy_fix import ProxyFix
+
+# Cloudinary for image upload (fallback when DB is 90% full)
+import cloudinary
+import cloudinary.uploader
 
 # Redis is REQUIRED for production
 try:
@@ -65,7 +70,7 @@ class SensitiveDataFilter(logging.Filter):
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[logging.FileHandler('tarazo.log'), logging.StreamHandler()]
+    handlers=[logging.FileHandler('wamp.log'), logging.StreamHandler()]
 )
 logger = logging.getLogger(__name__)
 logger.addFilter(SensitiveDataFilter())
@@ -79,8 +84,7 @@ app.config['JWT_TOKEN_LOCATION'] = ['headers']
 app.config['JWT_HEADER_NAME'] = 'Authorization'
 app.config['JWT_HEADER_TYPE'] = 'Bearer'
 app.config['JWT_IDENTITY_CLAIM'] = 'sub'
-
-app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB max upload
 
 # Validate required secrets
 required_vars = ['SECRET_KEY', 'JWT_SECRET_KEY', 'DATABASE_URL', 'ENCRYPTION_KEY', 'REDIS_URL']
@@ -96,7 +100,6 @@ try:
     logger.info("✅ Encryption key validated")
 except Exception as e:
     print(f"ERROR: Invalid ENCRYPTION_KEY format: {e}")
-    print("Generate a valid key with: python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())'")
     exit(1)
 
 # Database
@@ -115,9 +118,19 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_timeout': 30
 }
 
-# ==================== CORS ====================
-FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://ravenj-png.github.io')
+# ==================== CLOUDINARY CONFIG ====================
+cloudinary.config(
+    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME', 'Imaginary-Raven'),
+    api_key=os.environ.get('CLOUDINARY_API_KEY', ''),
+    api_secret=os.environ.get('CLOUDINARY_API_SECRET', '')
+)
+CLOUDINARY_ENABLED = bool(os.environ.get('CLOUDINARY_API_KEY') and os.environ.get('CLOUDINARY_API_SECRET'))
+if CLOUDINARY_ENABLED:
+    logger.info("✅ Cloudinary configured for image uploads")
+else:
+    logger.warning("⚠️ Cloudinary not configured - images will be stored in database only")
 
+# ==================== CORS ====================
 ALLOWED_ORIGINS = [
     "https://ravenj-png.github.io",
     "http://localhost:5500",
@@ -135,7 +148,7 @@ CORS(app,
      expose_headers=["Content-Type"],
      max_age=3600)
 
-# ==================== REDIS (REQUIRED) ====================
+# ==================== REDIS ====================
 try:
     redis_client = redis.from_url(os.environ.get('REDIS_URL'), socket_timeout=5, decode_responses=True)
     redis_client.ping()
@@ -170,14 +183,12 @@ serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 FLUTTERWAVE_SECRET_KEY = os.environ.get('FLUTTERWAVE_SECRET_KEY')
 FLUTTERWAVE_PUBLIC_KEY = os.environ.get('FLUTTERWAVE_PUBLIC_KEY')
 FLUTTERWAVE_WEBHOOK_SECRET = os.environ.get('FLUTTERWAVE_WEBHOOK_SECRET')
-FLUTTERWAVE_BASE_URL = 'https://api.flutterwave.com/v3'
-
 FLUTTERWAVE_ENABLED = bool(FLUTTERWAVE_SECRET_KEY and FLUTTERWAVE_PUBLIC_KEY)
 
 if FLUTTERWAVE_ENABLED:
     logger.info("✅ Payments: ENABLED (Flutterwave)")
 else:
-    logger.warning("⚠️ Payments: DISABLED - Add Flutterwave keys to enable")
+    logger.warning("⚠️ Payments: DISABLED")
 
 # ==================== BRUTE FORCE PROTECTION ====================
 def record_failed_login(ip):
@@ -212,10 +223,6 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    __table_args__ = (
-        Index('idx_user_role_status', 'role', 'status'),
-    )
-
 class Product(db.Model):
     __tablename__ = 'products'
     id = db.Column(db.Integer, primary_key=True)
@@ -225,7 +232,10 @@ class Product(db.Model):
     stock = db.Column(db.Integer, default=0, index=True)
     reserved_stock = db.Column(db.Integer, default=0, index=True)
     description = db.Column(db.Text)
-    image_url = db.Column(db.String(500))
+    image_url = db.Column(db.String(500))  # URL for cloudinary or external images
+    image_data = db.Column(db.Text)  # base64 for DB stored images
+    image_type = db.Column(db.String(20), default='url')  # 'url', 'db', 'cloudinary'
+    image_mime = db.Column(db.String(50))  # mime type for DB images
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     @property
@@ -295,43 +305,59 @@ class AuditLog(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
 # ==================== AUTO-FIX MISSING COLUMNS ====================
-def ensure_columns_exist():
-    """Automatically add missing columns to existing tables"""
+def get_database_size():
+    """Get current database size in bytes"""
     try:
-        # Check if email_verified column exists
-        db.session.execute(text("SELECT email_verified FROM users LIMIT 1"))
-    except ProgrammingError:
-        try:
-            db.session.execute(text("ALTER TABLE users ADD COLUMN email_verified BOOLEAN DEFAULT TRUE"))
-            db.session.commit()
-            logger.info("✅ Added missing column: email_verified")
-        except Exception as e:
-            logger.warning(f"Could not add email_verified: {e}")
-            db.session.rollback()
+        result = db.session.execute(text("SELECT pg_database_size(current_database())"))
+        return result.scalar()
+    except Exception as e:
+        logger.warning(f"Could not get DB size: {e}")
+        return 0
+
+DB_LIMIT_GB = 8  # 8GB database limit
+DB_THRESHOLD = DB_LIMIT_GB * 0.9 * 1024 * 1024 * 1024  # 90% of 8GB = 7.2GB
+
+def should_use_cloudinary():
+    """Check if database is 90% full, then use Cloudinary"""
+    if not CLOUDINARY_ENABLED:
+        return False
+    db_size = get_database_size()
+    return db_size >= DB_THRESHOLD
+
+def ensure_all_columns_exist():
+    """Safely add all missing columns without deleting data"""
+    # User table columns
+    user_columns = [
+        ('phone', 'VARCHAR(20)'),
+        ('email_verified', 'BOOLEAN DEFAULT TRUE'),
+        ('address', 'TEXT'),
+        ('status', 'VARCHAR(20) DEFAULT \'online\'')
+    ]
     
-    try:
-        # Check if status column exists
-        db.session.execute(text("SELECT status FROM users LIMIT 1"))
-    except ProgrammingError:
+    for col_name, col_def in user_columns:
         try:
-            db.session.execute(text("ALTER TABLE users ADD COLUMN status VARCHAR(20) DEFAULT 'online'"))
+            db.session.execute(text(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col_name} {col_def}"))
             db.session.commit()
-            logger.info("✅ Added missing column: status")
+            logger.info(f"✅ Added column users.{col_name}")
         except Exception as e:
-            logger.warning(f"Could not add status: {e}")
             db.session.rollback()
+            logger.warning(f"Could not add users.{col_name}: {e}")
     
-    try:
-        # Check if address column exists
-        db.session.execute(text("SELECT address FROM users LIMIT 1"))
-    except ProgrammingError:
+    # Product table columns for hybrid storage
+    product_columns = [
+        ('image_data', 'TEXT'),
+        ('image_type', 'VARCHAR(20) DEFAULT \'url\''),
+        ('image_mime', 'VARCHAR(50)')
+    ]
+    
+    for col_name, col_def in product_columns:
         try:
-            db.session.execute(text("ALTER TABLE users ADD COLUMN address TEXT"))
+            db.session.execute(text(f"ALTER TABLE products ADD COLUMN IF NOT EXISTS {col_name} {col_def}"))
             db.session.commit()
-            logger.info("✅ Added missing column: address")
+            logger.info(f"✅ Added column products.{col_name}")
         except Exception as e:
-            logger.warning(f"Could not add address: {e}")
             db.session.rollback()
+            logger.warning(f"Could not add products.{col_name}: {e}")
 
 # ==================== JWT BLACKLIST ====================
 @jwt.token_in_blocklist_loader
@@ -344,6 +370,7 @@ def check_if_token_revoked(jwt_header, jwt_payload):
 RUN_SCHEDULER = os.environ.get('RUN_SCHEDULER', 'false').lower() == 'true'
 
 if RUN_SCHEDULER:
+    from apscheduler.schedulers.background import BackgroundScheduler
     scheduler = BackgroundScheduler()
 
     def cleanup_expired_data():
@@ -430,8 +457,8 @@ def send_password_reset_email(user):
 
 # ==================== CREATE DEFAULT DATA ====================
 def create_default_accounts():
-    # First ensure columns exist
-    ensure_columns_exist()
+    # First ensure all columns exist
+    ensure_all_columns_exist()
     
     admin_email = os.environ.get('ADMIN_EMAIL', 'admin@tarazo.com')
     admin_password = os.environ.get('ADMIN_PASSWORD', 'Admin123456')
@@ -470,9 +497,9 @@ def create_default_accounts():
 
     if Product.query.count() == 0:
         sample_products = [
-            Product(name='Premium Floor Terrazzo', type='Floor Terrazzo', price=250000, stock=100, description='High-end terrazzo flooring', image_url='https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=400'),
-            Product(name='Copper Plumbing Pipe', type='Plumbing Pipe', price=45000, stock=50, description='Durable copper pipe', image_url='https://images.unsplash.com/photo-1581092160562-40aa08e7882a?w=400'),
-            Product(name='Interior Emulsion Paint', type='Paint Emulsion', price=120000, stock=80, description='Smooth matte finish', image_url='https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=400'),
+            Product(name='Premium Floor Terrazzo', type='Floor Terrazzo', price=250000, stock=100, description='High-end terrazzo flooring', image_type='url', image_url='https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=400'),
+            Product(name='Copper Plumbing Pipe', type='Plumbing Pipe', price=45000, stock=50, description='Durable copper pipe', image_type='url', image_url='https://images.unsplash.com/photo-1581092160562-40aa08e7882a?w=400'),
+            Product(name='Interior Emulsion Paint', type='Paint Emulsion', price=120000, stock=80, description='Smooth matte finish', image_type='url', image_url='https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=400'),
         ]
         for p in sample_products:
             db.session.add(p)
@@ -523,6 +550,8 @@ def health():
         'uptime_seconds': uptime,
         'database': 'connected',
         'payments_mode': 'LIVE' if FLUTTERWAVE_ENABLED else 'DEMO',
+        'db_size_gb': round(get_database_size() / (1024**3), 2),
+        'cloudinary_available': CLOUDINARY_ENABLED,
         'timestamp': datetime.utcnow().isoformat()
     })
 
@@ -644,21 +673,125 @@ def forgot_password():
 @rate_limit("3 per hour")
 def reset_password():
     data = request.get_json()
-    token = data.get('token')
     new_password = data.get('password')
     if not new_password or len(new_password) < 6:
         return jsonify({'error': 'Password must be at least 6 characters'}), 400
     return jsonify({'success': True, 'message': 'Password reset successful'})
 
-# ==================== PRODUCT ROUTES ====================
+# ==================== PRODUCT ROUTES WITH HYBRID STORAGE ====================
 @app.route('/api/products', methods=['GET'])
 def get_products():
     products = Product.query.all()
     return jsonify([{
         'id': p.id, 'name': p.name, 'type': p.type, 'price': p.price,
         'stock': p.available_stock, 'description': p.description or '',
-        'image_url': p.image_url or ''
+        'image_url': p.image_url or '',
+        'image_data': p.image_data if p.image_type == 'db' else None,
+        'image_type': p.image_type,
+        'image_mime': p.image_mime
     } for p in products])
+
+@app.route('/api/admin/products', methods=['POST'])
+@admin_required
+def admin_create_product():
+    data = request.get_json()
+    
+    product = Product(
+        name=data.get('name'),
+        type=data.get('type'),
+        price=data.get('price'),
+        stock=data.get('stock', 0),
+        description=data.get('description', ''),
+        image_url=data.get('image_url', ''),
+        image_type='url'
+    )
+    
+    db.session.add(product)
+    db.session.commit()
+    return jsonify({'success': True, 'id': product.id}), 201
+
+@app.route('/api/admin/products/upload', methods=['POST'])
+@admin_required
+def admin_upload_product_image():
+    """Upload image - stores in DB if under 90%, otherwise Cloudinary"""
+    if 'image' not in request.files:
+        return jsonify({'error': 'No image file'}), 400
+    
+    file = request.files['image']
+    product_id = request.form.get('product_id')
+    
+    if not product_id:
+        return jsonify({'error': 'Product ID required'}), 400
+    
+    product = Product.query.get(product_id)
+    if not product:
+        return jsonify({'error': 'Product not found'}), 404
+    
+    # Check file size (5MB max)
+    file.seek(0, 2)
+    file_size = file.tell()
+    file.seek(0)
+    
+    if file_size > 5 * 1024 * 1024:
+        return jsonify({'error': 'Image too large. Max 5MB'}), 400
+    
+    # Read file content
+    file_content = file.read()
+    mime_type = file.mimetype
+    
+    # Decide storage location
+    use_cloudinary = should_use_cloudinary()
+    
+    if use_cloudinary and CLOUDINARY_ENABLED:
+        # Upload to Cloudinary
+        try:
+            upload_result = cloudinary.uploader.upload(file, folder='wamp_products')
+            product.image_url = upload_result['secure_url']
+            product.image_type = 'cloudinary'
+            product.image_data = None
+            product.image_mime = None
+            logger.info(f"Image uploaded to Cloudinary for product {product_id}")
+        except Exception as e:
+            logger.error(f"Cloudinary upload failed: {e}")
+            return jsonify({'error': 'Image upload failed'}), 500
+    else:
+        # Store as base64 in database
+        base64_data = base64.b64encode(file_content).decode('utf-8')
+        product.image_data = base64_data
+        product.image_type = 'db'
+        product.image_mime = mime_type
+        product.image_url = None
+        logger.info(f"Image stored in database for product {product_id}")
+    
+    db.session.commit()
+    return jsonify({'success': True, 'image_type': product.image_type})
+
+@app.route('/api/admin/products/<int:product_id>', methods=['PUT'])
+@admin_required
+def admin_update_product(product_id):
+    product = Product.query.get_or_404(product_id)
+    data = request.get_json()
+    product.name = data.get('name', product.name)
+    product.type = data.get('type', product.type)
+    product.price = data.get('price', product.price)
+    product.stock = data.get('stock', product.stock)
+    product.description = data.get('description', product.description)
+    
+    # Only update URL if provided and not using DB storage
+    if data.get('image_url') and product.image_type != 'db':
+        product.image_url = data.get('image_url')
+        product.image_type = 'url'
+    
+    db.session.commit()
+    return jsonify({'success': True})
+
+@app.route('/api/admin/products/<int:product_id>', methods=['DELETE'])
+@admin_required
+def admin_delete_product(product_id):
+    product = Product.query.get_or_404(product_id)
+    db.session.delete(product)
+    db.session.commit()
+    return jsonify({'success': True})
 
 # ==================== CART ROUTES ====================
 @app.route('/api/cart', methods=['GET'])
@@ -843,46 +976,10 @@ def admin_stats():
         'today_sales': today_sales,
         'pending_orders': pending,
         'total_products': Product.query.count(),
-        'low_stock': low_stock
+        'low_stock': low_stock,
+        'db_size_gb': round(get_database_size() / (1024**3), 2),
+        'db_threshold_gb': round(DB_THRESHOLD / (1024**3), 2)
     })
-
-@app.route('/api/admin/products', methods=['POST'])
-@admin_required
-def admin_create_product():
-    data = request.get_json()
-    product = Product(
-        name=data.get('name'),
-        type=data.get('type'),
-        price=data.get('price'),
-        stock=data.get('stock', 0),
-        description=data.get('description', ''),
-        image_url=data.get('image_url', '')
-    )
-    db.session.add(product)
-    db.session.commit()
-    return jsonify({'success': True, 'id': product.id}), 201
-
-@app.route('/api/admin/products/<int:product_id>', methods=['PUT'])
-@admin_required
-def admin_update_product(product_id):
-    product = Product.query.get_or_404(product_id)
-    data = request.get_json()
-    product.name = data.get('name', product.name)
-    product.type = data.get('type', product.type)
-    product.price = data.get('price', product.price)
-    product.stock = data.get('stock', product.stock)
-    product.description = data.get('description', product.description)
-    product.image_url = data.get('image_url', product.image_url)
-    db.session.commit()
-    return jsonify({'success': True})
-
-@app.route('/api/admin/products/<int:product_id>', methods=['DELETE'])
-@admin_required
-def admin_delete_product(product_id):
-    product = Product.query.get_or_404(product_id)
-    db.session.delete(product)
-    db.session.commit()
-    return jsonify({'success': True})
 
 @app.route('/api/admin/orders', methods=['GET'])
 @admin_required
@@ -999,16 +1096,18 @@ if __name__ == '__main__':
     print(f"""
 ╔══════════════════════════════════════════════════════════════════╗
 ║              WAMP BACKEND - PRODUCTION READY ✅                  ║
-║                         Version 6.2.0                            ║
+║                         Version 7.0.0                            ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  Status:      RUNNING                                           ║
 ║  Mode:        PRODUCTION                                        ║
 ║  Payments:    {'LIVE' if FLUTTERWAVE_ENABLED else 'DEMO'}                                ║
+║  Cloudinary:  {'ENABLED' if CLOUDINARY_ENABLED else 'DISABLED'}                            ║
 ║  Port:        {port}                                             ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  ✅ Default Admin: {os.environ.get('ADMIN_EMAIL', 'admin@tarazo.com')} / [SET IN ENV]    ║
-║  ✅ Auto-fixes missing columns on startup                       ║
-║  ✅ All routes ready                                            ║
+║  ✅ Auto-creates missing columns                                 ║
+║  ✅ Hybrid image storage (DB first → Cloudinary at 90% full)    ║
+║  ✅ All existing data preserved                                 ║
+║  ✅ Max image size: 5MB                                         ║
 ╚══════════════════════════════════════════════════════════════════╝
 """)
 
