@@ -652,52 +652,425 @@
 
 <script>
 // ==================== APP STATE ====================
-let AppState = { user: null, products: [], cart: [], orders: [], wishlist: [], reviews: [], notifications: [{ id:1, title:"✨ Welcome!", message:"Browse freely — login to add to cart or wishlist.", read:false, date:new Date() }], pendingAction: null };
+let AppState = { 
+  user: null, 
+  products: [], 
+  cart: [], 
+  orders: [], 
+  wishlist: [], 
+  reviews: [], 
+  notifications: [{ id: 1, title: "✨ Welcome!", message: "Browse freely — login to add to cart or wishlist.", read: false, date: new Date() }], 
+  pendingAction: null 
+};
+
 const API_BASE = 'https://raven-terazzo.onrender.com/api';
-function showToast(msg, err) { let t=document.getElementById('toast'); t.textContent=msg; t.style.background=err?'#e74c3c':'#154360'; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
-function showModal(title, html) { document.querySelector('#modalOverlay .modal-header').innerHTML=title; document.getElementById('modalBody').innerHTML=html; document.getElementById('modalOverlay').classList.remove('hidden'); }
-function hideModal() { document.getElementById('modalOverlay').classList.add('hidden'); }
-function closeModal(e) { if(e.target===document.getElementById('modalOverlay')) hideModal(); }
-function escapeHtml(s) { return String(s||'').replace(/[&<>]/g, m=> m==='&'?'&amp;': m==='<'?'&lt;': '&gt;'); }
-function getToken() { return localStorage.getItem('access_token'); }
-function setToken(t) { if(t) localStorage.setItem('access_token',t); else localStorage.removeItem('access_token'); }
-function setRefresh(t) { if(t) localStorage.setItem('refresh_token',t); else localStorage.removeItem('refresh_token'); }
-function clearTokens() { localStorage.removeItem('access_token'); localStorage.removeItem('refresh_token'); }
 
-async function apiCall(endpoint, opts={}) {
-  const headers={'Content-Type':'application/json', ...opts.headers};
-  const token=getToken(); if(token) headers['Authorization']=`Bearer ${token}`;
-  const res=await fetch(`${API_BASE}${endpoint}`,{...opts,headers});
-  if(res.status===401){ logout(); throw new Error('Session expired'); }
-  if(!res.ok) throw new Error(await res.text());
-  return res.json();
+// ==================== TOAST & MODAL ====================
+function showToast(msg, err) { 
+  let t = document.getElementById('toast'); 
+  t.textContent = msg; 
+  t.style.background = err ? '#e74c3c' : '#154360'; 
+  t.classList.add('show'); 
+  setTimeout(() => t.classList.remove('show'), 3000); 
 }
-async function loginUser(email, password) { const res=await fetch(`${API_BASE}/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})}); const data=await res.json(); if(res.ok && data.success) { setToken(data.access_token); setRefresh(data.refresh_token); AppState.user=data.user; await refreshUserData(); return true; } else throw new Error(data.error||'Login failed'); }
-async function registerUser(name, phone, email, password) { const res=await fetch(`${API_BASE}/register`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,phone,password})}); const data=await res.json(); if(res.ok && data.success) return true; else throw new Error(data.error||'Registration failed'); }
-async function refreshUserData() { if(!AppState.user) return; try { AppState.products = await apiCall('/products'); } catch(e){ AppState.products = sampleFallback; } try { AppState.cart = await apiCall('/cart'); updateCartBadge(); } catch(e){ AppState.cart=[]; } try { AppState.orders = await apiCall('/orders'); } catch(e){ AppState.orders=[]; } }
-const sampleFallback = [ { id:1, name:"Premium Floor Terrazzo", type:"Floor Terrazzo", price:250000, stock:12, image_url:"https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=400", description:"Elegant terrazzo finish" }, { id:2, name:"Copper Plumbing Pipe", type:"Plumbing Pipe", price:45000, stock:30, image_url:"https://images.unsplash.com/photo-1581092160562-40aa08e7882a?w=400", description:"Durable copper pipe" }, { id:3, name:"Interior Emulsion Paint", type:"Paint Emulsion", price:120000, stock:8, image_url:"https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=400", description:"Smooth matt finish" } ];
 
-// ---------- AUTH MODAL (POPUP) ----------
-function requireAuth(cb) { if(AppState.user) cb(); else showAuthModal(cb); }
-function showAuthModal(cb) { let html=`<div style="text-align:center"><p style="margin-bottom:20px">Login or register to continue</p><div style="display:flex; gap:12px; margin-bottom:16px"><button class="btn btn-primary" style="flex:1" onclick="showAuthLogin()">🔐 Login</button><button class="btn btn-green" style="flex:1" onclick="showAuthRegister()">📝 Register</button></div><small>✨ Use your backend account</small></div>`; showModal('🔐 Account Required', html); window.pendingAuthCallback=cb; }
-function showAuthLogin() { let html=`<div><input type="email" id="authEmail" placeholder="Email" style="width:100%"><input type="password" id="authPassword" placeholder="Password" style="width:100%"><button class="btn btn-primary" style="width:100%; margin-top:10px" onclick="submitAuthLogin()">Login</button><div style="text-align:center; margin-top:16px">No account? <span onclick="showAuthRegister()" style="color:var(--blue); font-weight:600; cursor:pointer;">Register</span></div></div>`; showModal('🔐 Login', html); }
-function showAuthRegister() { let html=`<div><input type="text" id="authName" placeholder="Full name"><input type="tel" id="authPhone" placeholder="Phone"><input type="email" id="authRegEmail" placeholder="Email"><input type="password" id="authRegPassword" placeholder="Password"><input type="password" id="authRegConfirm" placeholder="Confirm"><button class="btn btn-green" style="width:100%" onclick="submitAuthRegister()">Create account</button><div style="text-align:center; margin-top:16px">Have an account? <span onclick="showAuthLogin()" style="color:var(--blue); font-weight:600; cursor:pointer;">Login</span></div></div>`; showModal('📝 Register', html); }
-async function submitAuthLogin() { let email=document.getElementById('authEmail')?.value, pwd=document.getElementById('authPassword')?.value; if(!email||!pwd) return showToast('Enter credentials',true); try{ await loginUser(email,pwd); hideModal(); showToast(`Welcome ${AppState.user.name}!`); updateUIAfterLogin(); if(window.pendingAuthCallback){ let cb=window.pendingAuthCallback; window.pendingAuthCallback=null; cb(); } }catch(e){ showToast(e.message,true); } }
-async function submitAuthRegister() { let name=document.getElementById('authName')?.value, phone=document.getElementById('authPhone')?.value, email=document.getElementById('authRegEmail')?.value, pwd=document.getElementById('authRegPassword')?.value, conf=document.getElementById('authRegConfirm')?.value; if(pwd!==conf) return showToast('Passwords mismatch',true); try{ await registerUser(name,phone,email,pwd); showToast('Registered! Please login'); showAuthLogin(); }catch(e){ showToast(e.message,true); } }
-function updateUIAfterLogin() { updateAuthButton(); setupNav(); refreshUserData().then(()=>{ if(AppState.user.role==='admin') navigateTo('adminDashboard'); else if(AppState.user.role==='agent') navigateTo('agentPanel'); else navigateTo('userShop'); renderShop(); renderWishlist(); renderUserReviews(); updateCartBadge(); }); }
-function onAuthButtonClick() { if(AppState.user) logout(); else showAuthModal(null); }
-function updateAuthButton() { let btn=document.getElementById('dynamicAuthBtn'); if(btn) { btn.innerHTML = AppState.user ? '🚪' : '🔐'; btn.style.backgroundColor = AppState.user ? '#e74c3c' : '#1a5276'; btn.style.color = 'white'; } }
-async function logout() { clearTokens(); AppState.user=null; AppState.cart=[]; AppState.wishlist=[]; AppState.reviews=[]; updateCartBadge(); updateAuthButton(); setupNav(); navigateTo('userShop'); renderShop(); showToast('Logged out'); }
+function showModal(title, html) { 
+  document.querySelector('#modalOverlay .modal-header').innerHTML = title; 
+  document.getElementById('modalBody').innerHTML = html; 
+  document.getElementById('modalOverlay').classList.remove('hidden'); 
+}
 
-// ---------- PROTECTED ACTIONS ----------
-function addToCart(pid) { requireAuth(async()=>{ try{ await apiCall('/cart',{method:'POST',body:JSON.stringify({product_id:pid,quantity:1})}); await refreshUserData(); showToast('Added to cart'); renderCart(); }catch(e){ showToast('Failed',true); } }); }
-function toggleWishlist(pid) { requireAuth(()=>{ let idx=AppState.wishlist.findIndex(w=>w.productId===pid); if(idx>=0) AppState.wishlist.splice(idx,1); else { let p=(AppState.products.length?AppState.products:sampleFallback).find(pr=>pr.id===pid); AppState.wishlist.push({productId:pid,productName:p?.name}); } renderWishlist(); renderShop(); showToast(idx>=0?'Removed from wishlist':'Added to wishlist'); }); }
-function submitRatingAndReview(pid) { requireAuth(()=>{ let rating=document.querySelectorAll('#detailRatingStars .star.active').length; let text=document.getElementById('reviewTextarea')?.value||''; if(!rating) return showToast('Select a rating',true); let existing=AppState.reviews.findIndex(r=>r.productId===pid && r.userId===AppState.user.id); let reviewObj={productId:pid,userId:AppState.user.id,rating,text,productName:(AppState.products.length?AppState.products:sampleFallback).find(p=>p.id===pid)?.name}; if(existing>=0) AppState.reviews[existing]=reviewObj; else AppState.reviews.push(reviewObj); showToast('Review saved!'); renderUserReviews(); showProductDetail(pid); }); }
-function triggerCheckout() { requireAuth(()=>{ if(!AppState.cart.length) return showToast('Cart empty',true); let total=AppState.cart.reduce((s,c)=>{ let p=AppState.products.find(pr=>pr.id===c.product_id); return s+((p?.price||0)*(c.quantity||1)); },0); document.getElementById('checkoutTotal').innerText='UGX '+total.toLocaleString(); navigateTo('checkoutPage'); }); }
+function hideModal() { 
+  document.getElementById('modalOverlay').classList.add('hidden'); 
+}
 
-// ---------- RECEIPT PRINTING (NEW) ----------
+function closeModal(e) { 
+  if (e.target === document.getElementById('modalOverlay')) hideModal(); 
+}
+
+function escapeHtml(s) { 
+  return String(s || '').replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); 
+}
+
+// ==================== TOKEN HANDLING (FIXED) ====================
+function getToken() { 
+  const token = localStorage.getItem('access_token'); 
+  if (token) console.log('✅ Token retrieved, length:', token.length);
+  else console.warn('⚠️ No token found');
+  return token; 
+}
+
+function setToken(t) { 
+  if (t) { 
+    localStorage.setItem('access_token', t); 
+    console.log('✅ Token stored, length:', t.length);
+  } else { 
+    localStorage.removeItem('access_token'); 
+    console.log('❌ Token removed');
+  } 
+}
+
+function setRefresh(t) { 
+  if (t) localStorage.setItem('refresh_token', t); 
+  else localStorage.removeItem('refresh_token'); 
+}
+
+function clearTokens() { 
+  localStorage.removeItem('access_token'); 
+  localStorage.removeItem('refresh_token'); 
+  console.log('🔒 All tokens cleared');
+}
+
+// ==================== API CALL WITH IMPROVED ERROR HANDLING ====================
+async function apiCall(endpoint, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...opts.headers };
+  const token = getToken();
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+    console.log(`🔐 API Call to ${endpoint} with auth header`);
+  } else {
+    console.warn(`⚠️ API Call to ${endpoint} without token`);
+  }
+  
+  try {
+    const res = await fetch(`${API_BASE}${endpoint}`, { ...opts, headers });
+    
+    // Handle 401 Unauthorized
+    if (res.status === 401) {
+      console.error('🔒 Session expired - logging out');
+      const errorData = await res.json().catch(() => ({}));
+      logout();
+      throw new Error(errorData.error || 'Session expired');
+    }
+    
+    // Handle 422 Unprocessable Entity
+    if (res.status === 422) {
+      console.error('❌ 422 Error - Invalid token format for:', endpoint);
+      const errorText = await res.text();
+      throw new Error(`Invalid token format: ${errorText}`);
+    }
+    
+    // Handle other errors
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(errorText || `HTTP ${res.status}`);
+    }
+    
+    return res.json();
+  } catch (error) {
+    console.error(`🚨 API Error (${endpoint}):`, error);
+    throw error;
+  }
+}
+
+// ==================== AUTH FUNCTIONS (FIXED) ====================
+async function loginUser(email, password) { 
+  try {
+    console.log(`🔐 Attempting login for: ${email}`);
+    
+    const res = await fetch(`${API_BASE}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    
+    const data = await res.json();
+    console.log('📡 Login response status:', res.status);
+    
+    if (res.ok && data.success) {
+      // Store tokens
+      setToken(data.access_token);
+      setRefresh(data.refresh_token);
+      
+      // Verify token was stored
+      const storedToken = getToken();
+      console.log('✅ Token stored successfully:', storedToken ? 'YES' : 'NO');
+      
+      AppState.user = data.user;
+      console.log('✅ User logged in:', AppState.user.email, 'Role:', AppState.user.role);
+      
+      await refreshUserData();
+      return true;
+    } else {
+      throw new Error(data.error || 'Login failed');
+    }
+  } catch (error) {
+    console.error('❌ Login error:', error);
+    throw error;
+  }
+}
+
+async function registerUser(name, phone, email, password) { 
+  const res = await fetch(`${API_BASE}/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, email, phone, password })
+  });
+  
+  const data = await res.json();
+  if (res.ok && data.success) return true;
+  else throw new Error(data.error || 'Registration failed');
+}
+
+async function refreshUserData() { 
+  if (!AppState.user) return;
+  
+  try {
+    console.log('🔄 Refreshing user data...');
+    AppState.products = await apiCall('/products');
+    console.log('✅ Products loaded:', AppState.products.length);
+  } catch (e) { 
+    console.warn('⚠️ Products fallback:', e);
+    AppState.products = sampleFallback; 
+  }
+  
+  try { 
+    AppState.cart = await apiCall('/cart'); 
+    updateCartBadge();
+    console.log('✅ Cart loaded:', AppState.cart.length);
+  } catch (e) { 
+    console.warn('⚠️ Cart error:', e);
+    AppState.cart = []; 
+  }
+  
+  try { 
+    AppState.orders = await apiCall('/orders'); 
+    console.log('✅ Orders loaded:', AppState.orders.length);
+  } catch (e) { 
+    console.warn('⚠️ Orders error:', e);
+    AppState.orders = []; 
+  }
+}
+
+// ==================== VERIFY TOKEN (DEBUG) ====================
+async function verifyToken() {
+  const token = getToken();
+  if (!token) {
+    console.log('❌ No token to verify');
+    return false;
+  }
+  
+  try {
+    const result = await apiCall('/verify-token');
+    console.log('✅ Token is valid:', result);
+    return true;
+  } catch (error) {
+    console.error('❌ Token invalid:', error);
+    return false;
+  }
+}
+
+// ==================== LOGOUT ====================
+async function logout() { 
+  try {
+    if (getToken()) {
+      await apiCall('/logout', { method: 'POST' }).catch(() => {});
+    }
+  } catch(e) {}
+  
+  clearTokens(); 
+  AppState.user = null; 
+  AppState.cart = []; 
+  AppState.wishlist = []; 
+  AppState.reviews = []; 
+  updateCartBadge(); 
+  updateAuthButton(); 
+  setupNav(); 
+  navigateTo('userShop'); 
+  renderShop(); 
+  showToast('Logged out');
+  console.log('🔓 User logged out');
+}
+
+// ==================== SAMPLE FALLBACK DATA ====================
+const sampleFallback = [ 
+  { id: 1, name: "Premium Floor Terrazzo", type: "Floor Terrazzo", price: 250000, stock: 12, image_url: "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=400", description: "Elegant terrazzo finish" }, 
+  { id: 2, name: "Copper Plumbing Pipe", type: "Plumbing Pipe", price: 45000, stock: 30, image_url: "https://images.unsplash.com/photo-1581092160562-40aa08e7882a?w=400", description: "Durable copper pipe" }, 
+  { id: 3, name: "Interior Emulsion Paint", type: "Paint Emulsion", price: 120000, stock: 8, image_url: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=400", description: "Smooth matt finish" } 
+];
+
+// ==================== AUTH MODAL ====================
+function requireAuth(cb) { 
+  if (AppState.user) cb(); 
+  else showAuthModal(cb); 
+}
+
+function showAuthModal(cb) { 
+  let html = `<div style="text-align:center">
+    <p style="margin-bottom:20px">Login or register to continue</p>
+    <div style="display:flex; gap:12px; margin-bottom:16px">
+      <button class="btn btn-primary" style="flex:1" onclick="showAuthLogin()">🔐 Login</button>
+      <button class="btn btn-green" style="flex:1" onclick="showAuthRegister()">📝 Register</button>
+    </div>
+    <small>✨ Use your backend account</small>
+  </div>`; 
+  showModal('🔐 Account Required', html); 
+  window.pendingAuthCallback = cb; 
+}
+
+function showAuthLogin() { 
+  let html = `<div>
+    <input type="email" id="authEmail" placeholder="Email" style="width:100%">
+    <input type="password" id="authPassword" placeholder="Password" style="width:100%">
+    <button class="btn btn-primary" style="width:100%; margin-top:10px" onclick="submitAuthLogin()">Login</button>
+    <div style="text-align:center; margin-top:16px">No account? <span onclick="showAuthRegister()" style="color:var(--blue); font-weight:600; cursor:pointer;">Register</span></div>
+  </div>`; 
+  showModal('🔐 Login', html); 
+}
+
+function showAuthRegister() { 
+  let html = `<div>
+    <input type="text" id="authName" placeholder="Full name">
+    <input type="tel" id="authPhone" placeholder="Phone">
+    <input type="email" id="authRegEmail" placeholder="Email">
+    <input type="password" id="authRegPassword" placeholder="Password">
+    <input type="password" id="authRegConfirm" placeholder="Confirm">
+    <button class="btn btn-green" style="width:100%" onclick="submitAuthRegister()">Create account</button>
+    <div style="text-align:center; margin-top:16px">Have an account? <span onclick="showAuthLogin()" style="color:var(--blue); font-weight:600; cursor:pointer;">Login</span></div>
+  </div>`; 
+  showModal('📝 Register', html); 
+}
+
+async function submitAuthLogin() { 
+  let email = document.getElementById('authEmail')?.value; 
+  let pwd = document.getElementById('authPassword')?.value; 
+  
+  if (!email || !pwd) return showToast('Enter credentials', true);
+  
+  try { 
+    await loginUser(email, pwd); 
+    hideModal(); 
+    showToast(`Welcome ${AppState.user.name}!`); 
+    updateUIAfterLogin(); 
+    
+    if (window.pendingAuthCallback) { 
+      let cb = window.pendingAuthCallback; 
+      window.pendingAuthCallback = null; 
+      cb(); 
+    } 
+  } catch (e) { 
+    showToast(e.message, true); 
+  } 
+}
+
+async function submitAuthRegister() { 
+  let name = document.getElementById('authName')?.value; 
+  let phone = document.getElementById('authPhone')?.value; 
+  let email = document.getElementById('authRegEmail')?.value; 
+  let pwd = document.getElementById('authRegPassword')?.value; 
+  let conf = document.getElementById('authRegConfirm')?.value; 
+  
+  if (pwd !== conf) return showToast('Passwords mismatch', true);
+  
+  try { 
+    await registerUser(name, phone, email, pwd); 
+    showToast('Registered! Please login'); 
+    showAuthLogin(); 
+  } catch (e) { 
+    showToast(e.message, true); 
+  } 
+}
+
+function updateUIAfterLogin() { 
+  updateAuthButton(); 
+  setupNav(); 
+  refreshUserData().then(() => { 
+    if (AppState.user.role === 'admin') navigateTo('adminDashboard'); 
+    else if (AppState.user.role === 'agent') navigateTo('agentPanel'); 
+    else navigateTo('userShop'); 
+    renderShop(); 
+    renderWishlist(); 
+    renderUserReviews(); 
+    updateCartBadge(); 
+  }); 
+}
+
+function onAuthButtonClick() { 
+  if (AppState.user) logout(); 
+  else showAuthModal(null); 
+}
+
+function updateAuthButton() { 
+  let btn = document.getElementById('dynamicAuthBtn'); 
+  if (btn) { 
+    btn.innerHTML = AppState.user ? '🚪' : '🔐'; 
+    btn.style.backgroundColor = AppState.user ? '#e74c3c' : '#1a5276'; 
+    btn.style.color = 'white'; 
+  } 
+}
+
+// ==================== PROTECTED ACTIONS ====================
+function addToCart(pid) { 
+  requireAuth(async () => { 
+    try { 
+      await apiCall('/cart', { method: 'POST', body: JSON.stringify({ product_id: pid, quantity: 1 }) }); 
+      await refreshUserData(); 
+      showToast('Added to cart'); 
+      renderCart(); 
+    } catch (e) { 
+      showToast('Failed', true); 
+    } 
+  }); 
+}
+
+function toggleWishlist(pid) { 
+  requireAuth(() => { 
+    let idx = AppState.wishlist.findIndex(w => w.productId === pid); 
+    if (idx >= 0) AppState.wishlist.splice(idx, 1); 
+    else { 
+      let p = (AppState.products.length ? AppState.products : sampleFallback).find(pr => pr.id === pid); 
+      AppState.wishlist.push({ productId: pid, productName: p?.name }); 
+    } 
+    renderWishlist(); 
+    renderShop(); 
+    showToast(idx >= 0 ? 'Removed from wishlist' : 'Added to wishlist'); 
+  }); 
+}
+
+function submitRatingAndReview(pid) { 
+  requireAuth(() => { 
+    let rating = document.querySelectorAll('#detailRatingStars .star.active').length; 
+    let text = document.getElementById('reviewTextarea')?.value || ''; 
+    
+    if (!rating) return showToast('Select a rating', true); 
+    
+    let existing = AppState.reviews.findIndex(r => r.productId === pid && r.userId === AppState.user.id); 
+    let reviewObj = { 
+      productId: pid, 
+      userId: AppState.user.id, 
+      rating, 
+      text, 
+      productName: (AppState.products.length ? AppState.products : sampleFallback).find(p => p.id === pid)?.name 
+    }; 
+    
+    if (existing >= 0) AppState.reviews[existing] = reviewObj; 
+    else AppState.reviews.push(reviewObj); 
+    
+    showToast('Review saved!'); 
+    renderUserReviews(); 
+    showProductDetail(pid); 
+  }); 
+}
+
+function triggerCheckout() { 
+  requireAuth(() => { 
+    if (!AppState.cart.length) return showToast('Cart empty', true); 
+    
+    let total = AppState.cart.reduce((s, c) => { 
+      let p = AppState.products.find(pr => pr.id === c.product_id); 
+      return s + ((p?.price || 0) * (c.quantity || 1)); 
+    }, 0); 
+    
+    document.getElementById('checkoutTotal').innerText = 'UGX ' + total.toLocaleString(); 
+    navigateTo('checkoutPage'); 
+  }); 
+}
+
+// ==================== RECEIPT PRINTING ====================
 function printReceipt(order) {
   if (!order) return;
+  
   let receiptHtml = `
     <div class="receipt-print-area" style="font-family: monospace; max-width: 300px; margin: 0 auto; padding: 20px;">
       <div style="text-align: center; border-bottom: 2px dashed #ccc; padding-bottom: 10px; margin-bottom: 10px;">
@@ -715,7 +1088,7 @@ function printReceipt(order) {
         <table style="width: 100%; font-size: 12px;">
           <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
           <tbody>
-            ${(order.items || []).map(item => `<tr><td>${escapeHtml(item.name || item.product_name || 'Product')}</td><td>${item.quantity}</td><td>UGX ${(item.price||0).toLocaleString()}</td><td>UGX ${((item.price||0)*(item.quantity||1)).toLocaleString()}</td></tr>`).join('')}
+            ${(order.items || []).map(item => `<tr><td>${escapeHtml(item.name || item.product_name || 'Product')}</td><td>${item.quantity}</td><td>UGX ${(item.price || 0).toLocaleString()}</td><td>UGX ${((item.price || 0) * (item.quantity || 1)).toLocaleString()}</td></tr>`).join('')}
           </tbody>
         </table>
       </div>
@@ -728,6 +1101,7 @@ function printReceipt(order) {
       </div>
     </div>
   `;
+  
   let printWindow = window.open('', '_blank');
   printWindow.document.write(`
     <html>
@@ -744,41 +1118,533 @@ function printReceipt(order) {
   printWindow.print();
 }
 
-// ---------- RENDERING ----------
-function renderProductCard(p) { let inWish=AppState.user && AppState.wishlist.some(w=>w.productId===p.id); return `<div class="product-card" onclick="showProductDetail(${p.id})"><img src="${escapeHtml(p.image_url||'https://placehold.co/600x400/1a5276/white?text=WAMP')}"><div class="product-info"><div class="product-name">${escapeHtml(p.name)}</div><div class="product-price">UGX ${(p.price||0).toLocaleString()}</div><div class="product-stock">${p.stock||0} in stock</div><button class="btn-sm btn-green" style="width:100%" onclick="event.stopPropagation();addToCart(${p.id})">🛒 Add to Cart</button><button class="btn-sm btn-outline" style="width:100%; margin-top:8px" onclick="event.stopPropagation();toggleWishlist(${p.id})">${inWish?'❤️ Wishlist':'🤍 Wishlist'}</button></div></div>`; }
-async function renderShop(f='all'){ let prods=AppState.products.length?AppState.products:sampleFallback; if(f!=='all') prods=prods.filter(p=>p.type&&p.type.toLowerCase().includes(f.toLowerCase())); document.getElementById('shopGrid').innerHTML=prods.map(p=>renderProductCard(p)).join('')||'<div class="empty-state">No products found</div>'; }
-function filterProducts(t,btn){ document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderShop(t); }
-function searchProducts(q){ renderShop('all'); }
-async function showProductDetail(id){ let prods=AppState.products.length?AppState.products:sampleFallback; let p=prods.find(pr=>pr.id===id); if(!p) return; let existingReview=AppState.user&&AppState.reviews.find(r=>r.productId===id&&r.userId===AppState.user.id); let rating=existingReview?existingReview.rating:0; let reviewText=existingReview?existingReview.text:''; document.getElementById('detailContent').innerHTML=`<div class="card"><img src="${escapeHtml(p.image_url||'https://placehold.co/600x400/1a5276/white?text=WAMP')}" style="width:100%; border-radius:16px; margin-bottom:16px;"><h2 style="margin-bottom:8px">${escapeHtml(p.name)}</h2><div class="product-price">UGX ${(p.price||0).toLocaleString()}</div><p style="margin:12px 0">${escapeHtml(p.description)}</p><div class="star-rating" id="detailRatingStars">${[1,2,3,4,5].map(s=>`<span class="star ${s<=rating?'active':''}" data-rating="${s}">★</span>`).join('')}</div><textarea id="reviewTextarea" placeholder="Write a review..." rows="2">${escapeHtml(reviewText)}</textarea><button class="btn btn-primary" onclick="submitRatingAndReview(${p.id})">Submit Review</button><button class="btn btn-green" style="margin-top:12px" onclick="addToCart(${p.id})">🛒 Add to Cart</button><button class="btn btn-outline" style="margin-top:12px" onclick="navigateTo('userShop')">Back to Shop</button></div>`; document.querySelectorAll('#detailRatingStars .star').forEach(star=>star.onclick=()=>{ let rate=parseInt(star.dataset.rating); document.querySelectorAll('#detailRatingStars .star').forEach(s=>s.classList.toggle('active',parseInt(s.dataset.rating)<=rate)); }); navigateTo('productDetail'); }
-function showCart(){ navigateTo('userCart'); renderCart(); }
-async function renderCart(){ if(!AppState.cart.length){ document.getElementById('cartItems').innerHTML='<div class="empty-state">Cart is empty</div>'; document.getElementById('cartSummary').classList.add('hidden'); return; } let total=0,html=''; for(let c of AppState.cart){ let p=AppState.products.find(pr=>pr.id===c.product_id); if(p){ let it=(p.price||0)*(c.quantity||1); total+=it; html+=`<div class="list-item"><div><strong>${escapeHtml(p.name)}</strong><br>UGX ${(p.price||0).toLocaleString()} x ${c.quantity} = UGX ${it.toLocaleString()}</div><button class="btn-sm btn-red" onclick="removeFromCart(${c.id})">Remove</button></div>`; } } document.getElementById('cartItems').innerHTML=html; document.getElementById('cartTotal').innerText='UGX '+total.toLocaleString(); document.getElementById('cartSummary').classList.remove('hidden'); }
-async function removeFromCart(cid){ try{ await apiCall(`/cart/${cid}`,{method:'DELETE'}); await refreshUserData(); renderCart(); }catch(e){} }
-function updateCartBadge(){ let sum=AppState.cart.reduce((s,c)=>s+(c.quantity||0),0); let b=document.getElementById('cartBadge'); if(sum>0){ b.textContent=sum; b.classList.remove('hidden'); } else b.classList.add('hidden'); }
-async function processPayment(){ if(!AppState.user) return; let method=document.querySelector('input[name="payMethod"]:checked').value; let phone=document.getElementById('payPhone').value; if(method!=='card' && method!=='cod' && !/^07[0-9]{8}$/.test(phone.replace(/\D/g,''))) return showToast('Valid phone required for mobile money',true); if(!AppState.cart.length) return showToast('Cart empty',true); let total=0,items=[]; let cartItemsDetails = []; for(let c of AppState.cart){ let p=AppState.products.find(pr=>pr.id===c.product_id); if(p){ total+=(p.price||0)*(c.quantity||1); items.push({productId:c.product_id,quantity:c.quantity}); cartItemsDetails.push({name:p.name, price:p.price, quantity:c.quantity}); } } let paymentMethod = method==='mtn'?'MTN':(method==='airtel'?'Airtel':(method==='cod'?'Cash on Delivery':'Card')); try{ let orderResponse = await apiCall('/orders',{method:'POST',body:JSON.stringify({items,total,payment_method:paymentMethod})}); let newOrder = { id: orderResponse.id || Date.now(), user_id: AppState.user.id, total: total, status: 'pending', payment_method: paymentMethod, date: new Date().toISOString(), customer_name: AppState.user.name, items: cartItemsDetails }; showToast(method==='cod'?'Order placed! Pay on delivery.':'Order placed!'); await refreshUserData(); navigateTo('userOrders'); renderUserOrders(); printReceipt(newOrder); }catch(e){ showToast('Order failed',true); } }
-function renderUserOrders(){ if(!AppState.user) return; let my=AppState.orders.filter(o=>o.user_id===AppState.user.id); document.getElementById('userOrderList').innerHTML=my.length?my.map(o=>`<div class="card"><div style="display:flex; justify-content:space-between; align-items:center;"><div><strong>Order #${o.id}</strong> <span class="status-badge">${o.status}</span><br>UGX ${(o.total||0).toLocaleString()}<br>Payment: ${o.payment_method || 'N/A'}</div><button class="btn-sm btn-primary" style="width:auto;" onclick='printReceipt(${JSON.stringify(o).replace(/'/g, "&#39;")})'>🖨️ Print Receipt</button></div></div>`).join(''):'<div class="empty-state">No orders</div>'; }
-function renderWishlist(){ let c=document.getElementById('wishlistItems'); if(!c) return; if(!AppState.user || !AppState.wishlist.length){ c.innerHTML='<div class="empty-state">No items in wishlist</div>'; return; } c.innerHTML=AppState.wishlist.map(w=>`<div class="list-item"><span>${escapeHtml(w.productName)}</span><button class="btn-sm btn-red" onclick="toggleWishlist(${w.productId})">Remove</button></div>`).join(''); }
-function renderUserReviews(){ let c=document.getElementById('userReviews'); if(!c) return; let my=AppState.user?AppState.reviews.filter(r=>r.userId===AppState.user.id):[]; if(!my.length){ c.innerHTML='<div class="empty-state">No reviews yet</div>'; return; } c.innerHTML=my.map(r=>`<div class="review-item" style="border-bottom:1px solid var(--border); padding:12px 0"><strong>${escapeHtml(r.productName)}</strong> ${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}<br><em>${escapeHtml(r.text)}</em></div>`).join(''); }
-function saveUserProfile(){ if(AppState.user){ AppState.user.name=document.getElementById('profileName').value; AppState.user.phone=document.getElementById('profilePhone').value; AppState.user.address=document.getElementById('profileAddress').value; showToast('Profile saved'); } }
-function showNotifications(){ let unread=AppState.notifications.map(n=>`<div class="list-item"><strong>${escapeHtml(n.title)}</strong><br>${escapeHtml(n.message)}</div>`).join('')||'<div class="empty-state">No notifications</div>'; showModal('🔔 Notifications',unread); AppState.notifications.forEach(n=>n.read=true); document.getElementById('notificationBadge').classList.add('hidden'); }
-function navigateTo(page){ document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden')); document.getElementById(page).classList.remove('hidden'); if(page==='userShop') renderShop(); if(page==='userCart') renderCart(); if(page==='userOrders') renderUserOrders(); if(page==='userDashboard'){ renderWishlist(); renderUserReviews(); } }
-function setupNav(){ let nav=document.getElementById('bottomNav'); if(!AppState.user) nav.innerHTML='<div class="nav-item" onclick="navigateTo(\'userShop\')">🏪 Shop</div><div class="nav-item" onclick="showAuthModal()">🔐 Login</div>'; else if(AppState.user.role==='admin') nav.innerHTML='<div class="nav-item" onclick="navigateTo(\'adminDashboard\')">📊 Dashboard</div><div class="nav-item" onclick="navigateTo(\'adminProducts\')">📦 Products</div><div class="nav-item" onclick="navigateTo(\'adminOrders\')">📋 Orders</div><div class="nav-item" onclick="logout()">🚪 Exit</div>'; else if(AppState.user.role==='agent') nav.innerHTML='<div class="nav-item" onclick="navigateTo(\'agentPanel\')">📦 Agent</div><div class="nav-item" onclick="logout()">🚪 Exit</div>'; else nav.innerHTML='<div class="nav-item" onclick="navigateTo(\'userShop\')">🏪 Shop</div><div class="nav-item" onclick="navigateTo(\'userOrders\')">📦 Orders</div><div class="nav-item" onclick="navigateTo(\'userCart\')">🛒 Cart</div><div class="nav-item" onclick="navigateTo(\'userDashboard\')">👤 Profile</div>'; let chat=document.getElementById('chatWidgetContainer'), wa=document.getElementById('whatsappWidget'); if(AppState.user?.role==='user'){ chat?.classList.remove('hidden'); wa?.classList.remove('hidden'); } else { chat?.classList.add('hidden'); wa?.classList.add('hidden'); } }
-function toggleChat(){ let box=document.getElementById('chatBox'); if(box.classList.contains('hidden')){ box.classList.remove('hidden'); if(!document.getElementById('chatMessages').innerHTML) addChatMessage('bot','Welcome! Ask about our products.'); } else box.classList.add('hidden'); }
-function addChatMessage(sender,txt){ let c=document.getElementById('chatMessages'); let d=document.createElement('div'); d.className='chat-msg '+sender; d.textContent=txt; c.appendChild(d); c.scrollTop=c.scrollHeight; }
-async function sendChat(){ let inp=document.getElementById('chatInput'), t=inp.value.trim(); if(!t) return; addChatMessage('user',t); inp.value=''; try{ let data=await apiCall('/chat/customer',{method:'POST',body:JSON.stringify({message:t})}); addChatMessage('bot',data.response||'Thanks!'); }catch(e){ addChatMessage('bot','Please WhatsApp us for support.'); } }
-function initSlider(){ let slides=document.querySelectorAll('.slider-slide'), dots=document.getElementById('sliderDots'); if(!slides.length) return; dots.innerHTML=''; slides.forEach((_,i)=>{ let d=document.createElement('div'); d.className='slider-dot'+(i===0?' active':''); d.onclick=()=>goToSlide(i); dots.appendChild(d); }); let cur=0; window.goToSlide=(idx)=>{ slides.forEach((s,i)=>{ s.classList.toggle('active',i===idx); dots.children[i]?.classList.toggle('active',i===idx); }); cur=idx; }; setInterval(()=>goToSlide((cur+1)%slides.length),4000); goToSlide(0); }
-function renderAdminProducts(){ let html=(AppState.products||[]).map(p=>`<div class="list-item"><div><strong>${escapeHtml(p.name)}</strong><br>${p.type} - Stock ${p.stock}</div><button class="btn-sm btn-red" onclick="deleteProductItem(${p.id})">Delete</button></div>`).join(''); document.getElementById('adminProductList').innerHTML=html||'<div class="empty-state">No products</div>'; }
-async function saveProduct(){ let id=document.getElementById('editProductId').value; let data={name:document.getElementById('prodName').value,type:document.getElementById('prodType').value,description:document.getElementById('prodDesc').value,price:parseInt(document.getElementById('prodPrice').value)||0,stock:parseInt(document.getElementById('prodStock').value)||0,image_url:document.getElementById('prodImage').value}; if(!data.name) return showToast('Name required',true); try{ if(id) await apiCall(`/admin/products/${id}`,{method:'PUT',body:JSON.stringify(data)}); else await apiCall('/admin/products',{method:'POST',body:JSON.stringify(data)}); await refreshUserData(); renderAdminProducts(); resetProductForm(); showToast('Saved'); }catch(e){ showToast('Failed',true); } }
-function resetProductForm(){ document.getElementById('editProductId').value=''; document.getElementById('prodName').value=''; document.getElementById('prodDesc').value=''; document.getElementById('prodPrice').value=''; document.getElementById('prodStock').value=''; document.getElementById('prodImage').value=''; }
-function deleteProductItem(id){ if(confirm('Delete?')) apiCall(`/admin/products/${id}`,{method:'DELETE'}).then(()=>{ refreshUserData(); renderAdminProducts(); }).catch(()=>showToast('Failed',true)); }
-function renderAdminOrders(){ let html=(AppState.orders||[]).map(o=>`<div class="list-item"><div>Order #${o.id} - UGX ${(o.total||0).toLocaleString()}<br>${o.status}</div></div>`).join(''); document.getElementById('adminOrdersList').innerHTML=html||'<div class="empty-state">No orders</div>'; }
-function renderAdminDashboard(){ document.getElementById('adminTodaySales').innerHTML='UGX '+((AppState.orders||[]).reduce((s,o)=>s+(o.total||0),0)).toLocaleString(); document.getElementById('adminPendingOrders').innerText=(AppState.orders||[]).filter(o=>o.status==='pending').length; }
-function openAgentToManagerChat(){ showToast('Message forwarded to manager',false); }
-function handleFullLogin() { let e=document.getElementById('loginEmail').value, p=document.getElementById('loginPassword').value; loginUser(e,p).then(()=>{ hideModal(); updateUIAfterLogin(); }).catch(e=>showToast(e.message,true)); }
-function handleFullRegister() { let name=document.getElementById('regName').value,phone=document.getElementById('regPhone').value,email=document.getElementById('regEmail').value,pwd=document.getElementById('regPassword').value,conf=document.getElementById('regConfirmPassword').value; if(pwd!==conf) return showToast('Passwords mismatch',true); registerUser(name,phone,email,pwd).then(()=>{ showToast('Registered! Please login'); showAuthLogin(); }).catch(e=>showToast(e.message,true)); }
-function toggleFullAuth(){ let l=document.getElementById('loginForm'), r=document.getElementById('registerForm'); if(l.classList.contains('hidden')){ l.classList.remove('hidden'); r.classList.add('hidden'); } else { l.classList.add('hidden'); r.classList.remove('hidden'); } }
-function init() { const splash = document.getElementById('splashPage'); setTimeout(()=>{ splash.style.opacity='0'; setTimeout(()=>{ splash.classList.add('hidden'); document.getElementById('appContainer').classList.remove('hidden'); AppState.products = sampleFallback; renderShop(); initSlider(); setupNav(); updateAuthButton(); navigateTo('userShop'); const token=getToken(); if(token) refreshUserData().catch(()=>clearTokens()); },600); },1500); }
+// ==================== RENDERING FUNCTIONS ====================
+function renderProductCard(p) { 
+  let inWish = AppState.user && AppState.wishlist.some(w => w.productId === p.id); 
+  return `<div class="product-card" onclick="showProductDetail(${p.id})">
+    <img src="${escapeHtml(p.image_url || 'https://placehold.co/600x400/1a5276/white?text=WAMP')}">
+    <div class="product-info">
+      <div class="product-name">${escapeHtml(p.name)}</div>
+      <div class="product-price">UGX ${(p.price || 0).toLocaleString()}</div>
+      <div class="product-stock">${p.stock || 0} in stock</div>
+      <button class="btn-sm btn-green" style="width:100%" onclick="event.stopPropagation();addToCart(${p.id})">🛒 Add to Cart</button>
+      <button class="btn-sm btn-outline" style="width:100%; margin-top:8px" onclick="event.stopPropagation();toggleWishlist(${p.id})">${inWish ? '❤️ Wishlist' : '🤍 Wishlist'}</button>
+    </div>
+  </div>`; 
+}
+
+async function renderShop(f = 'all') { 
+  let prods = AppState.products.length ? AppState.products : sampleFallback; 
+  if (f !== 'all') prods = prods.filter(p => p.type && p.type.toLowerCase().includes(f.toLowerCase())); 
+  document.getElementById('shopGrid').innerHTML = prods.map(p => renderProductCard(p)).join('') || '<div class="empty-state">No products found</div>'; 
+}
+
+function filterProducts(t, btn) { 
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); 
+  btn.classList.add('active'); 
+  renderShop(t); 
+}
+
+function searchProducts(q) { 
+  renderShop('all'); 
+}
+
+async function showProductDetail(id) { 
+  let prods = AppState.products.length ? AppState.products : sampleFallback; 
+  let p = prods.find(pr => pr.id === id); 
+  if (!p) return; 
+  
+  let existingReview = AppState.user && AppState.reviews.find(r => r.productId === id && r.userId === AppState.user.id); 
+  let rating = existingReview ? existingReview.rating : 0; 
+  let reviewText = existingReview ? existingReview.text : ''; 
+  
+  document.getElementById('detailContent').innerHTML = `<div class="card">
+    <img src="${escapeHtml(p.image_url || 'https://placehold.co/600x400/1a5276/white?text=WAMP')}" style="width:100%; border-radius:16px; margin-bottom:16px;">
+    <h2 style="margin-bottom:8px">${escapeHtml(p.name)}</h2>
+    <div class="product-price">UGX ${(p.price || 0).toLocaleString()}</div>
+    <p style="margin:12px 0">${escapeHtml(p.description)}</p>
+    <div class="star-rating" id="detailRatingStars">${[1, 2, 3, 4, 5].map(s => `<span class="star ${s <= rating ? 'active' : ''}" data-rating="${s}">★</span>`).join('')}</div>
+    <textarea id="reviewTextarea" placeholder="Write a review..." rows="2">${escapeHtml(reviewText)}</textarea>
+    <button class="btn btn-primary" onclick="submitRatingAndReview(${p.id})">Submit Review</button>
+    <button class="btn btn-green" style="margin-top:12px" onclick="addToCart(${p.id})">🛒 Add to Cart</button>
+    <button class="btn btn-outline" style="margin-top:12px" onclick="navigateTo('userShop')">Back to Shop</button>
+  </div>`; 
+  
+  document.querySelectorAll('#detailRatingStars .star').forEach(star => {
+    star.onclick = () => { 
+      let rate = parseInt(star.dataset.rating); 
+      document.querySelectorAll('#detailRatingStars .star').forEach(s => s.classList.toggle('active', parseInt(s.dataset.rating) <= rate)); 
+    };
+  });
+  
+  navigateTo('productDetail'); 
+}
+
+function showCart() { 
+  navigateTo('userCart'); 
+  renderCart(); 
+}
+
+async function renderCart() { 
+  if (!AppState.cart.length) { 
+    document.getElementById('cartItems').innerHTML = '<div class="empty-state">Cart is empty</div>'; 
+    document.getElementById('cartSummary').classList.add('hidden'); 
+    return; 
+  } 
+  
+  let total = 0, html = ''; 
+  
+  for (let c of AppState.cart) { 
+    let p = AppState.products.find(pr => pr.id === c.product_id); 
+    if (p) { 
+      let it = (p.price || 0) * (c.quantity || 1); 
+      total += it; 
+      html += `<div class="list-item">
+        <div>
+          <strong>${escapeHtml(p.name)}</strong><br>
+          UGX ${(p.price || 0).toLocaleString()} x ${c.quantity} = UGX ${it.toLocaleString()}
+        </div>
+        <button class="btn-sm btn-red" onclick="removeFromCart(${c.id})">Remove</button>
+      </div>`; 
+    } 
+  } 
+  
+  document.getElementById('cartItems').innerHTML = html; 
+  document.getElementById('cartTotal').innerText = 'UGX ' + total.toLocaleString(); 
+  document.getElementById('cartSummary').classList.remove('hidden'); 
+}
+
+async function removeFromCart(cid) { 
+  try { 
+    await apiCall(`/cart/${cid}`, { method: 'DELETE' }); 
+    await refreshUserData(); 
+    renderCart(); 
+  } catch (e) { 
+    showToast('Failed to remove', true);
+  } 
+}
+
+function updateCartBadge() { 
+  let sum = AppState.cart.reduce((s, c) => s + (c.quantity || 0), 0); 
+  let b = document.getElementById('cartBadge'); 
+  if (sum > 0) { 
+    b.textContent = sum; 
+    b.classList.remove('hidden'); 
+  } else { 
+    b.classList.add('hidden'); 
+  } 
+}
+
+async function processPayment() { 
+  if (!AppState.user) return; 
+  
+  let method = document.querySelector('input[name="payMethod"]:checked').value; 
+  let phone = document.getElementById('payPhone').value; 
+  
+  if (method !== 'card' && method !== 'cod' && !/^07[0-9]{8}$/.test(phone.replace(/\D/g, ''))) {
+    return showToast('Valid phone required for mobile money', true);
+  }
+  
+  if (!AppState.cart.length) return showToast('Cart empty', true); 
+  
+  let total = 0, items = []; 
+  let cartItemsDetails = []; 
+  
+  for (let c of AppState.cart) { 
+    let p = AppState.products.find(pr => pr.id === c.product_id); 
+    if (p) { 
+      total += (p.price || 0) * (c.quantity || 1); 
+      items.push({ productId: c.product_id, quantity: c.quantity }); 
+      cartItemsDetails.push({ name: p.name, price: p.price, quantity: c.quantity }); 
+    } 
+  } 
+  
+  let paymentMethod = method === 'mtn' ? 'MTN' : (method === 'airtel' ? 'Airtel' : (method === 'cod' ? 'Cash on Delivery' : 'Card')); 
+  
+  try { 
+    let orderResponse = await apiCall('/orders', { 
+      method: 'POST', 
+      body: JSON.stringify({ items, total, payment_method: paymentMethod }) 
+    }); 
+    
+    let newOrder = { 
+      id: orderResponse.order_id || Date.now(), 
+      user_id: AppState.user.id, 
+      total: total, 
+      status: 'pending', 
+      payment_method: paymentMethod, 
+      date: new Date().toISOString(), 
+      customer_name: AppState.user.name, 
+      items: cartItemsDetails 
+    }; 
+    
+    showToast(method === 'cod' ? 'Order placed! Pay on delivery.' : 'Order placed!'); 
+    await refreshUserData(); 
+    navigateTo('userOrders'); 
+    renderUserOrders(); 
+    printReceipt(newOrder); 
+  } catch (e) { 
+    showToast('Order failed', true); 
+  } 
+}
+
+function renderUserOrders() { 
+  if (!AppState.user) return; 
+  
+  let my = AppState.orders.filter(o => o.user_id === AppState.user.id); 
+  document.getElementById('userOrderList').innerHTML = my.length ? my.map(o => `<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <strong>Order #${o.id}</strong> <span class="status-badge">${o.status}</span><br>
+        UGX ${(o.total || 0).toLocaleString()}<br>
+        Payment: ${o.payment_method || 'N/A'}
+      </div>
+      <button class="btn-sm btn-primary" style="width:auto;" onclick='printReceipt(${JSON.stringify(o).replace(/'/g, "&#39;")})'>🖨️ Print Receipt</button>
+    </div>
+  </div>`).join('') : '<div class="empty-state">No orders</div>'; 
+}
+
+function renderWishlist() { 
+  let c = document.getElementById('wishlistItems'); 
+  if (!c) return; 
+  
+  if (!AppState.user || !AppState.wishlist.length) { 
+    c.innerHTML = '<div class="empty-state">No items in wishlist</div>'; 
+    return; 
+  } 
+  
+  c.innerHTML = AppState.wishlist.map(w => `<div class="list-item">
+    <span>${escapeHtml(w.productName)}</span>
+    <button class="btn-sm btn-red" onclick="toggleWishlist(${w.productId})">Remove</button>
+  </div>`).join(''); 
+}
+
+function renderUserReviews() { 
+  let c = document.getElementById('userReviews'); 
+  if (!c) return; 
+  
+  let my = AppState.user ? AppState.reviews.filter(r => r.userId === AppState.user.id) : []; 
+  
+  if (!my.length) { 
+    c.innerHTML = '<div class="empty-state">No reviews yet</div>'; 
+    return; 
+  } 
+  
+  c.innerHTML = my.map(r => `<div class="review-item" style="border-bottom:1px solid var(--border); padding:12px 0">
+    <strong>${escapeHtml(r.productName)}</strong> ${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}<br>
+    <em>${escapeHtml(r.text)}</em>
+  </div>`).join(''); 
+}
+
+function saveUserProfile() { 
+  if (AppState.user) { 
+    AppState.user.name = document.getElementById('profileName').value; 
+    AppState.user.phone = document.getElementById('profilePhone').value; 
+    AppState.user.address = document.getElementById('profileAddress').value; 
+    showToast('Profile saved'); 
+  } 
+}
+
+function showNotifications() { 
+  let unread = AppState.notifications.map(n => `<div class="list-item">
+    <strong>${escapeHtml(n.title)}</strong><br>${escapeHtml(n.message)}
+  </div>`).join('') || '<div class="empty-state">No notifications</div>'; 
+  
+  showModal('🔔 Notifications', unread); 
+  AppState.notifications.forEach(n => n.read = true); 
+  document.getElementById('notificationBadge').classList.add('hidden'); 
+}
+
+function navigateTo(page) { 
+  document.querySelectorAll('.page').forEach(p => p.classList.add('hidden')); 
+  document.getElementById(page).classList.remove('hidden'); 
+  
+  if (page === 'userShop') renderShop(); 
+  if (page === 'userCart') renderCart(); 
+  if (page === 'userOrders') renderUserOrders(); 
+  if (page === 'userDashboard') { 
+    renderWishlist(); 
+    renderUserReviews(); 
+  } 
+}
+
+function setupNav() { 
+  let nav = document.getElementById('bottomNav'); 
+  
+  if (!AppState.user) {
+    nav.innerHTML = '<div class="nav-item" onclick="navigateTo(\'userShop\')">🏪 Shop</div><div class="nav-item" onclick="showAuthModal()">🔐 Login</div>';
+  } else if (AppState.user.role === 'admin') {
+    nav.innerHTML = '<div class="nav-item" onclick="navigateTo(\'adminDashboard\')">📊 Dashboard</div><div class="nav-item" onclick="navigateTo(\'adminProducts\')">📦 Products</div><div class="nav-item" onclick="navigateTo(\'adminOrders\')">📋 Orders</div><div class="nav-item" onclick="logout()">🚪 Exit</div>';
+  } else if (AppState.user.role === 'agent') {
+    nav.innerHTML = '<div class="nav-item" onclick="navigateTo(\'agentPanel\')">📦 Agent</div><div class="nav-item" onclick="logout()">🚪 Exit</div>';
+  } else {
+    nav.innerHTML = '<div class="nav-item" onclick="navigateTo(\'userShop\')">🏪 Shop</div><div class="nav-item" onclick="navigateTo(\'userOrders\')">📦 Orders</div><div class="nav-item" onclick="navigateTo(\'userCart\')">🛒 Cart</div><div class="nav-item" onclick="navigateTo(\'userDashboard\')">👤 Profile</div>';
+  }
+  
+  let chat = document.getElementById('chatWidgetContainer');
+  let wa = document.getElementById('whatsappWidget');
+  
+  if (AppState.user?.role === 'user') { 
+    chat?.classList.remove('hidden'); 
+    wa?.classList.remove('hidden'); 
+  } else { 
+    chat?.classList.add('hidden'); 
+    wa?.classList.add('hidden'); 
+  } 
+}
+
+// ==================== CHAT FUNCTIONS ====================
+function toggleChat() { 
+  let box = document.getElementById('chatBox'); 
+  if (box.classList.contains('hidden')) { 
+    box.classList.remove('hidden'); 
+    if (!document.getElementById('chatMessages').innerHTML) addChatMessage('bot', 'Welcome! Ask about our products.'); 
+  } else { 
+    box.classList.add('hidden'); 
+  } 
+}
+
+function addChatMessage(sender, txt) { 
+  let c = document.getElementById('chatMessages'); 
+  let d = document.createElement('div'); 
+  d.className = 'chat-msg ' + sender; 
+  d.textContent = txt; 
+  c.appendChild(d); 
+  c.scrollTop = c.scrollHeight; 
+}
+
+async function sendChat() { 
+  let inp = document.getElementById('chatInput'); 
+  let t = inp.value.trim(); 
+  
+  if (!t) return; 
+  
+  addChatMessage('user', t); 
+  inp.value = ''; 
+  
+  try { 
+    let data = await apiCall('/chat/customer', { method: 'POST', body: JSON.stringify({ message: t }) }); 
+    addChatMessage('bot', data.response || 'Thanks!'); 
+  } catch (e) { 
+    addChatMessage('bot', 'Please WhatsApp us for support.'); 
+  } 
+}
+
+// ==================== ADMIN FUNCTIONS ====================
+function renderAdminProducts() { 
+  let html = (AppState.products || []).map(p => `<div class="list-item">
+    <div><strong>${escapeHtml(p.name)}</strong><br>${p.type} - Stock ${p.stock}</div>
+    <button class="btn-sm btn-red" onclick="deleteProductItem(${p.id})">Delete</button>
+  </div>`).join(''); 
+  
+  document.getElementById('adminProductList').innerHTML = html || '<div class="empty-state">No products</div>'; 
+}
+
+async function saveProduct() { 
+  let id = document.getElementById('editProductId').value; 
+  let data = {
+    name: document.getElementById('prodName').value,
+    type: document.getElementById('prodType').value,
+    description: document.getElementById('prodDesc').value,
+    price: parseInt(document.getElementById('prodPrice').value) || 0,
+    stock: parseInt(document.getElementById('prodStock').value) || 0,
+    image_url: document.getElementById('prodImage').value
+  };
+  
+  if (!data.name) return showToast('Name required', true);
+  
+  try { 
+    if (id) {
+      await apiCall(`/admin/products/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+    } else {
+      await apiCall('/admin/products', { method: 'POST', body: JSON.stringify(data) });
+    }
+    
+    await refreshUserData(); 
+    renderAdminProducts(); 
+    resetProductForm(); 
+    showToast('Saved'); 
+  } catch (e) { 
+    showToast('Failed', true); 
+  } 
+}
+
+function resetProductForm() { 
+  document.getElementById('editProductId').value = ''; 
+  document.getElementById('prodName').value = ''; 
+  document.getElementById('prodDesc').value = ''; 
+  document.getElementById('prodPrice').value = ''; 
+  document.getElementById('prodStock').value = ''; 
+  document.getElementById('prodImage').value = ''; 
+}
+
+async function deleteProductItem(id) { 
+  if (confirm('Delete?')) {
+    try {
+      await apiCall(`/admin/products/${id}`, { method: 'DELETE' });
+      await refreshUserData();
+      renderAdminProducts();
+      showToast('Product deleted');
+    } catch(e) {
+      showToast('Failed', true);
+    }
+  }
+}
+
+function renderAdminOrders() { 
+  let html = (AppState.orders || []).map(o => `<div class="list-item">
+    <div>Order #${o.id} - UGX ${(o.total || 0).toLocaleString()}<br>${o.status}</div>
+  </div>`).join(''); 
+  
+  document.getElementById('adminOrdersList').innerHTML = html || '<div class="empty-state">No orders</div>'; 
+}
+
+function renderAdminDashboard() { 
+  document.getElementById('adminTodaySales').innerHTML = 'UGX ' + ((AppState.orders || []).reduce((s, o) => s + (o.total || 0), 0)).toLocaleString(); 
+  document.getElementById('adminPendingOrders').innerText = (AppState.orders || []).filter(o => o.status === 'pending').length; 
+}
+
+function openAgentToManagerChat() { 
+  showToast('Message forwarded to manager', false); 
+}
+
+// ==================== FALLBACK LOGIN HANDLERS ====================
+function handleFullLogin() { 
+  let e = document.getElementById('loginEmail').value; 
+  let p = document.getElementById('loginPassword').value; 
+  loginUser(e, p).then(() => { 
+    hideModal(); 
+    updateUIAfterLogin(); 
+  }).catch(e => showToast(e.message, true)); 
+}
+
+function handleFullRegister() { 
+  let name = document.getElementById('regName').value;
+  let phone = document.getElementById('regPhone').value;
+  let email = document.getElementById('regEmail').value;
+  let pwd = document.getElementById('regPassword').value;
+  let conf = document.getElementById('regConfirmPassword').value;
+  
+  if (pwd !== conf) return showToast('Passwords mismatch', true);
+  
+  registerUser(name, phone, email, pwd).then(() => { 
+    showToast('Registered! Please login'); 
+    showAuthLogin(); 
+  }).catch(e => showToast(e.message, true)); 
+}
+
+function toggleFullAuth() { 
+  let l = document.getElementById('loginForm'); 
+  let r = document.getElementById('registerForm'); 
+  
+  if (l.classList.contains('hidden')) { 
+    l.classList.remove('hidden'); 
+    r.classList.add('hidden'); 
+  } else { 
+    l.classList.add('hidden'); 
+    r.classList.remove('hidden'); 
+  } 
+}
+
+// ==================== SLIDER INIT ====================
+function initSlider() { 
+  let slides = document.querySelectorAll('.slider-slide'); 
+  let dots = document.getElementById('sliderDots'); 
+  
+  if (!slides.length) return; 
+  
+  dots.innerHTML = ''; 
+  
+  slides.forEach((_, i) => { 
+    let d = document.createElement('div'); 
+    d.className = 'slider-dot' + (i === 0 ? ' active' : ''); 
+    d.onclick = () => goToSlide(i); 
+    dots.appendChild(d); 
+  }); 
+  
+  let cur = 0; 
+  
+  window.goToSlide = (idx) => { 
+    slides.forEach((s, i) => { 
+      s.classList.toggle('active', i === idx); 
+      dots.children[i]?.classList.toggle('active', i === idx); 
+    }); 
+    cur = idx; 
+  }; 
+  
+  setInterval(() => goToSlide((cur + 1) % slides.length), 4000); 
+  goToSlide(0); 
+}
+
+// ==================== INITIALIZATION ====================
+function init() { 
+  const splash = document.getElementById('splashPage'); 
+  
+  setTimeout(() => { 
+    splash.style.opacity = '0'; 
+    setTimeout(() => { 
+      splash.classList.add('hidden'); 
+      document.getElementById('appContainer').classList.remove('hidden'); 
+      AppState.products = sampleFallback; 
+      renderShop(); 
+      initSlider(); 
+      setupNav(); 
+      updateAuthButton(); 
+      navigateTo('userShop'); 
+      
+      const token = getToken(); 
+      if (token) {
+        console.log('🔐 Found stored token, verifying...');
+        refreshUserData().catch(() => clearTokens());
+      }
+    }, 600); 
+  }, 1500); 
+}
+
+// ==================== EXPOSE GLOBALS ====================
 window.onload = init;
-window.navigateTo=navigateTo; window.addToCart=addToCart; window.showProductDetail=showProductDetail; window.removeFromCart=removeFromCart; window.processPayment=processPayment; window.saveProduct=saveProduct; window.resetProductForm=resetProductForm; window.renderShop=renderShop; window.searchProducts=searchProducts; window.filterProducts=filterProducts; window.showCart=showCart; window.triggerCheckout=triggerCheckout; window.toggleWishlist=toggleWishlist; window.submitRatingAndReview=submitRatingAndReview; window.showNotifications=showNotifications; window.onAuthButtonClick=onAuthButtonClick; window.showAuthModal=showAuthModal; window.showAuthLogin=showAuthLogin; window.showAuthRegister=showAuthRegister; window.submitAuthLogin=submitAuthLogin; window.submitAuthRegister=submitAuthRegister; window.handleFullLogin=handleFullLogin; window.handleFullRegister=handleFullRegister; window.toggleFullAuth=toggleFullAuth; window.logout=logout; window.saveUserProfile=saveUserProfile; window.toggleChat=toggleChat; window.sendChat=sendChat; window.openAgentToManagerChat=openAgentToManagerChat; window.renderAdminProducts=renderAdminProducts; window.renderAdminOrders=renderAdminOrders; window.renderAdminDashboard=renderAdminDashboard; window.deleteProductItem=deleteProductItem; window.printReceipt=printReceipt; window.showSalesDetail=()=>showModal('Sales','Statistics'); window.showPendingDetail=()=>showModal('Pending','Pending orders list'); window.showProductsDetail=()=>showModal('Products',`Total: ${AppState.products.length}`); window.showLowStockDetail=()=>showModal('Low Stock','Items below 5 units');
+window.navigateTo = navigateTo;
+window.addToCart = addToCart;
+window.showProductDetail = showProductDetail;
+window.removeFromCart = removeFromCart;
+window.processPayment = processPayment;
+window.saveProduct = saveProduct;
+window.resetProductForm = resetProductForm;
+window.renderShop = renderShop;
+window.searchProducts = searchProducts;
+window.filterProducts = filterProducts;
+window.showCart = showCart;
+window.triggerCheckout = triggerCheckout;
+window.toggleWishlist = toggleWishlist;
+window.submitRatingAndReview = submitRatingAndReview;
+window.showNotifications = showNotifications;
+window.onAuthButtonClick = onAuthButtonClick;
+window.showAuthModal = showAuthModal;
+window.showAuthLogin = showAuthLogin;
+window.showAuthRegister = showAuthRegister;
+window.submitAuthLogin = submitAuthLogin;
+window.submitAuthRegister = submitAuthRegister;
+window.handleFullLogin = handleFullLogin;
+window.handleFullRegister = handleFullRegister;
+window.toggleFullAuth = toggleFullAuth;
+window.logout = logout;
+window.saveUserProfile = saveUserProfile;
+window.toggleChat = toggleChat;
+window.sendChat = sendChat;
+window.openAgentToManagerChat = openAgentToManagerChat;
+window.renderAdminProducts = renderAdminProducts;
+window.renderAdminOrders = renderAdminOrders;
+window.renderAdminDashboard = renderAdminDashboard;
+window.deleteProductItem = deleteProductItem;
+window.printReceipt = printReceipt;
+window.showSalesDetail = () => showModal('Sales', 'Statistics');
+window.showPendingDetail = () => showModal('Pending', 'Pending orders list');
+window.showProductsDetail = () => showModal('Products', `Total: ${AppState.products.length}`);
+window.showLowStockDetail = () => showModal('Low Stock', 'Items below 5 units');
+window.verifyToken = verifyToken;
+
+console.log('🚀 Frontend loaded with JWT fixes!');
+console.log('📝 To test auth, run: verifyToken() in console');
 </script>
 </body>
 </html>
