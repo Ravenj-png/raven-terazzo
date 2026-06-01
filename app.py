@@ -1,4 +1,4 @@
-# WAMP BACKEND - VERSION 3 (COMPLETE + WHATSAPP CONTACTS)
+# WAMP BACKEND - VERSION 4 (COMPLETE + RECEIPTS + CUSTOMER CHAT)
 # ================================================================
 
 import os
@@ -203,7 +203,7 @@ class Product(db.Model):
     image_mime = db.Column(db.String(50))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+
     @property
     def available_stock(self):
         return self.stock - self.reserved_stock
@@ -233,6 +233,39 @@ class Order(db.Model):
     rider_phone = db.Column(db.String(20))
     delivery_location = db.Column(db.String(500))
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+class Receipt(db.Model):
+    __tablename__ = 'receipts'
+    id = db.Column(db.Integer, primary_key=True)
+    receipt_number = db.Column(db.String(100), unique=True, nullable=False, index=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    barcode_data = db.Column(db.String(500))
+    barcode_image = db.Column(db.Text)
+    pdf_url = db.Column(db.String(500))
+    printed_count = db.Column(db.Integer, default=0)
+    issued_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship
+    order = db.relationship('Order', backref='receipts', foreign_keys=[order_id])
+    user = db.relationship('User', backref='receipts', foreign_keys=[user_id])
+
+class CustomerChat(db.Model):
+    __tablename__ = 'customer_chats'
+    id = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(db.String(100), nullable=False, index=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    agent_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    sender_name = db.Column(db.String(100), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    customer = db.relationship('User', foreign_keys=[customer_id])
+    agent = db.relationship('User', foreign_keys=[agent_id])
+    sender = db.relationship('User', foreign_keys=[sender_id])
 
 class Wishlist(db.Model):
     __tablename__ = 'wishlist'
@@ -399,12 +432,15 @@ def enrich_order(order):
         'items': enriched, 'created_at': order.created_at.isoformat()
     }
 
+def generate_receipt_number(order_id):
+    return f"WAMP-{datetime.utcnow().year}-{order_id:06d}"
+
 # ==================== DATABASE INIT ====================
 def init_db():
     db.create_all()
     logger.info("✅ Tables created")
     release_expired_reservations()
-    
+
     # Create agent group messages table
     try:
         db.session.execute(text("""
@@ -418,7 +454,7 @@ def init_db():
         db.session.commit()
     except:
         db.session.rollback()
-    
+
     # Admin account
     admin_email = os.environ.get('ADMIN_EMAIL')
     admin_password = os.environ.get('ADMIN_PASSWORD')
@@ -437,7 +473,7 @@ def init_db():
         else:
             admin.password_hash = ph.hash(admin_password)
             admin.role = 'admin'
-    
+
     # Agents
     for i in range(1, 6):
         agent_email = os.environ.get(f'AGENT{i}_EMAIL')
@@ -457,7 +493,7 @@ def init_db():
             else:
                 agent.password_hash = ph.hash(agent_password)
                 agent.role = 'agent'
-    
+
     db.session.commit()
 
 with app.app_context():
@@ -484,12 +520,12 @@ def register():
     email = data.get('email', '').strip()
     password = data.get('password', '').strip()
     phone = data.get('phone', '').strip()
-    
+
     if not name or not email or not password:
         return jsonify({'error': 'Missing fields'}), 400
     if User.query.filter_by(email=email).first():
         return jsonify({'error': 'Email exists'}), 409
-    
+
     user = User(name=name, email=email, phone=phone, password_hash=ph.hash(password), role='user')
     db.session.add(user)
     db.session.commit()
@@ -503,30 +539,30 @@ def login():
     client_ip = request.remote_addr
     if is_ip_blocked(client_ip):
         return jsonify({'error': 'Too many attempts'}), 429
-    
+
     data = request.get_json()
     email = data.get('email', '').strip()
     password = data.get('password', '').strip()
-    
+
     if not email or not password:
         return jsonify({'error': 'Credentials required'}), 400
-    
+
     user = User.query.filter_by(email=email).first()
     if not user:
         record_failed_login(client_ip)
         return jsonify({'error': 'Invalid credentials'}), 401
-    
+
     try:
         ph.verify(user.password_hash, password)
     except VerifyMismatchError:
         record_failed_login(client_ip)
         return jsonify({'error': 'Invalid credentials'}), 401
-    
+
     reset_failed_attempts(client_ip)
     access_token = create_access_token(identity=str(user.id))
     refresh_token = create_refresh_token(identity=str(user.id))
     log_audit(user.id, 'LOGIN')
-    
+
     return jsonify({
         'success': True, 'access_token': access_token, 'refresh_token': refresh_token,
         'user': {'id': user.id, 'name': user.name, 'email': user.email, 'role': user.role, 'phone': user.phone, 'address': user.address}
@@ -556,17 +592,16 @@ def logout():
 # ==================== WHATSAPP CONTACTS ENDPOINT ====================
 @app.route('/api/whatsapp/contacts', methods=['GET'])
 def get_whatsapp_contacts():
-    """Get WhatsApp contacts for Manager and Assistant"""
     return jsonify({
         'manager': {
             'name': 'Manager',
-            'number': os.environ.get('MANAGER_WHATSAPP', '256772123456'),
+            'number': os.environ.get('MANAGER_WHATSAPP', '256741227707'),
             'icon': '👑',
             'message': 'Hello Manager, I need assistance with WAMP Enterprises!'
         },
         'assistant': {
             'name': 'Support Assistant',
-            'number': os.environ.get('ASSISTANT_WHATSAPP', '256770000000'),
+            'number': os.environ.get('ASSISTANT_WHATSAPP', '256741333544'),
             'icon': '🤖',
             'message': 'Hello Support, I need help with my order!'
         }
@@ -688,26 +723,45 @@ def upload_product_image():
     product = Product.query.get(pid)
     if not product:
         return jsonify({'error': 'Product not found'}), 404
+    
     file.seek(0, 2)
     if file.tell() > 5 * 1024 * 1024:
         return jsonify({'error': 'Image too large'}), 400
     file.seek(0)
-    content = file.read()
-    product.image_data = base64.b64encode(content).decode('utf-8')
-    product.image_mime = file.mimetype
-    product.image_type = 'db'
-    cloudinary_used = False
-    if CLOUDINARY_ENABLED:
+    
+    # Try DB storage first (primary)
+    db_success = False
+    try:
+        content = file.read()
+        product.image_data = base64.b64encode(content).decode('utf-8')
+        product.image_mime = file.mimetype
+        product.image_type = 'db'
+        db.session.commit()
+        db_success = True
+        logger.info(f"✅ Image saved to DB for product {pid}")
+    except Exception as e:
+        logger.error(f"❌ DB storage failed: {e}")
+        db.session.rollback()
+    
+    # If DB fails (full/error), fallback to Cloudinary
+    if not db_success and CLOUDINARY_ENABLED:
         try:
             file.seek(0)
             result = cloudinary.uploader.upload(file, folder='wamp_products')
             product.image_url = result['secure_url']
             product.image_type = 'cloudinary'
-            cloudinary_used = True
+            product.image_data = None
+            db.session.commit()
+            logger.info(f"✅ Fallback to Cloudinary for product {pid}")
+            return jsonify({'success': True, 'cloudinary_fallback': True})
         except Exception as e:
-            logger.error(f"Cloudinary error: {e}")
-    db.session.commit()
-    return jsonify({'success': True, 'cloudinary_used': cloudinary_used})
+            logger.error(f"❌ Cloudinary also failed: {e}")
+            return jsonify({'error': 'Both DB and Cloudinary storage failed'}), 500
+    
+    if db_success:
+        return jsonify({'success': True, 'stored_in_db': True})
+    else:
+        return jsonify({'error': 'Storage failed'}), 500
 
 @app.route('/api/admin/products/<int:pid>', methods=['PUT'])
 @jwt_required()
@@ -872,15 +926,29 @@ def create_order():
         p.reserved_stock += it['quantity']
     order = Order(user_id=uid, items=json.dumps(validated), total=total, payment_method=data.get('payment_method', 'MTN'), delivery_location=data.get('delivery_location', ''), stock_reserved_until=datetime.utcnow() + timedelta(hours=1))
     db.session.add(order)
+    db.session.commit()
+    
+    # Create receipt for the order
+    receipt = Receipt(
+        receipt_number=generate_receipt_number(order.id),
+        order_id=order.id,
+        user_id=uid,
+        barcode_data=f"TEL:0741227707,0741333544",
+        printed_count=0
+    )
+    db.session.add(receipt)
+    
     CartItem.query.filter_by(user_id=uid).delete()
     agent = get_least_busy_agent()
     if agent:
         order.agent_id = agent.id
     db.session.commit()
+    
     send_notification(uid, 'Order Created', f'Order #{order.id} created')
     if agent:
         send_notification(agent.id, 'New Order', f'Order #{order.id} assigned to you')
-    return jsonify({'success': True, 'order_id': order.id}), 201
+    
+    return jsonify({'success': True, 'order_id': order.id, 'receipt': {'id': receipt.id, 'receipt_number': receipt.receipt_number}}), 201
 
 @app.route('/api/orders/<int:oid>/status', methods=['PUT'])
 @jwt_required()
@@ -913,6 +981,296 @@ def track_order(oid):
         'delivery_address': order.delivery_location, 'created_at': order.created_at.isoformat(),
         'estimated_delivery': (order.created_at + timedelta(days=2)).isoformat()
     })
+
+# ==================== RECEIPT ROUTES (NEW) ====================
+@app.route('/api/receipts', methods=['GET'])
+@jwt_required()
+def get_user_receipts():
+    uid = int(get_jwt_identity())
+    receipts = Receipt.query.filter_by(user_id=uid).order_by(Receipt.issued_at.desc()).all()
+    return jsonify([{
+        'id': r.id,
+        'receipt_number': r.receipt_number,
+        'order_id': r.order_id,
+        'barcode_data': r.barcode_data,
+        'printed_count': r.printed_count,
+        'issued_at': r.issued_at.isoformat()
+    } for r in receipts])
+
+@app.route('/api/receipts/<int:receipt_id>', methods=['GET'])
+@jwt_required()
+def get_receipt(receipt_id):
+    uid = int(get_jwt_identity())
+    user = User.query.get(uid)
+    receipt = Receipt.query.get_or_404(receipt_id)
+    
+    # Check permission
+    if receipt.user_id != uid and user.role not in ['admin', 'agent']:
+        return jsonify({'error': 'Permission denied'}), 403
+    
+    order = Order.query.get(receipt.order_id)
+    items = json.loads(order.items) if order.items else []
+    enriched_items = []
+    for item in items:
+        p = Product.query.get(item.get('productId'))
+        enriched_items.append({
+            'name': p.name if p else 'Product',
+            'price': p.price if p else 0,
+            'quantity': item.get('quantity', 1)
+        })
+    
+    return jsonify({
+        'id': receipt.id,
+        'receipt_number': receipt.receipt_number,
+        'order_id': receipt.order_id,
+        'order': {
+            'id': order.id,
+            'total': order.total,
+            'status': order.status,
+            'payment_method': order.payment_method,
+            'delivery_location': order.delivery_location,
+            'created_at': order.created_at.isoformat(),
+            'items': enriched_items
+        },
+        'barcode_data': receipt.barcode_data,
+        'printed_count': receipt.printed_count,
+        'issued_at': receipt.issued_at.isoformat()
+    })
+
+@app.route('/api/receipts/<int:receipt_id>/print', methods=['POST'])
+@jwt_required()
+def increment_receipt_print(receipt_id):
+    uid = int(get_jwt_identity())
+    user = User.query.get(uid)
+    receipt = Receipt.query.get_or_404(receipt_id)
+    
+    if receipt.user_id != uid and user.role not in ['admin', 'agent']:
+        return jsonify({'error': 'Permission denied'}), 403
+    
+    receipt.printed_count += 1
+    db.session.commit()
+    return jsonify({'success': True, 'printed_count': receipt.printed_count})
+
+# ==================== CUSTOMER-AGENT CHAT ROUTES (NEW) ====================
+@app.route('/api/customer/chats', methods=['GET'])
+@jwt_required()
+def get_customer_chats():
+    uid = int(get_jwt_identity())
+    user = User.query.get(uid)
+    
+    if user.role == 'admin':
+        # Admin sees all conversations
+        conversations = db.session.query(
+            CustomerChat.conversation_id,
+            CustomerChat.customer_id,
+            func.max(CustomerChat.created_at).label('last_message_time')
+        ).group_by(CustomerChat.conversation_id, CustomerChat.customer_id).all()
+        
+        result = []
+        for conv in conversations:
+            customer = User.query.get(conv.customer_id)
+            last_msg = CustomerChat.query.filter_by(conversation_id=conv.conversation_id).order_by(CustomerChat.created_at.desc()).first()
+            unread = CustomerChat.query.filter_by(conversation_id=conv.conversation_id, is_read=False).filter(CustomerChat.sender_id != uid).count()
+            result.append({
+                'conversation_id': conv.conversation_id,
+                'customer_id': conv.customer_id,
+                'customer_name': customer.name if customer else f'Customer #{conv.customer_id}',
+                'last_message': last_msg.message if last_msg else '',
+                'last_message_time': conv.last_message_time.isoformat() if conv.last_message_time else None,
+                'unread_count': unread
+            })
+        return jsonify(result)
+    
+    elif user.role == 'agent':
+        # Agent sees conversations where they are the agent
+        conversations = db.session.query(
+            CustomerChat.conversation_id,
+            CustomerChat.customer_id,
+            func.max(CustomerChat.created_at).label('last_message_time')
+        ).filter(CustomerChat.agent_id == uid).group_by(CustomerChat.conversation_id, CustomerChat.customer_id).all()
+        
+        result = []
+        for conv in conversations:
+            customer = User.query.get(conv.customer_id)
+            last_msg = CustomerChat.query.filter_by(conversation_id=conv.conversation_id).order_by(CustomerChat.created_at.desc()).first()
+            unread = CustomerChat.query.filter_by(conversation_id=conv.conversation_id, is_read=False).filter(CustomerChat.sender_id != uid).count()
+            result.append({
+                'conversation_id': conv.conversation_id,
+                'customer_id': conv.customer_id,
+                'customer_name': customer.name if customer else f'Customer #{conv.customer_id}',
+                'last_message': last_msg.message if last_msg else '',
+                'last_message_time': conv.last_message_time.isoformat() if conv.last_message_time else None,
+                'unread_count': unread
+            })
+        return jsonify(result)
+    
+    else:
+        # Customer sees their own conversations
+        conversations = db.session.query(
+            CustomerChat.conversation_id,
+            CustomerChat.agent_id,
+            func.max(CustomerChat.created_at).label('last_message_time')
+        ).filter(CustomerChat.customer_id == uid).group_by(CustomerChat.conversation_id, CustomerChat.agent_id).all()
+        
+        result = []
+        for conv in conversations:
+            agent = User.query.get(conv.agent_id)
+            last_msg = CustomerChat.query.filter_by(conversation_id=conv.conversation_id).order_by(CustomerChat.created_at.desc()).first()
+            unread = CustomerChat.query.filter_by(conversation_id=conv.conversation_id, is_read=False).filter(CustomerChat.sender_id != uid).count()
+            result.append({
+                'conversation_id': conv.conversation_id,
+                'agent_id': conv.agent_id,
+                'agent_name': agent.name if agent else 'Agent',
+                'last_message': last_msg.message if last_msg else '',
+                'last_message_time': conv.last_message_time.isoformat() if conv.last_message_time else None,
+                'unread_count': unread
+            })
+        return jsonify(result)
+
+@app.route('/api/customer/chats/<conversation_id>', methods=['GET'])
+@jwt_required()
+def get_chat_messages(conversation_id):
+    uid = int(get_jwt_identity())
+    user = User.query.get(uid)
+    
+    # Verify access
+    chat_record = CustomerChat.query.filter_by(conversation_id=conversation_id).first()
+    if not chat_record:
+        return jsonify([])
+    
+    if user.role == 'admin':
+        # Admin can see any conversation
+        pass
+    elif user.role == 'agent':
+        if chat_record.agent_id != uid:
+            return jsonify({'error': 'Permission denied'}), 403
+    else:
+        if chat_record.customer_id != uid:
+            return jsonify({'error': 'Permission denied'}), 403
+    
+    # Get messages
+    messages = CustomerChat.query.filter_by(conversation_id=conversation_id).order_by(CustomerChat.created_at.asc()).all()
+    
+    # Mark messages as read
+    for msg in messages:
+        if msg.sender_id != uid and not msg.is_read:
+            msg.is_read = True
+    db.session.commit()
+    
+    return jsonify([{
+        'id': m.id,
+        'sender_id': m.sender_id,
+        'sender_name': m.sender_name,
+        'message': m.message,
+        'is_read': m.is_read,
+        'created_at': m.created_at.isoformat()
+    } for m in messages])
+
+@app.route('/api/customer/chats', methods=['POST'])
+@jwt_required()
+def send_chat_message():
+    uid = int(get_jwt_identity())
+    user = User.query.get(uid)
+    data = request.get_json()
+    
+    customer_id = data.get('customer_id')
+    agent_id = data.get('agent_id')
+    message = data.get('message', '').strip()
+    
+    if not message:
+        return jsonify({'error': 'Message required'}), 400
+    
+    # Determine conversation participants
+    if user.role == 'agent':
+        # Agent sending to customer
+        actual_customer_id = customer_id
+        actual_agent_id = uid
+        conversation_id = f"cust_{actual_customer_id}_agent_{actual_agent_id}"
+        
+        # Create or get the conversation
+        existing = CustomerChat.query.filter_by(conversation_id=conversation_id).first()
+        if not existing:
+            # First message, create conversation record
+            pass
+        
+        chat = CustomerChat(
+            conversation_id=conversation_id,
+            customer_id=actual_customer_id,
+            agent_id=actual_agent_id,
+            sender_id=uid,
+            sender_name=user.name,
+            message=message
+        )
+        db.session.add(chat)
+        db.session.commit()
+        
+        # Notify customer
+        send_notification(actual_customer_id, f'Message from Agent {user.name}', message[:100])
+        
+        return jsonify({'success': True, 'conversation_id': conversation_id})
+    
+    elif user.role == 'admin':
+        # Admin can send as agent
+        actual_customer_id = customer_id
+        actual_agent_id = agent_id or user.id
+        conversation_id = f"cust_{actual_customer_id}_agent_{actual_agent_id}"
+        
+        chat = CustomerChat(
+            conversation_id=conversation_id,
+            customer_id=actual_customer_id,
+            agent_id=actual_agent_id,
+            sender_id=uid,
+            sender_name=user.name,
+            message=message
+        )
+        db.session.add(chat)
+        db.session.commit()
+        
+        if actual_customer_id:
+            send_notification(actual_customer_id, f'Message from Admin', message[:100])
+        if actual_agent_id and actual_agent_id != uid:
+            send_notification(actual_agent_id, f'Message from Admin regarding customer', message[:100])
+        
+        return jsonify({'success': True, 'conversation_id': conversation_id})
+    
+    else:
+        # Customer sending to agent
+        actual_customer_id = uid
+        
+        # Find or create agent for this customer
+        # First, check if customer has an assigned agent from their orders
+        order = Order.query.filter_by(user_id=uid).order_by(Order.created_at.desc()).first()
+        actual_agent_id = order.agent_id if order and order.agent_id else None
+        
+        # If no agent assigned, find least busy agent
+        if not actual_agent_id:
+            agent = get_least_busy_agent()
+            actual_agent_id = agent.id if agent else 1  # Fallback to admin
+        
+        conversation_id = f"cust_{actual_customer_id}_agent_{actual_agent_id}"
+        
+        chat = CustomerChat(
+            conversation_id=conversation_id,
+            customer_id=actual_customer_id,
+            agent_id=actual_agent_id,
+            sender_id=uid,
+            sender_name=user.name,
+            message=message
+        )
+        db.session.add(chat)
+        db.session.commit()
+        
+        # Notify agent
+        send_notification(actual_agent_id, f'New message from {user.name}', message[:100])
+        
+        return jsonify({'success': True, 'conversation_id': conversation_id})
+
+@app.route('/api/customer/chats/unread/count', methods=['GET'])
+@jwt_required()
+def get_unread_chat_count():
+    uid = int(get_jwt_identity())
+    count = CustomerChat.query.filter(CustomerChat.receiver_id == uid, CustomerChat.is_read == False).count()
+    return jsonify({'unread_count': count})
 
 # ==================== RIDER ASSIGNMENT ====================
 @app.route('/api/admin/orders/<int:oid>/assign-rider', methods=['PUT'])
@@ -963,6 +1321,23 @@ def export_orders():
     resp.headers['Content-Type'] = 'text/csv'
     resp.headers['Content-Disposition'] = 'attachment; filename=orders.csv'
     return resp
+
+@app.route('/api/admin/receipts', methods=['GET'])
+@jwt_required()
+def admin_get_receipts():
+    user = User.query.get(int(get_jwt_identity()))
+    if user.role != 'admin':
+        return jsonify({'error': 'Admin required'}), 403
+    
+    receipts = Receipt.query.order_by(Receipt.issued_at.desc()).all()
+    return jsonify([{
+        'id': r.id,
+        'receipt_number': r.receipt_number,
+        'order_id': r.order_id,
+        'user_id': r.user_id,
+        'printed_count': r.printed_count,
+        'issued_at': r.issued_at.isoformat()
+    } for r in receipts])
 
 # ==================== ADMIN CHAT ENDPOINTS ====================
 @app.route('/api/admin/conversations', methods=['GET'])
@@ -1096,6 +1471,38 @@ def agent_send_notification():
     send_notification(order.user_id, data.get('title', 'Order Update'), f'Order #{oid}: {message}')
     return jsonify({'success': True})
 
+@app.route('/api/agent/customers', methods=['GET'])
+@jwt_required()
+def get_agent_customers():
+    uid = int(get_jwt_identity())
+    user = User.query.get(uid)
+    if user.role not in ['agent', 'admin']:
+        return jsonify({'error': 'Agent required'}), 403
+    
+    # Get unique customers from orders assigned to this agent
+    if user.role == 'admin':
+        orders = Order.query.all()
+    else:
+        orders = Order.query.filter_by(agent_id=uid).all()
+    
+    customer_ids = set()
+    for order in orders:
+        customer_ids.add(order.user_id)
+    
+    customers = []
+    for cid in customer_ids:
+        customer = User.query.get(cid)
+        if customer:
+            customers.append({
+                'id': customer.id,
+                'name': customer.name,
+                'phone': customer.phone,
+                'email': customer.email,
+                'address': customer.address
+            })
+    
+    return jsonify(customers)
+
 # ==================== AGENT GROUP CHAT ====================
 @app.route('/api/agent/group-messages', methods=['GET'])
 @jwt_required()
@@ -1149,22 +1556,21 @@ def send_comms():
     send_notification(rid, 'New Message', f'Message from {User.query.get(uid).name}')
     return jsonify({'success': True})
 
-# ==================== AI CHAT BOT (FIXED) ====================
+# ==================== AI CHAT BOT ====================
 @app.route('/api/chat/customer', methods=['POST'])
 def customer_chat():
     if not request.is_json:
         return jsonify({'error': 'JSON required'}), 400
-    
+
     data = request.get_json()
     message = data.get('message', '').strip()
-    
+
     if not message:
         return jsonify({'error': 'Message required'}), 400
-    
+
     # Try Gemini AI first if enabled
     if GEMINI_ENABLED:
         try:
-            # Create a proper prompt
             prompt = f"""You are a customer service assistant for WAMP Enterprises.
 
 Company info:
@@ -1174,42 +1580,40 @@ Company info:
 - Free delivery on orders over UGX 500,000
 - Delivery takes 2-5 days
 - Accepts MTN, Airtel, Card, and Cash on Delivery
+- Support numbers: 0741227707 and 0741333544
 
 Customer question: {message}
 
 Answer concisely and helpfully in 1-2 sentences. Be friendly but professional."""
 
-            # Generate response
             response = gemini_model.generate_content(prompt)
             ai_response = response.text if response.text else "I'm here to help! What would you like to know?"
-            
-            print(f"🤖 Gemini AI Response: {ai_response[:100]}...")  # Log for debugging
-            
+
             return jsonify({'response': ai_response, 'ai_used': True})
-            
+
         except Exception as e:
-            print(f"❌ Gemini error: {e}")  # This will show in Render logs
-            # Fall through to fallback responses
+            print(f"❌ Gemini error: {e}")
             pass
-    
-    # Fallback responses (if Gemini fails or not enabled)
+
+    # Fallback responses
     msg_lower = message.lower()
-    
+
     if any(word in msg_lower for word in ['price', 'cost', 'how much']):
         resp = "💰 Prices: Terrazzo UGX 250k-500k | Plumbing UGX 45k-150k | General UGX 10k-200k"
     elif any(word in msg_lower for word in ['delivery', 'shipping']):
         resp = "🚚 Free delivery on orders > UGX 500k. Takes 2-5 days."
     elif any(word in msg_lower for word in ['payment', 'pay', 'mtn', 'airtel']):
         resp = "💳 We accept MTN, Airtel, Card, and Cash on Delivery!"
+    elif any(word in msg_lower for word in ['contact', 'support', 'help', 'call']):
+        resp = "📞 Contact support: 0741227707 or 0741333544"
     elif 'terrazzo' in msg_lower:
         resp = "🏛️ Terrazzo flooring: prices start at UGX 250,000"
     elif 'plumbing' in msg_lower:
         resp = "🔧 Plumbing supplies: copper pipes, fittings from UGX 45,000"
     else:
-        resp = "Welcome to WAMP! Ask about prices, delivery, or payments."
-    
-    return jsonify({'response': resp, 'ai_used': False})
+        resp = "Welcome to WAMP! Ask about prices, delivery, payments, or contact support at 0741227707 / 0741333544."
 
+    return jsonify({'response': resp, 'ai_used': False})
 
 # ==================== ERROR HANDLERS ====================
 @app.errorhandler(404)
@@ -1230,22 +1634,18 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
     print(f"""
 ╔═══════════════════════════════════════════════════════════════════════════════╗
-║                    WAMP BACKEND - VERSION 3 ✅                                ║
+║                    WAMP BACKEND - VERSION 4 ✅                                ║
+╠═══════════════════════════════════════════════════════════════════════════════╣
+║  NEW FEATURES ADDED:                                                          ║
+║  ✅ Receipts table + API endpoints                                           ║
+║  ✅ Customer-Agent shielded chat (CustomerChat table)                        ║
+║  ✅ Receipt auto-generation on order placement                               ║
+║  ✅ Image upload: DB primary → Cloudinary fallback                           ║
+║  ✅ WhatsApp numbers: 0741227707 & 0741333544                                ║
 ╠═══════════════════════════════════════════════════════════════════════════════╣
 ║  Port:        {port}                                                          ║
 ║  Cloudinary:  {'✅' if CLOUDINARY_ENABLED else '❌'}                            ║
 ║  Gemini AI:   {'✅' if GEMINI_ENABLED else '❌'}                                ║
-╠═══════════════════════════════════════════════════════════════════════════════╣
-║  ✅ NEW: WhatsApp Contacts API                                                ║
-║     - GET /api/whatsapp/contacts                                             ║
-║     - Returns Manager & Assistant WhatsApp numbers                           ║
-╠═══════════════════════════════════════════════════════════════════════════════╣
-║  ✅ ALL ENDPOINTS INCLUDED:                                                   ║
-║     - Admin Chat, Agent Panel, Agent Group Chat                              ║
-║     - Rider Assignment, Delivery Tracking                                    ║
-║     - User Dashboard Stats, Notifications                                    ║
-║     - Wishlist, Reviews, Cart, Orders                                        ║
-║     - AI Chat (Gemini + fallback)                                            ║
 ╚═══════════════════════════════════════════════════════════════════════════════╝
     """)
     app.run(host='0.0.0.0', port=port, debug=False)
