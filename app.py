@@ -1,4 +1,4 @@
-# WAMP BACKEND - VERSION 4 (COMPLETE + RECEIPTS + CUSTOMER CHAT)
+# WAMP BACKEND - VERSION 5 (FINAL)
 # ================================================================
 
 import os
@@ -66,8 +66,8 @@ logger = logging.getLogger(__name__)
 logger.addFilter(SensitiveDataFilter())
 
 # ==================== CONFIGURATION ====================
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
-app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fallback-secret-key-change-in-production')
+app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'fallback-jwt-secret-change-in-production')
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
 app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=7)
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
@@ -143,7 +143,7 @@ jwt = JWTManager(app)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 ph = PasswordHasher()
-serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'] or 'fallback')
+serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
 # ==================== BRUTE FORCE PROTECTION ====================
 def record_failed_login(ip):
@@ -234,6 +234,15 @@ class Order(db.Model):
     delivery_location = db.Column(db.String(500))
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
+class Rider(db.Model):
+    __tablename__ = 'riders'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(20), nullable=False)
+    status = db.Column(db.String(20), default='available')  # available, busy
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 class Receipt(db.Model):
     __tablename__ = 'receipts'
     id = db.Column(db.Integer, primary_key=True)
@@ -246,7 +255,6 @@ class Receipt(db.Model):
     printed_count = db.Column(db.Integer, default=0)
     issued_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relationship
     order = db.relationship('Order', backref='receipts', foreign_keys=[order_id])
     user = db.relationship('User', backref='receipts', foreign_keys=[user_id])
 
@@ -262,7 +270,6 @@ class CustomerChat(db.Model):
     is_read = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relationships
     customer = db.relationship('User', foreign_keys=[customer_id])
     agent = db.relationship('User', foreign_keys=[agent_id])
     sender = db.relationship('User', foreign_keys=[sender_id])
@@ -441,7 +448,7 @@ def init_db():
     logger.info("✅ Tables created")
     release_expired_reservations()
 
-    # Create agent group messages table
+    # Create agent group messages table if not exists
     try:
         db.session.execute(text("""
             CREATE TABLE IF NOT EXISTS agent_group_messages (
@@ -456,23 +463,22 @@ def init_db():
         db.session.rollback()
 
     # Admin account
-    admin_email = os.environ.get('ADMIN_EMAIL')
-    admin_password = os.environ.get('ADMIN_PASSWORD')
-    if admin_email and admin_password:
-        admin = User.query.filter_by(email=admin_email).first()
-        if not admin:
-            admin = User(
-                name=os.environ.get('ADMIN_NAME', 'Admin'),
-                email=admin_email,
-                phone=os.environ.get('ADMIN_PHONE', '0771000000'),
-                password_hash=ph.hash(admin_password),
-                role='admin'
-            )
-            db.session.add(admin)
-            logger.info(f"✅ Created admin: {admin_email}")
-        else:
-            admin.password_hash = ph.hash(admin_password)
-            admin.role = 'admin'
+    admin_email = os.environ.get('ADMIN_EMAIL', 'admin@wamp.com')
+    admin_password = os.environ.get('ADMIN_PASSWORD', 'admin123')
+    admin = User.query.filter_by(email=admin_email).first()
+    if not admin:
+        admin = User(
+            name=os.environ.get('ADMIN_NAME', 'Admin'),
+            email=admin_email,
+            phone=os.environ.get('ADMIN_PHONE', '0771000000'),
+            password_hash=ph.hash(admin_password),
+            role='admin'
+        )
+        db.session.add(admin)
+        logger.info(f"✅ Created admin: {admin_email}")
+    else:
+        admin.password_hash = ph.hash(admin_password)
+        admin.role = 'admin'
 
     # Agents
     for i in range(1, 6):
@@ -739,6 +745,7 @@ def upload_product_image():
         db.session.commit()
         db_success = True
         logger.info(f"✅ Image saved to DB for product {pid}")
+        return jsonify({'success': True, 'stored_in_db': True})
     except Exception as e:
         logger.error(f"❌ DB storage failed: {e}")
         db.session.rollback()
@@ -758,10 +765,7 @@ def upload_product_image():
             logger.error(f"❌ Cloudinary also failed: {e}")
             return jsonify({'error': 'Both DB and Cloudinary storage failed'}), 500
     
-    if db_success:
-        return jsonify({'success': True, 'stored_in_db': True})
-    else:
-        return jsonify({'error': 'Storage failed'}), 500
+    return jsonify({'error': 'Storage failed'}), 500
 
 @app.route('/api/admin/products/<int:pid>', methods=['PUT'])
 @jwt_required()
@@ -982,12 +986,107 @@ def track_order(oid):
         'estimated_delivery': (order.created_at + timedelta(days=2)).isoformat()
     })
 
-# ==================== RECEIPT ROUTES (NEW) ====================
+# ==================== RIDER ROUTES (NEW) ====================
+@app.route('/api/riders', methods=['GET'])
+@jwt_required()
+def get_riders():
+    uid = int(get_jwt_identity())
+    user = User.query.get(uid)
+    if user.role not in ['admin', 'agent']:
+        return jsonify({'error': 'Permission denied'}), 403
+    
+    riders = Rider.query.all()
+    return jsonify([{'id': r.id, 'name': r.name, 'phone': r.phone, 'status': r.status} for r in riders])
+
+@app.route('/api/riders', methods=['POST'])
+@jwt_required()
+def create_rider():
+    uid = int(get_jwt_identity())
+    user = User.query.get(uid)
+    if user.role not in ['admin', 'agent']:
+        return jsonify({'error': 'Permission denied'}), 403
+    
+    data = request.get_json()
+    name = data.get('name', '').strip()
+    phone = data.get('phone', '').strip()
+    
+    if not name or not phone:
+        return jsonify({'error': 'Name and phone required'}), 400
+    
+    rider = Rider(name=name, phone=phone, status='available', created_by=uid)
+    db.session.add(rider)
+    db.session.commit()
+    
+    return jsonify({'success': True, 'id': rider.id})
+
+@app.route('/api/riders/<int:rid>/status', methods=['PUT'])
+@jwt_required()
+def update_rider_status(rid):
+    uid = int(get_jwt_identity())
+    user = User.query.get(uid)
+    if user.role not in ['admin', 'agent']:
+        return jsonify({'error': 'Permission denied'}), 403
+    
+    data = request.get_json()
+    status = data.get('status')
+    if status not in ['available', 'busy']:
+        return jsonify({'error': 'Invalid status'}), 400
+    
+    rider = Rider.query.get_or_404(rid)
+    rider.status = status
+    db.session.commit()
+    
+    return jsonify({'success': True})
+
+@app.route('/api/orders/<int:oid>/assign-rider', methods=['PUT'])
+@jwt_required()
+def assign_rider_to_order(oid):
+    uid = int(get_jwt_identity())
+    user = User.query.get(uid)
+    if user.role not in ['admin', 'agent']:
+        return jsonify({'error': 'Permission denied'}), 403
+    
+    data = request.get_json()
+    rider_id = data.get('rider_id')
+    rider_name = data.get('rider_name')
+    rider_phone = data.get('rider_phone')
+    
+    order = Order.query.get_or_404(oid)
+    
+    if rider_id:
+        rider = Rider.query.get(rider_id)
+        if rider:
+            order.rider_name = rider.name
+            order.rider_phone = rider.phone
+            rider.status = 'busy'
+    elif rider_name and rider_phone:
+        order.rider_name = rider_name
+        order.rider_phone = rider_phone
+    
+    order.status = 'shipped'
+    db.session.commit()
+    
+    send_notification(order.user_id, 'Rider Assigned', f'Rider {order.rider_name} assigned to order #{oid}')
+    return jsonify({'success': True})
+
+# ==================== RECEIPT ROUTES ====================
 @app.route('/api/receipts', methods=['GET'])
 @jwt_required()
 def get_user_receipts():
     uid = int(get_jwt_identity())
-    receipts = Receipt.query.filter_by(user_id=uid).order_by(Receipt.issued_at.desc()).all()
+    user = User.query.get(uid)
+    
+    if user.role == 'admin':
+        receipts = Receipt.query.order_by(Receipt.issued_at.desc()).all()
+    elif user.role == 'agent':
+        # Agent sees receipts for orders they are assigned to
+        agent_orders = Order.query.filter_by(agent_id=uid).all()
+        order_ids = [o.id for o in agent_orders]
+        receipts = Receipt.query.filter(Receipt.order_id.in_(order_ids)).order_by(Receipt.issued_at.desc()).all()
+    else:
+        # Customer sees their own receipts
+        receipts = Receipt.query.filter_by(user_id=uid).order_by(Receipt.issued_at.desc()).all()
+    
     return jsonify([{
         'id': r.id,
         'receipt_number': r.receipt_number,
@@ -1007,6 +1106,12 @@ def get_receipt(receipt_id):
     # Check permission
     if receipt.user_id != uid and user.role not in ['admin', 'agent']:
         return jsonify({'error': 'Permission denied'}), 403
+    
+    if user.role == 'agent':
+        # Check if agent is assigned to this order
+        order = Order.query.get(receipt.order_id)
+        if order.agent_id != uid:
+            return jsonify({'error': 'Permission denied'}), 403
     
     order = Order.query.get(receipt.order_id)
     items = json.loads(order.items) if order.items else []
@@ -1051,7 +1156,7 @@ def increment_receipt_print(receipt_id):
     db.session.commit()
     return jsonify({'success': True, 'printed_count': receipt.printed_count})
 
-# ==================== CUSTOMER-AGENT CHAT ROUTES (NEW) ====================
+# ==================== CUSTOMER-AGENT CHAT ROUTES ====================
 @app.route('/api/customer/chats', methods=['GET'])
 @jwt_required()
 def get_customer_chats():
@@ -1059,7 +1164,6 @@ def get_customer_chats():
     user = User.query.get(uid)
     
     if user.role == 'admin':
-        # Admin sees all conversations
         conversations = db.session.query(
             CustomerChat.conversation_id,
             CustomerChat.customer_id,
@@ -1082,7 +1186,6 @@ def get_customer_chats():
         return jsonify(result)
     
     elif user.role == 'agent':
-        # Agent sees conversations where they are the agent
         conversations = db.session.query(
             CustomerChat.conversation_id,
             CustomerChat.customer_id,
@@ -1105,7 +1208,6 @@ def get_customer_chats():
         return jsonify(result)
     
     else:
-        # Customer sees their own conversations
         conversations = db.session.query(
             CustomerChat.conversation_id,
             CustomerChat.agent_id,
@@ -1133,13 +1235,11 @@ def get_chat_messages(conversation_id):
     uid = int(get_jwt_identity())
     user = User.query.get(uid)
     
-    # Verify access
     chat_record = CustomerChat.query.filter_by(conversation_id=conversation_id).first()
     if not chat_record:
         return jsonify([])
     
     if user.role == 'admin':
-        # Admin can see any conversation
         pass
     elif user.role == 'agent':
         if chat_record.agent_id != uid:
@@ -1148,10 +1248,8 @@ def get_chat_messages(conversation_id):
         if chat_record.customer_id != uid:
             return jsonify({'error': 'Permission denied'}), 403
     
-    # Get messages
     messages = CustomerChat.query.filter_by(conversation_id=conversation_id).order_by(CustomerChat.created_at.asc()).all()
     
-    # Mark messages as read
     for msg in messages:
         if msg.sender_id != uid and not msg.is_read:
             msg.is_read = True
@@ -1180,18 +1278,10 @@ def send_chat_message():
     if not message:
         return jsonify({'error': 'Message required'}), 400
     
-    # Determine conversation participants
     if user.role == 'agent':
-        # Agent sending to customer
         actual_customer_id = customer_id
         actual_agent_id = uid
         conversation_id = f"cust_{actual_customer_id}_agent_{actual_agent_id}"
-        
-        # Create or get the conversation
-        existing = CustomerChat.query.filter_by(conversation_id=conversation_id).first()
-        if not existing:
-            # First message, create conversation record
-            pass
         
         chat = CustomerChat(
             conversation_id=conversation_id,
@@ -1204,13 +1294,10 @@ def send_chat_message():
         db.session.add(chat)
         db.session.commit()
         
-        # Notify customer
         send_notification(actual_customer_id, f'Message from Agent {user.name}', message[:100])
-        
         return jsonify({'success': True, 'conversation_id': conversation_id})
     
     elif user.role == 'admin':
-        # Admin can send as agent
         actual_customer_id = customer_id
         actual_agent_id = agent_id or user.id
         conversation_id = f"cust_{actual_customer_id}_agent_{actual_agent_id}"
@@ -1234,18 +1321,13 @@ def send_chat_message():
         return jsonify({'success': True, 'conversation_id': conversation_id})
     
     else:
-        # Customer sending to agent
         actual_customer_id = uid
-        
-        # Find or create agent for this customer
-        # First, check if customer has an assigned agent from their orders
         order = Order.query.filter_by(user_id=uid).order_by(Order.created_at.desc()).first()
         actual_agent_id = order.agent_id if order and order.agent_id else None
         
-        # If no agent assigned, find least busy agent
         if not actual_agent_id:
             agent = get_least_busy_agent()
-            actual_agent_id = agent.id if agent else 1  # Fallback to admin
+            actual_agent_id = agent.id if agent else 1
         
         conversation_id = f"cust_{actual_customer_id}_agent_{actual_agent_id}"
         
@@ -1260,34 +1342,8 @@ def send_chat_message():
         db.session.add(chat)
         db.session.commit()
         
-        # Notify agent
         send_notification(actual_agent_id, f'New message from {user.name}', message[:100])
-        
         return jsonify({'success': True, 'conversation_id': conversation_id})
-
-@app.route('/api/customer/chats/unread/count', methods=['GET'])
-@jwt_required()
-def get_unread_chat_count():
-    uid = int(get_jwt_identity())
-    count = CustomerChat.query.filter(CustomerChat.receiver_id == uid, CustomerChat.is_read == False).count()
-    return jsonify({'unread_count': count})
-
-# ==================== RIDER ASSIGNMENT ====================
-@app.route('/api/admin/orders/<int:oid>/assign-rider', methods=['PUT'])
-@jwt_required()
-def assign_rider(oid):
-    uid = int(get_jwt_identity())
-    user = User.query.get(uid)
-    if user.role not in ['admin', 'agent']:
-        return jsonify({'error': 'Permission denied'}), 403
-    data = request.get_json()
-    order = Order.query.get_or_404(oid)
-    order.rider_name = data.get('rider_name')
-    order.rider_phone = data.get('rider_phone')
-    order.status = 'shipped'
-    db.session.commit()
-    send_notification(order.user_id, 'Rider Assigned', f'Rider {order.rider_name} assigned to order #{oid}')
-    return jsonify({'success': True})
 
 # ==================== ADMIN ROUTES ====================
 @app.route('/api/admin/stats', methods=['GET'])
@@ -1321,23 +1377,6 @@ def export_orders():
     resp.headers['Content-Type'] = 'text/csv'
     resp.headers['Content-Disposition'] = 'attachment; filename=orders.csv'
     return resp
-
-@app.route('/api/admin/receipts', methods=['GET'])
-@jwt_required()
-def admin_get_receipts():
-    user = User.query.get(int(get_jwt_identity()))
-    if user.role != 'admin':
-        return jsonify({'error': 'Admin required'}), 403
-    
-    receipts = Receipt.query.order_by(Receipt.issued_at.desc()).all()
-    return jsonify([{
-        'id': r.id,
-        'receipt_number': r.receipt_number,
-        'order_id': r.order_id,
-        'user_id': r.user_id,
-        'printed_count': r.printed_count,
-        'issued_at': r.issued_at.isoformat()
-    } for r in receipts])
 
 # ==================== ADMIN CHAT ENDPOINTS ====================
 @app.route('/api/admin/conversations', methods=['GET'])
@@ -1479,7 +1518,6 @@ def get_agent_customers():
     if user.role not in ['agent', 'admin']:
         return jsonify({'error': 'Agent required'}), 403
     
-    # Get unique customers from orders assigned to this agent
     if user.role == 'admin':
         orders = Order.query.all()
     else:
@@ -1568,7 +1606,6 @@ def customer_chat():
     if not message:
         return jsonify({'error': 'Message required'}), 400
 
-    # Try Gemini AI first if enabled
     if GEMINI_ENABLED:
         try:
             prompt = f"""You are a customer service assistant for WAMP Enterprises.
@@ -1588,14 +1625,10 @@ Answer concisely and helpfully in 1-2 sentences. Be friendly but professional.""
 
             response = gemini_model.generate_content(prompt)
             ai_response = response.text if response.text else "I'm here to help! What would you like to know?"
-
             return jsonify({'response': ai_response, 'ai_used': True})
-
         except Exception as e:
             print(f"❌ Gemini error: {e}")
-            pass
 
-    # Fallback responses
     msg_lower = message.lower()
 
     if any(word in msg_lower for word in ['price', 'cost', 'how much']):
@@ -1634,14 +1667,17 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
     print(f"""
 ╔═══════════════════════════════════════════════════════════════════════════════╗
-║                    WAMP BACKEND - VERSION 4 ✅                                ║
+║                    WAMP BACKEND - VERSION 5 (FINAL) ✅                         ║
 ╠═══════════════════════════════════════════════════════════════════════════════╣
 ║  NEW FEATURES ADDED:                                                          ║
-║  ✅ Receipts table + API endpoints                                           ║
-║  ✅ Customer-Agent shielded chat (CustomerChat table)                        ║
-║  ✅ Receipt auto-generation on order placement                               ║
-║  ✅ Image upload: DB primary → Cloudinary fallback                           ║
-║  ✅ WhatsApp numbers: 0741227707 & 0741333544                                ║
+║  ✅ Riders table + CRUD endpoints                                             ║
+║  ✅ Assign rider to order                                                     ║
+║  ✅ Receipts: Admin & Agent can print (NO user receipts)                      ║
+║  ✅ Customer-Agent shielded chat (CustomerChat table)                         ║
+║  ✅ Receipt auto-generation on order placement                                ║
+║  ✅ Image upload: DB primary → Cloudinary fallback                            ║
+║  ✅ WhatsApp numbers: 0741227707 & 0741333544                                 ║
+║  ✅ Redesigned AI chat (bigger, better)                                       ║
 ╠═══════════════════════════════════════════════════════════════════════════════╣
 ║  Port:        {port}                                                          ║
 ║  Cloudinary:  {'✅' if CLOUDINARY_ENABLED else '❌'}                            ║
