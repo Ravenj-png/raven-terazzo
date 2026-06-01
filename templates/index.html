@@ -613,12 +613,37 @@ function enterApp(){
   refreshData().then(()=>{ if(AppState.user.role==='admin')navigateTo('adminDashboard'); else if(AppState.user.role==='agent')navigateTo('agentPanel'); else{navigateTo('userShop'); initSlider();} });
 }
 
-async function initApp(){
+async function initApp() {
   setupPaymentMethodListener();
-  const splash=document.getElementById('splashPage');
-  setTimeout(()=>{ splash.style.opacity='0'; setTimeout(()=>{ splash.classList.add('hidden'); document.getElementById('appContainer').classList.remove('hidden'); const t=getAccessToken(); if(t){ try{await refreshData();}catch(e){clearTokens();} } navigateTo('userShop'); initSlider(); setupNav(); },600); },1500);
+  
+  const splash = document.getElementById('splashPage');
+  
+  setTimeout(async () => {
+    splash.style.opacity = '0';
+    
+    setTimeout(async () => {
+      splash.classList.add('hidden');
+      document.getElementById('appContainer').classList.remove('hidden');
+      
+      const token = getAccessToken();
+      
+      if (token) {
+        try { 
+          await refreshData(); 
+        } catch(e) { 
+          clearTokens(); 
+        }
+      }
+      
+      navigateTo('userShop');
+      initSlider();
+      setupNav();
+      
+    }, 600);
+    
+  }, 1500);
 }
-
+  
 window.onload=initApp;
 window.navigateTo=navigateTo; window.addToCart=addToCart; window.showProductDetail=showProductDetail; window.removeFromCart=removeFromCart; window.processPayment=processPayment; window.saveProduct=saveProduct; window.editProduct=editProduct; window.deleteProductItem=deleteProductItem; window.resetProductForm=resetProductForm; window.renderShop=renderShop; window.searchProducts=searchProducts; window.filterProducts=filterProducts; window.showCart=showCart; window.showCheckout=showCheckout; window.handleLogin=handleLogin; window.handleRegister=handleRegister; window.handleForgotPassword=handleForgotPassword; window.logout=logout; window.toggleAuth=toggleAuth; window.showForgotPassword=showForgotPassword; window.showLoginForm=showLoginForm; window.saveUserProfile=saveUserProfile; window.toggleChat=toggleChat; window.sendChat=sendChat; window.searchTransactionByPhone=searchTransactionByPhone; window.resetTransactionSearch=resetTransactionSearch; window.exportTransactionsCSV=exportTransactionsCSV; window.showSalesDetail=showSalesDetail; window.showPendingDetail=showPendingDetail; window.showProductsDetail=showProductsDetail; window.showLowStockDetail=showLowStockDetail; window.viewTransactionDetails=viewTransactionDetails; window.openAgentToManagerChat=openAgentToManagerChat; window.renderAgentPanel=renderAgentPanel; window.renderAgentReceipts=renderAgentReceipts; window.printReceipt=printReceipt; window.showNotifications=showNotifications; window.sendManagerMessage=()=>showToast('Send message (Backend pending)'); window.claimOrder=claimOrder;
 </script>
