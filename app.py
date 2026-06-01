@@ -1,4 +1,4 @@
-# WAMP BACKEND - PRODUCTION READY (FIXED)
+# WAMP BACKEND - PRODUCTION READY (FULLY FIXED)
 # ==========================================
 
 import os
@@ -78,6 +78,9 @@ app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB
 app.config['JWT_TOKEN_LOCATION'] = ['headers']
 app.config['JWT_HEADER_NAME'] = 'Authorization'
 app.config['JWT_HEADER_TYPE'] = 'Bearer'
+app.config['JWT_IDENTITY_CLAIM'] = 'sub'
+app.config['JWT_DECODE_AUDIENCE'] = None
+app.config['JWT_DECODE_ISSUER'] = None
 
 # Database
 database_url = os.environ.get('DATABASE_URL')
@@ -122,7 +125,7 @@ ALLOWED_ORIGINS = [
 
 CORS(app, 
      origins=ALLOWED_ORIGINS, 
-     supports_credentials=True,  # Changed to True for better cookie/token support
+     supports_credentials=True,
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
      allow_headers=["Content-Type", "Authorization", "X-Requested-With", "Accept"],
      expose_headers=["Content-Type", "Authorization"],
@@ -211,6 +214,20 @@ def custom_needs_fresh_token_response(jwt_header, jwt_payload):
     """Handle when fresh token is needed"""
     logger.warning("Fresh token required")
     return jsonify({'error': 'Fresh token required'}), 401
+
+
+# ==================== JWT IDENTITY FIX ====================
+
+@jwt.user_identity_loader
+def user_identity_lookup(user_id):
+    """Convert user identity to string"""
+    return str(user_id)
+
+@jwt.user_lookup_loader
+def user_lookup_callback(_jwt_header, jwt_data):
+    """Look up user from JWT payload"""
+    identity = jwt_data["sub"]
+    return User.query.get(int(identity))
 
 
 # ==================== BRUTE FORCE PROTECTION ====================
@@ -650,7 +667,8 @@ def admin_required(f):
     @jwt_required()
     def decorated(*args, **kwargs):
         user_id = get_jwt_identity()
-        user = User.query.get(user_id)
+        # Convert to int for database query
+        user = User.query.get(int(user_id))
         if not user or user.role != 'admin':
             return jsonify({'error': 'Admin access required'}), 403
         return f(*args, **kwargs)
@@ -661,7 +679,7 @@ def user_required(f):
     @jwt_required()
     def decorated(*args, **kwargs):
         user_id = get_jwt_identity()
-        user = User.query.get(user_id)
+        user = User.query.get(int(user_id))
         if not user:
             return jsonify({'error': 'User not found'}), 404
         return f(*args, **kwargs)
@@ -760,9 +778,13 @@ def login():
 
         reset_failed_attempts(client_ip)
 
-        # Create tokens with additional claims
-        access_token = create_access_token(identity=user.id)
-        refresh_token = create_refresh_token(identity=user.id)
+        # ✅ CRITICAL FIX: Convert user.id to string explicitly
+        user_id_str = str(user.id)
+        logger.info(f"Creating token for user_id: {user_id_str} (type: {type(user_id_str).__name__})")
+        
+        # Create tokens with string identity
+        access_token = create_access_token(identity=user_id_str)
+        refresh_token = create_refresh_token(identity=user_id_str)
 
         # Log successful login
         log_audit(user.id, 'LOGIN', 'user', user.id)
@@ -790,7 +812,8 @@ def login():
 @jwt_required(refresh=True)
 def refresh():
     user_id = get_jwt_identity()
-    access_token = create_access_token(identity=user_id)
+    # ✅ Ensure identity is string
+    access_token = create_access_token(identity=str(user_id))
     return jsonify({'success': True, 'access_token': access_token})
 
 
@@ -799,10 +822,10 @@ def refresh():
 def logout():
     jti = get_jwt()['jti']
     user_id = get_jwt_identity()
-    blacklist = TokenBlacklist(jti=jti, user_id=user_id)
+    blacklist = TokenBlacklist(jti=jti, user_id=int(user_id))
     db.session.add(blacklist)
     db.session.commit()
-    log_audit(user_id, 'LOGOUT', 'user', user_id)
+    log_audit(int(user_id), 'LOGOUT', 'user', int(user_id))
     return jsonify({'success': True})
 
 
@@ -813,7 +836,7 @@ def logout():
 def verify_token():
     """Endpoint to test if token is valid"""
     user_id = get_jwt_identity()
-    user = User.query.get(user_id)
+    user = User.query.get(int(user_id))
     
     if not user:
         return jsonify({'valid': False, 'error': 'User not found'}), 401
@@ -976,7 +999,8 @@ def delete_product(product_id):
 def get_cart():
     try:
         user_id = get_jwt_identity()
-        cart = CartItem.query.filter_by(user_id=user_id).all()
+        user_id_int = int(user_id)
+        cart = CartItem.query.filter_by(user_id=user_id_int).all()
         
         # Get product details for each cart item
         cart_data = []
@@ -1007,6 +1031,7 @@ def add_to_cart():
             return jsonify({'error': 'Content-Type must be application/json'}), 400
         
         user_id = get_jwt_identity()
+        user_id_int = int(user_id)
         data = request.get_json()
         product_id = data.get('product_id')
         quantity = data.get('quantity', 1)
@@ -1018,12 +1043,12 @@ def add_to_cart():
         if product.available_stock < quantity:
             return jsonify({'error': 'Insufficient stock'}), 400
 
-        cart_item = CartItem.query.filter_by(user_id=user_id, product_id=product_id).first()
+        cart_item = CartItem.query.filter_by(user_id=user_id_int, product_id=product_id).first()
         
         if cart_item:
             cart_item.quantity += quantity
         else:
-            cart_item = CartItem(user_id=user_id, product_id=product_id, quantity=quantity)
+            cart_item = CartItem(user_id=user_id_int, product_id=product_id, quantity=quantity)
             db.session.add(cart_item)
 
         db.session.commit()
@@ -1039,7 +1064,8 @@ def add_to_cart():
 def remove_from_cart(cart_item_id):
     try:
         user_id = get_jwt_identity()
-        cart_item = CartItem.query.filter_by(id=cart_item_id, user_id=user_id).first()
+        user_id_int = int(user_id)
+        cart_item = CartItem.query.filter_by(id=cart_item_id, user_id=user_id_int).first()
         
         if not cart_item:
             return jsonify({'error': 'Not found'}), 404
@@ -1058,7 +1084,8 @@ def remove_from_cart(cart_item_id):
 def clear_cart():
     try:
         user_id = get_jwt_identity()
-        CartItem.query.filter_by(user_id=user_id).delete()
+        user_id_int = int(user_id)
+        CartItem.query.filter_by(user_id=user_id_int).delete()
         db.session.commit()
         return jsonify({'success': True})
     
@@ -1074,13 +1101,14 @@ def clear_cart():
 def get_wishlist():
     try:
         user_id = get_jwt_identity()
+        user_id_int = int(user_id)
         items = db.session.execute(text("""
             SELECT w.id, w.product_id, p.name, p.price, p.image_url, p.stock
             FROM wishlist w
             JOIN products p ON w.product_id = p.id
             WHERE w.user_id = :user_id
             ORDER BY w.created_at DESC
-        """), {'user_id': user_id}).fetchall()
+        """), {'user_id': user_id_int}).fetchall()
 
         return jsonify([{
             'id': row[0],
@@ -1104,6 +1132,7 @@ def toggle_wishlist():
             return jsonify({'error': 'Content-Type must be application/json'}), 400
         
         user_id = get_jwt_identity()
+        user_id_int = int(user_id)
         data = request.get_json()
         product_id = data.get('product_id')
 
@@ -1112,7 +1141,7 @@ def toggle_wishlist():
 
         existing = db.session.execute(text("""
             SELECT id FROM wishlist WHERE user_id = :user_id AND product_id = :product_id
-        """), {'user_id': user_id, 'product_id': product_id}).fetchone()
+        """), {'user_id': user_id_int, 'product_id': product_id}).fetchone()
 
         if existing:
             db.session.execute(text("DELETE FROM wishlist WHERE id = :id"), {'id': existing[0]})
@@ -1121,7 +1150,7 @@ def toggle_wishlist():
         else:
             db.session.execute(text("""
                 INSERT INTO wishlist (user_id, product_id) VALUES (:user_id, :product_id)
-            """), {'user_id': user_id, 'product_id': product_id})
+            """), {'user_id': user_id_int, 'product_id': product_id})
             db.session.commit()
             return jsonify({'success': True, 'action': 'added', 'message': 'Added to wishlist'}), 201
     
@@ -1140,6 +1169,7 @@ def submit_review():
             return jsonify({'error': 'Content-Type must be application/json'}), 400
         
         user_id = get_jwt_identity()
+        user_id_int = int(user_id)
         data = request.get_json()
         product_id = data.get('product_id')
         rating = data.get('rating')
@@ -1157,7 +1187,7 @@ def submit_review():
 
         existing = db.session.execute(text("""
             SELECT id FROM reviews WHERE user_id = :user_id AND product_id = :product_id
-        """), {'user_id': user_id, 'product_id': product_id}).fetchone()
+        """), {'user_id': user_id_int, 'product_id': product_id}).fetchone()
 
         if existing:
             db.session.execute(text("""
@@ -1167,7 +1197,7 @@ def submit_review():
             db.session.execute(text("""
                 INSERT INTO reviews (user_id, product_id, rating, comment)
                 VALUES (:user_id, :product_id, :rating, :comment)
-            """), {'user_id': user_id, 'product_id': product_id, 'rating': rating, 'comment': comment})
+            """), {'user_id': user_id_int, 'product_id': product_id, 'rating': rating, 'comment': comment})
 
         db.session.commit()
         return jsonify({'success': True, 'message': 'Review saved'})
@@ -1205,13 +1235,14 @@ def get_product_reviews(product_id):
 def get_user_reviews():
     try:
         user_id = get_jwt_identity()
+        user_id_int = int(user_id)
         reviews = db.session.execute(text("""
             SELECT r.id, r.product_id, p.name as product_name, r.rating, r.comment, r.created_at
             FROM reviews r
             JOIN products p ON r.product_id = p.id
             WHERE r.user_id = :user_id
             ORDER BY r.created_at DESC
-        """), {'user_id': user_id}).fetchall()
+        """), {'user_id': user_id_int}).fetchall()
 
         return jsonify([{
             'id': row[0],
@@ -1234,17 +1265,19 @@ def get_user_reviews():
 def get_orders():
     try:
         user_id = get_jwt_identity()
-        user = User.query.get(user_id)
+        user_id_int = int(user_id)
+        user = User.query.get(user_id_int)
 
         if user.role == 'admin':
             orders = Order.query.order_by(Order.created_at.desc()).all()
         elif user.role == 'agent':
-            orders = Order.query.filter_by(agent_id=user_id).order_by(Order.created_at.desc()).all()
+            orders = Order.query.filter_by(agent_id=user_id_int).order_by(Order.created_at.desc()).all()
         else:
-            orders = Order.query.filter_by(user_id=user_id).order_by(Order.created_at.desc()).all()
+            orders = Order.query.filter_by(user_id=user_id_int).order_by(Order.created_at.desc()).all()
 
         return jsonify([{
             'id': o.id,
+            'user_id': o.user_id,
             'total': o.total,
             'status': o.status,
             'payment_method': o.payment_method,
@@ -1267,6 +1300,7 @@ def create_order():
             return jsonify({'error': 'Content-Type must be application/json'}), 400
         
         user_id = get_jwt_identity()
+        user_id_int = int(user_id)
         data = request.get_json()
         items_data = data.get('items', [])
         
@@ -1300,7 +1334,7 @@ def create_order():
         delivery_location = data.get('delivery_location', '')
         
         order = Order(
-            user_id=user_id,
+            user_id=user_id_int,
             items=json.dumps(validated_items),
             total=total,
             status='pending',
@@ -1313,7 +1347,7 @@ def create_order():
         db.session.commit()
 
         # Clear cart after order
-        CartItem.query.filter_by(user_id=user_id).delete()
+        CartItem.query.filter_by(user_id=user_id_int).delete()
         db.session.commit()
 
         # Assign agent
@@ -1322,7 +1356,7 @@ def create_order():
             order.agent_id = agent.id
             db.session.commit()
 
-        log_audit(user_id, 'CREATE_ORDER', 'order', order.id)
+        log_audit(user_id_int, 'CREATE_ORDER', 'order', order.id)
         return jsonify({'success': True, 'order_id': order.id}), 201
     
     except Exception as e:
@@ -1341,9 +1375,10 @@ def update_order_status(order_id):
         data = request.get_json()
         order = Order.query.get_or_404(order_id)
         user_id = get_jwt_identity()
-        user = User.query.get(user_id)
+        user_id_int = int(user_id)
+        user = User.query.get(user_id_int)
         
-        if user.role != 'admin' and (user.role == 'agent' and order.agent_id != user_id):
+        if user.role != 'admin' and (user.role == 'agent' and order.agent_id != user_id_int):
             return jsonify({'error': 'Permission denied'}), 403
         
         order.status = data.get('status', order.status)
@@ -1402,7 +1437,8 @@ def admin_orders():
 def agent_orders():
     try:
         user_id = get_jwt_identity()
-        user = User.query.get(user_id)
+        user_id_int = int(user_id)
+        user = User.query.get(user_id_int)
         
         if user.role != 'agent' and user.role != 'admin':
             return jsonify({'error': 'Agent access required'}), 403
@@ -1410,7 +1446,7 @@ def agent_orders():
         if user.role == 'admin':
             orders = Order.query.filter(Order.agent_id.isnot(None)).order_by(Order.created_at.desc()).all()
         else:
-            orders = Order.query.filter_by(agent_id=user_id).order_by(Order.created_at.desc()).all()
+            orders = Order.query.filter_by(agent_id=user_id_int).order_by(Order.created_at.desc()).all()
 
         return jsonify([{
             'id': o.id,
@@ -1598,11 +1634,11 @@ if __name__ == '__main__':
 ║  ✅ Tables: Users, Products, Cart, Orders, Wishlist, Reviews     ║
 ║  ✅ Admin: {os.environ.get('ADMIN_EMAIL', 'admin@tarazo.com')}   ║
 ║  ✅ Password: {os.environ.get('ADMIN_PASSWORD', 'Admin123456')}  ║
-║  ✅ Environment variables loaded from .env or Render             ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  🔧 TEST AUTH: GET /api/verify-token                            ║
-║  🔧 LOGIN: POST /api/login                                      ║
-║  🔧 CART: GET /api/cart                                         ║
+║  🔧 JWT FIXES APPLIED:                                          ║
+║  - String identity conversion                                   ║
+║  - User lookup callbacks                                        ║
+║  - Proper type casting in all routes                            ║
 ╚══════════════════════════════════════════════════════════════════╝
 """)
     
