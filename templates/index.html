@@ -1,651 +1,2564 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=yes,viewport-fit=cover">
-<title>WAMP Enterprises - Terrazzo, Plumbing & Painting</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
-:root{--blue:#1a5276;--blue-dark:#0e3a56;--blue-light:#2c7ab1;--green:#27ae60;--green-light:#2ecc71;--white:#fff;--gray:#f4f6f9;--gray-dark:#5a6e7a;--border:#e2e8f0;--red:#e74c3c;--orange:#f39c12;--shadow:0 4px 20px rgba(0,0,0,.08)}
-body{background:var(--gray);color:#2c3e50;font-size:14px;line-height:1.5;overflow-x:hidden}
-.hidden{display:none!important}
-#splashPage{position:fixed;inset:0;background:linear-gradient(135deg,var(--blue),var(--blue-dark));z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s}
-.splash-logo{font-size:clamp(32px,8vw,48px);font-weight:800;color:var(--white);letter-spacing:4px}
-.splash-sub{color:var(--green-light);font-size:clamp(11px,3vw,13px);margin-top:8px;text-transform:uppercase;letter-spacing:3px}
-.splash-loader{width:50px;height:50px;border:4px solid rgba(255,255,255,.2);border-top-color:var(--green-light);border-radius:50%;animation:spin 1s linear infinite;margin-top:30px}
-@keyframes spin{to{transform:rotate(360deg)}}
-#loginPage{min-height:100vh;background:linear-gradient(135deg,var(--blue),var(--blue-dark));display:flex;align-items:center;justify-content:center;padding:20px}
-.login-box{background:var(--white);width:100%;max-width:400px;border-radius:20px;padding:30px 20px;box-shadow:var(--shadow)}
-.logo-text{text-align:center;font-size:clamp(24px,6vw,32px);font-weight:800;color:var(--blue);margin-bottom:5px}
-.logo-sub{text-align:center;color:var(--green);font-size:12px;font-weight:600;margin-bottom:25px;text-transform:uppercase}
-.form-group{margin-bottom:15px}
-.form-group label{display:block;font-size:12px;font-weight:600;color:var(--gray-dark);margin-bottom:5px;text-transform:uppercase}
-.form-group input,.form-group select,.form-group textarea{width:100%;padding:14px;border:2px solid #e0e0e0;border-radius:12px;font-size:15px;transition:border-color .3s;outline:none}
-.form-group input:focus{border-color:var(--blue)}
-.btn{width:100%;padding:16px;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;transition:all .3s;text-transform:uppercase;letter-spacing:1px}
-.btn-primary{background:var(--blue);color:var(--white)}
-.btn-primary:active{background:var(--blue-dark);transform:scale(.98)}
-.btn-green{background:var(--green);color:var(--white)}
-.btn-green:active{background:#219a52;transform:scale(.98)}
-.btn-outline{background:transparent;border:2px solid var(--blue);color:var(--blue);margin-top:10px}
-.btn-red{background:var(--red);color:var(--white)}
-.btn-sm{padding:8px 14px;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;margin-top:10px;width:auto;display:inline-block}
-.remember-row{display:flex;align-items:center;gap:8px;margin:10px 0 15px;font-size:13px;color:var(--gray-dark)}
-.remember-row input{width:18px;height:18px;accent-color:var(--blue)}
-.toggle-text{text-align:center;margin-top:15px;font-size:14px;color:var(--gray-dark)}
-.toggle-text span{color:var(--blue);font-weight:700;cursor:pointer}
-.forgot-link{text-align:center;margin-top:10px;font-size:13px;color:var(--blue);cursor:pointer;font-weight:600}
-#appContainer{min-height:100vh;padding-bottom:80px}
-.app-header{background:var(--blue);color:var(--white);padding:15px 20px;position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 10px rgba(0,0,0,.1)}
-.app-header h1{font-size:clamp(16px,4vw,20px);letter-spacing:1px}
-.header-actions{display:flex;gap:15px;align-items:center}
-.user-greeting{font-size:13px;font-weight:600;opacity:.9;margin-right:5px;display:none}
-@media(min-width:400px){.user-greeting{display:block}}
-.icon-btn{background:rgba(255,255,255,.2);border:none;color:var(--white);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;position:relative}
-.badge{position:absolute;top:-5px;right:-5px;background:var(--red);color:var(--white);font-size:10px;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700}
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--white);display:flex;justify-content:space-around;padding:10px 0;box-shadow:0 -2px 10px rgba(0,0,0,.1);z-index:100;border-top:1px solid #eee}
-.nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--gray-dark);font-size:11px;font-weight:600;cursor:pointer;padding:5px 10px;border-radius:10px;transition:all .2s;flex:1}
-.nav-item.active{color:var(--blue);background:rgba(26,82,118,.1)}
-.nav-icon{font-size:22px}
-.card{background:var(--white);border-radius:16px;padding:20px;margin:15px;box-shadow:var(--shadow)}.card-title{font-size:18px;font-weight:700;color:var(--blue-dark);margin-bottom:15px;display:flex;align-items:center;gap:10px}
-.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:15px}
-.stat-card{background:var(--white);border-radius:16px;padding:18px;text-align:center;box-shadow:var(--shadow);border-left:4px solid var(--blue);cursor:pointer;transition:transform .2s}
-.stat-card:active{transform:scale(.98)}
-.stat-card.green{border-left-color:var(--green)}
-.stat-card.orange{border-left-color:var(--orange)}
-.stat-card.red{border-left-color:var(--red)}
-.stat-value{font-size:clamp(18px,5vw,24px);font-weight:800;color:var(--blue-dark)}
-.stat-label{font-size:12px;color:var(--gray-dark);margin-top:5px;font-weight:600}
-.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:15px}
-.product-card{background:var(--white);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);cursor:pointer;transition:transform .2s}
-.product-card:active{transform:scale(.98)}
-.product-card img{width:100%;height:150px;object-fit:cover;background:#e0e0e0}
-.product-info{padding:12px}
-.product-name{font-size:14px;font-weight:700;color:var(--blue-dark);margin-bottom:5px}
-.product-type{font-size:11px;color:var(--green);font-weight:600;text-transform:uppercase;margin-bottom:8px}
-.product-price{font-size:18px;font-weight:800;color:var(--blue)}
-.product-stock{font-size:11px;color:var(--gray-dark);margin-top:5px}
-.product-stock.low{color:var(--red);font-weight:700}
-.list-item{background:var(--white);margin:10px 15px;padding:15px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 4px rgba(0,0,0,.05);cursor:pointer;transition:all .2s}
-.list-item:active{background:#f0f0f0}
-.list-info h4{font-size:15px;color:var(--blue-dark);margin-bottom:3px}
-.list-info p{font-size:12px;color:var(--gray-dark)}
-.status-badge{padding:5px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase}
-.status-pending{background:#fff3cd;color:#856404}
-.status-paid{background:#d4edda;color:#155724}
-.status-processing{background:#e2e3f3;color:#383d7a}
-.status-shipped{background:#cce5ff;color:#004085}
-.status-delivered{background:#d1ecf1;color:#0c5460}
-.status-completed{background:#d4edda;color:#155724}
-.status-cancelled{background:#f8d7da;color:#721c24}
-.hero-slider{position:relative;width:100%;height:200px;overflow:hidden;margin-bottom:15px}
-@media(min-width:768px){.hero-slider{height:300px}}
-.slider-container{position:relative;width:100%;height:100%}
-.slider-slide{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity .5s ease-in-out;display:flex;align-items:center;justify-content:center}
-.slider-slide.active{opacity:1}
-.slide-caption{background:rgba(0,0,0,.6);color:var(--white);padding:12px 20px;border-radius:30px;font-size:clamp(18px,5vw,28px);font-weight:800;text-transform:uppercase;letter-spacing:2px}
-.slider-dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:10px;z-index:5}
-.slider-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.5);cursor:pointer}
-.slider-dot.active{background:var(--white);width:20px;border-radius:10px}
-.chat-widget{position:fixed;bottom:80px;right:20px;z-index:200}
-.chat-btn{width:60px;height:60px;border-radius:50%;background:var(--green);color:var(--white);border:none;font-size:24px;cursor:pointer;box-shadow:0 4px 15px rgba(39,174,96,.4);display:flex;align-items:center;justify-content:center}
-.chat-box{position:fixed;bottom:150px;right:20px;width:calc(100% - 40px);max-width:350px;height:450px;background:var(--white);border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,.2);display:flex;flex-direction:column;overflow:hidden;z-index:250}
-.chat-header{background:var(--blue);color:var(--white);padding:15px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
-.chat-close{background:rgba(255,255,255,.2);border:none;color:var(--white);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px}
-.chat-messages{flex:1;overflow-y:auto;padding:15px;display:flex;flex-direction:column;gap:10px}
-.chat-msg{max-width:80%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.4;word-break:break-word}
-.chat-msg.user{align-self:flex-end;background:var(--blue);color:var(--white);border-bottom-right-radius:4px}
-.chat-msg.bot{align-self:flex-start;background:var(--gray);color:#2c3e50;border-bottom-left-radius:4px}
-.chat-input-area{display:flex;padding:10px;border-top:1px solid #eee;gap:8px}.chat-input-area input{flex:1;padding:12px;border:1px solid #ddd;border-radius:20px;outline:none}
-.whatsapp-widget{position:fixed;bottom:80px;left:20px;z-index:200}
-.whatsapp-btn{width:60px;height:60px;border-radius:50%;background:#25d366;color:var(--white);border:none;font-size:28px;cursor:pointer;box-shadow:0 4px 15px rgba(37,211,102,.4);display:flex;align-items:center;justify-content:center;text-decoration:none}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px}
-.modal-content{background:var(--white);border-radius:20px;padding:25px;width:100%;max-width:450px;max-height:85vh;overflow-y:auto}
-.modal-header{font-size:20px;font-weight:800;color:var(--blue-dark);margin-bottom:15px;display:flex;justify-content:space-between;align-items:center}
-.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-100px);background:var(--blue-dark);color:var(--white);padding:14px 24px;border-radius:12px;font-weight:600;z-index:400;transition:all .3s;opacity:0;white-space:nowrap}
-.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-.empty-state{text-align:center;padding:40px 20px;color:var(--gray-dark)}
-.filter-row{display:flex;gap:8px;overflow-x:auto;padding:0 15px 15px;-webkit-overflow-scrolling:touch}
-.filter-btn{padding:8px 16px;border:2px solid #ddd;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;background:var(--white);color:var(--gray-dark)}
-.filter-btn.active{background:var(--blue);color:var(--white);border-color:var(--blue)}
-.msg-thread{background:var(--white);margin:10px 15px;padding:15px;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
-.msg-thread-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
-.msg-thread-title{font-weight:700;color:var(--blue-dark)}
-.msg-thread-time{font-size:11px;color:var(--gray-dark)}
-.agent-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:15px 0}
-.agent-stat-box{background:var(--white);padding:15px;border-radius:12px;text-align:center;box-shadow:var(--shadow)}
-.agent-stat-value{font-size:24px;font-weight:800;color:var(--blue)}
-.agent-stat-label{font-size:11px;color:var(--gray-dark);margin-top:5px}
-@media print{body *{visibility:hidden}.receipt-print-area,.receipt-print-area *{visibility:visible}.receipt-print-area{position:absolute;inset:0;padding:20px;background:var(--white)}.no-print{display:none!important}}
-.receipt-print-area{font-family:monospace;max-width:300px;margin:0 auto;padding:20px}
-.receipt-print-area h2{text-align:center;border-bottom:2px dashed #ccc;padding-bottom:10px;margin-bottom:10px}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>WAMP Enterprises - Terrazzo, Plumbing & Painting</title>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    :root {
+      --blue: #1a5276;
+      --blue-dark: #0e3a56;
+      --blue-light: #2c7ab1;
+      --green: #27ae60;
+      --green-light: #2ecc71;
+      --white: #fff;
+      --gray: #f4f6f9;
+      --gray-dark: #5a6e7a;
+      --border: #e2e8f0;
+      --red: #e74c3c;
+      --orange: #f39c12;
+      --shadow: 0 4px 20px rgba(0, 0, 0, .08);
+    }
+
+    body {
+      background: var(--gray);
+      color: #2c3e50;
+      font-size: 14px;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    #splashPage {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity .6s;
+    }
+
+    .splash-logo {
+      font-size: clamp(32px, 8vw, 48px);
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: 4px;
+    }
+
+    .splash-sub {
+      color: var(--green-light);
+      font-size: clamp(11px, 3vw, 13px);
+      margin-top: 8px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+    }
+
+    .splash-loader {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(255, 255, 255, .2);
+      border-top-color: var(--green-light);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-top: 30px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    #loginPage {
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-box {
+      background: var(--white);
+      width: 100%;
+      max-width: 400px;
+      border-radius: 20px;
+      padding: 30px 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .logo-text {
+      text-align: center;
+      font-size: clamp(24px, 6vw, 32px);
+      font-weight: 800;
+      color: var(--blue);
+      margin-bottom: 5px;
+    }
+
+    .logo-sub {
+      text-align: center;
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 25px;
+      text-transform: uppercase;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-dark);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 15px;
+      transition: border-color .3s;
+      outline: none;
+    }
+
+    .form-group input:focus {
+      border-color: var(--blue);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .3s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .btn-primary {
+      background: var(--blue);
+      color: var(--white);
+    }
+
+    .btn-primary:active {
+      background: var(--blue-dark);
+      transform: scale(.98);
+    }
+
+    .btn-green {
+      background: var(--green);
+      color: var(--white);
+    }
+
+    .btn-green:active {
+      background: #219a52;
+      transform: scale(.98);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--blue);
+      color: var(--blue);
+      margin-top: 10px;
+    }
+
+    .btn-red {
+      background: var(--red);
+      color: var(--white);
+    }
+
+    .btn-sm {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 10px;
+      width: auto;
+      display: inline-block;
+    }
+
+    .remember-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 10px 0 15px;
+      font-size: 13px;
+      color: var(--gray-dark);
+    }
+
+    .remember-row input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--blue);
+    }
+
+    .toggle-text {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 14px;
+      color: var(--gray-dark);
+    }
+
+    .toggle-text span {
+      color: var(--blue);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .forgot-link {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--blue);
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    #appContainer {
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+
+    .app-header {
+      background: var(--blue);
+      color: var(--white);
+      padding: 15px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, .1);
+    }
+
+    .app-header h1 {
+      font-size: clamp(16px, 4vw, 20px);
+      letter-spacing: 1px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .user-greeting {
+      font-size: 13px;
+      font-weight: 600;
+      opacity: .9;
+      margin-right: 5px;
+      display: none;
+    }
+
+    @media(min-width: 400px) {
+      .user-greeting { display: block; }
+    }
+
+    .icon-btn {
+      background: rgba(255, 255, 255, .2);
+      border: none;
+      color: var(--white);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: var(--red);
+      color: var(--white);
+      font-size: 10px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--white);
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, .1);
+      z-index: 100;
+      border-top: 1px solid #eee;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: var(--gray-dark);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 5px 10px;
+      border-radius: 10px;
+      transition: all .2s;
+      flex: 1;
+    }
+
+    .nav-item.active {
+      color: var(--blue);
+      background: rgba(26, 82, 118, .1);
+    }
+
+    .nav-icon {
+      font-size: 22px;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 20px;
+      margin: 15px;
+      box-shadow: var(--shadow);
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--blue-dark);
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin: 15px;
+    }
+
+    .stat-card {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 18px;
+      text-align: center;
+      box-shadow: var(--shadow);
+      border-left: 4px solid var(--blue);
+      cursor: pointer;
+      transition: transform .2s;
+    }
+
+    .stat-card:active {
+      transform: scale(.98);
+    }
+
+    .stat-card.green {
+      border-left-color: var(--green);
+    }
+
+    .stat-card.orange {
+      border-left-color: var(--orange);
+    }
+
+    .stat-card.red {
+      border-left-color: var(--red);
+    }
+
+    .stat-value {
+      font-size: clamp(18px, 5vw, 24px);
+      font-weight: 800;
+      color: var(--blue-dark);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--gray-dark);
+      margin-top: 5px;
+      font-weight: 600;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+      padding: 15px;
+    }
+
+    .product-card {
+      background: var(--white);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: transform .2s;
+    }
+
+    .product-card:active {
+      transform: scale(.98);
+    }
+
+    .product-card img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      background: #e0e0e0;
+    }
+
+    .product-info {
+      padding: 12px;
+    }
+
+    .product-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--blue-dark);
+      margin-bottom: 5px;
+    }
+
+    .product-type {
+      font-size: 11px;
+      color: var(--green);
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .product-price {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--blue);
+    }
+
+    .product-stock {
+      font-size: 11px;
+      color: var(--gray-dark);
+      margin-top: 5px;
+    }
+
+    .product-stock.low {
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    .list-item {
+      background: var(--white);
+      margin: 10px 15px;
+      padding: 15px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, .05);
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .list-item:active {
+      background: #f0f0f0;
+    }
+
+    .list-info h4 {
+      font-size: 15px;
+      color: var(--blue-dark);
+      margin-bottom: 3px;
+    }
+
+    .list-info p {
+      font-size: 12px;
+      color: var(--gray-dark);
+    }
+
+    .status-badge {
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .status-pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .status-paid {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-processing {
+      background: #e2e3f3;
+      color: #383d7a;
+    }
+
+    .status-shipped {
+      background: #cce5ff;
+      color: #004085;
+    }
+
+    .status-delivered {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
+
+    .status-completed {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-cancelled {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .hero-slider {
+      position: relative;
+      width: 100%;
+      height: 200px;
+      overflow: hidden;
+      margin-bottom: 15px;
+    }
+
+    @media(min-width: 768px) {
+      .hero-slider { height: 300px; }
+    }
+
+    .slider-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .slider-slide {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      transition: opacity .5s ease-in-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .slider-slide.active {
+      opacity: 1;
+    }
+
+    .slide-caption {
+      background: rgba(0, 0, 0, .6);
+      color: var(--white);
+      padding: 12px 20px;
+      border-radius: 30px;
+      font-size: clamp(18px, 5vw, 28px);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .slider-dots {
+      position: absolute;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      z-index: 5;
+    }
+
+    .slider-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .5);
+      cursor: pointer;
+    }
+
+    .slider-dot.active {
+      background: var(--white);
+      width: 20px;
+      border-radius: 10px;
+    }
+
+    .chat-widget {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      z-index: 200;
+    }
+
+    .chat-btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--green);
+      color: var(--white);
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(39, 174, 96, .4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .chat-box {
+      position: fixed;
+      bottom: 150px;
+      right: 20px;
+      width: calc(100% - 40px);
+      max-width: 350px;
+      height: 450px;
+      background: var(--white);
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, .2);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 250;
+    }
+
+    .chat-header {
+      background: var(--blue);
+      color: var(--white);
+      padding: 15px;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chat-close {
+      background: rgba(255, 255, 255, .2);
+      border: none;
+      color: var(--white);
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .chat-msg {
+      max-width: 80%;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .chat-msg.user {
+      align-self: flex-end;
+      background: var(--blue);
+      color: var(--white);
+      border-bottom-right-radius: 4px;
+    }
+
+    .chat-msg.bot {
+      align-self: flex-start;
+      background: var(--gray);
+      color: #2c3e50;
+      border-bottom-left-radius: 4px;
+    }
+
+    .chat-input-area {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #eee;
+      gap: 8px;
+    }
+
+    .chat-input-area input {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      outline: none;
+    }
+
+    .whatsapp-widget {
+      position: fixed;
+      bottom: 80px;
+      left: 20px;
+      z-index: 200;
+    }
+
+    .whatsapp-btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #25d366;
+      color: var(--white);
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(37, 211, 102, .4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .5);
+      z-index: 300;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 25px;
+      width: 100%;
+      max-width: 450px;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--blue-dark);
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .toast {
+      position: fixed;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: var(--blue-dark);
+      color: var(--white);
+      padding: 14px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      z-index: 400;
+      transition: all .3s;
+      opacity: 0;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--gray-dark);
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 0 15px 15px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .filter-btn {
+      padding: 8px 16px;
+      border: 2px solid #ddd;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      background: var(--white);
+      color: var(--gray-dark);
+    }
+
+    .filter-btn.active {
+      background: var(--blue);
+      color: var(--white);
+      border-color: var(--blue);
+    }
+
+    .msg-thread {
+      background: var(--white);
+      margin: 10px 15px;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, .05);
+    }
+
+    .msg-thread-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .msg-thread-title {
+      font-weight: 700;
+      color: var(--blue-dark);
+    }
+
+    .msg-thread-time {
+      font-size: 11px;
+      color: var(--gray-dark);
+    }
+
+    .agent-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 15px 0;
+    }
+
+    .agent-stat-box {
+      background: var(--white);
+      padding: 15px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .agent-stat-value {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--blue);
+    }
+
+    .agent-stat-label {
+      font-size: 11px;
+      color: var(--gray-dark);
+      margin-top: 5px;
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      
+      .receipt-print-area,
+      .receipt-print-area * {
+        visibility: visible;
+      }
+      
+      .receipt-print-area {
+        position: absolute;
+        inset: 0;
+        padding: 20px;
+        background: var(--white);
+      }
+      
+      .no-print {
+        display: none !important;
+      }
+    }
+
+    .receipt-print-area {
+      font-family: monospace;
+      max-width: 300px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .receipt-print-area h2 {
+      text-align: center;
+      border-bottom: 2px dashed #ccc;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
+
 <body>
-<div id="toast" class="toast"></div>
-<div id="splashPage"><div class="splash-logo">🏗️ WAMP</div><div class="splash-sub">Enterprises Ltd</div><div class="splash-loader"></div></div>
-
-<div id="loginPage" class="hidden">
-  <div class="login-box">
-    <div class="logo-text">🏗️ WAMP</div><div class="logo-sub">Terrazzo • Plumbing • Painting</div>
-    <div id="loginForm">
-      <div class="form-group"><label>📧 Email</label><input type="email" id="loginEmail" placeholder="Enter email"></div>
-      <div class="form-group"><label>🔒 Password</label><input type="password" id="loginPassword" placeholder="Enter password"></div>
-      <div class="remember-row"><input type="checkbox" id="rememberMe"><label for="rememberMe" style="margin:0;text-transform:none;font-size:13px;font-weight:400;cursor:pointer;">Remember Me</label></div>
-      <button class="btn btn-primary" onclick="handleLogin()">🔐 Login</button>
-      <div class="forgot-link" onclick="showForgotPassword()">🔑 Forgot Password?</div>
-      <div class="toggle-text">No account? <span onclick="toggleAuth()">📝 Register</span></div>
-    </div>
-    <div id="registerForm" class="hidden">
-      <div class="form-group"><label>👤 Full Name</label><input type="text" id="regName" placeholder="Your name"></div>
-      <div class="form-group"><label>📱 Phone</label><input type="tel" id="regPhone" placeholder="07XX XXX XXX"></div>
-      <div class="form-group"><label>📧 Email</label><input type="email" id="regEmail" placeholder="Enter email"></div>
-      <div class="form-group"><label>🔒 Password</label><input type="password" id="regPassword" placeholder="Create password"></div>
-      <div class="form-group"><label> Confirm Password</label><input type="password" id="regConfirmPassword" placeholder="Confirm password"></div>
-      <button class="btn btn-green" onclick="handleRegister()">✅ Create Account</button>
-      <div class="toggle-text">Have an account? <span onclick="toggleAuth()">🔐 Login</span></div>
-    </div>
-    <div id="forgotForm" class="hidden">      <div class="form-group"><label>📧 Email</label><input type="email" id="forgotEmail" placeholder="Enter your registered email"></div>
-      <button class="btn btn-primary" onclick="handleForgotPassword()">🔄 Reset Password</button>
-      <div class="toggle-text">Remember your password? <span onclick="showLoginForm()">🔐 Login</span></div>
-    </div>
-  </div>
-</div>
-
-<div id="appContainer" class="hidden">
-  <div class="app-header">
-    <h1>🏗️ WAMP ENTERPRISES LTD</h1>
-    <div class="header-actions">
-      <span class="user-greeting" id="headerGreeting"></span>
-      <button class="icon-btn" onclick="showCart()" id="cartBtn">🛒<span class="badge hidden" id="cartBadge">0</span></button>
-      <button class="icon-btn" onclick="showNotifications()">🔔<span class="badge hidden" id="notificationBadge">0</span></button>
-      <button class="icon-btn" onclick="logout()" title="Logout">🚪</button>
-    </div>
+  <div id="toast" class="toast"></div>
+  
+  <div id="splashPage">
+    <div class="splash-logo">🏗️ WAMP</div>
+    <div class="splash-sub">Enterprises Ltd</div>
+    <div class="splash-loader"></div>
   </div>
 
-  <div id="adminDashboard" class="page hidden">
-    <div class="section-title">📊 Manager Overview</div>
-    <div class="stats-grid">
-      <div class="stat-card" onclick="showSalesDetail()"><div class="stat-value" id="adminTodaySales">UGX 0</div><div class="stat-label"> Today's Sales</div></div>
-      <div class="stat-card orange" onclick="showPendingDetail()"><div class="stat-value" id="adminPendingOrders">0</div><div class="stat-label">⏳ Pending Orders</div></div>
-      <div class="stat-card green" onclick="showProductsDetail()"><div class="stat-value" id="adminTotalProducts">0</div><div class="stat-label">📦 Products</div></div>
-      <div class="stat-card red" onclick="showLowStockDetail()"><div class="stat-value" id="adminLowStock">0</div><div class="stat-label">⚠️ Low Stock</div></div>
+  <div id="loginPage" class="hidden">
+    <div class="login-box">
+      <div class="logo-text">🏗️ WAMP</div>
+      <div class="logo-sub">Terrazzo • Plumbing • Painting</div>
+      
+      <div id="loginForm">
+        <div class="form-group">
+          <label>📧 Email</label>
+          <input type="email" id="loginEmail" placeholder="Enter email">
+        </div>
+        
+        <div class="form-group">
+          <label>🔒 Password</label>
+          <input type="password" id="loginPassword" placeholder="Enter password">
+        </div>
+        
+        <div class="remember-row">
+          <input type="checkbox" id="rememberMe">
+          <label for="rememberMe" style="margin:0; text-transform:none; font-size:13px; font-weight:400; cursor:pointer;">Remember Me</label>
+        </div>
+        
+        <button class="btn btn-primary" onclick="handleLogin()">🔐 Login</button>
+        
+        <div class="forgot-link" onclick="showForgotPassword()">🔑 Forgot Password?</div>
+        
+        <div class="toggle-text">
+          No account? <span onclick="toggleAuth()">📝 Register</span>
+        </div>
+      </div>
+      
+      <div id="registerForm" class="hidden">
+        <div class="form-group">
+          <label>👤 Full Name</label>
+          <input type="text" id="regName" placeholder="Your name">
+        </div>
+        
+        <div class="form-group">
+          <label>📱 Phone</label>
+          <input type="tel" id="regPhone" placeholder="07XX XXX XXX">
+        </div>
+        
+        <div class="form-group">
+          <label>📧 Email</label>
+          <input type="email" id="regEmail" placeholder="Enter email">
+        </div>
+        
+        <div class="form-group">
+          <label>🔒 Password</label>
+          <input type="password" id="regPassword" placeholder="Create password">
+        </div>
+        
+        <div class="form-group">
+          <label>🔒 Confirm Password</label>
+          <input type="password" id="regConfirmPassword" placeholder="Confirm password">
+        </div>
+        
+        <button class="btn btn-green" onclick="handleRegister()">✅ Create Account</button>
+        
+        <div class="toggle-text">
+          Have an account? <span onclick="toggleAuth()">🔐 Login</span>
+        </div>
+      </div>
+      
+      <div id="forgotForm" class="hidden">
+        <div class="form-group">
+          <label>📧 Email</label>
+          <input type="email" id="forgotEmail" placeholder="Enter your registered email">
+        </div>
+        
+        <button class="btn btn-primary" onclick="handleForgotPassword()">🔄 Reset Password</button>
+        
+        <div class="toggle-text">
+          Remember your password? <span onclick="showLoginForm()">🔐 Login</span>
+        </div>
+      </div>
     </div>
-    <div class="card"><div class="card-title">👥 Agent Status</div><div id="adminAgentStatus"></div></div>
-    <div class="card"><div class="card-title">🛒 Recent Orders</div><div id="adminRecentOrders"></div></div>
   </div>
 
-  <div id="adminProducts" class="page hidden">
-    <div class="section-title">📦 Manage Products</div>
-    <button class="btn btn-green" style="margin:0 15px 15px;width:auto;" onclick="resetProductForm()">➕ Add New Product</button>
-    <div class="card">
-      <div class="card-title" id="productFormTitle">📤 Add New Product</div>
+  <div id="appContainer" class="hidden">
+    <div class="app-header">
+      <h1>🏗️ WAMP ENTERPRISES LTD</h1>
+      
+      <div class="header-actions">
+        <span class="user-greeting" id="headerGreeting"></span>
+        
+        <button class="icon-btn" onclick="showCart()" id="cartBtn">
+          🛒
+          <span class="badge hidden" id="cartBadge">0</span>
+        </button>
+        
+        <button class="icon-btn" onclick="showNotifications()">
+          🔔
+          <span class="badge hidden" id="notificationBadge">0</span>
+        </button>
+        
+        <button class="icon-btn" onclick="logout()" title="Logout">🚪</button>
+      </div>
+    </div>
+
+    <!-- ADMIN DASHBOARD -->
+    <div id="adminDashboard" class="page hidden">
+      <div class="section-title">📊 Manager Overview</div>
+      
+      <div class="stats-grid">
+        <div class="stat-card" onclick="showSalesDetail()">
+          <div class="stat-value" id="adminTodaySales">UGX 0</div>
+          <div class="stat-label">💰 Today's Sales</div>
+        </div>
+        
+        <div class="stat-card orange" onclick="showPendingDetail()">
+          <div class="stat-value" id="adminPendingOrders">0</div>
+          <div class="stat-label">⏳ Pending Orders</div>
+        </div>
+        
+        <div class="stat-card green" onclick="showProductsDetail()">
+          <div class="stat-value" id="adminTotalProducts">0</div>
+          <div class="stat-label">📦 Products</div>
+        </div>
+        
+        <div class="stat-card red" onclick="showLowStockDetail()">
+          <div class="stat-value" id="adminLowStock">0</div>
+          <div class="stat-label">⚠️ Low Stock</div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-title">👥 Agent Status</div>
+        <div id="adminAgentStatus"></div>
+      </div>
+      
+      <div class="card">
+        <div class="card-title">🛒 Recent Orders</div>
+        <div id="adminRecentOrders"></div>
+      </div>
+    </div>
+
+    <!-- ADMIN PRODUCTS -->
+    <div id="adminProducts" class="page hidden">
+      <div class="section-title">📦 Manage Products</div>
+      
+      <button class="btn btn-green" style="margin:0 15px 15px; width:auto;" onclick="resetProductForm()">
+        ➕ Add New Product
+      </button>
+      
+      <div class="card">
+        <div class="card-title" id="productFormTitle">📤 Add New Product</div>
+        
+        <div style="padding:15px;">
+          <input type="hidden" id="editProductId">
+          
+          <div class="form-group">
+            <label>🏷️ Product Name</label>
+            <input type="text" id="prodName" placeholder="e.g. Classic Floor Terrazzo">
+          </div>
+          
+          <div class="form-group">
+            <label>📂 Type</label>
+            <select id="prodType">
+              <option>Floor Terrazzo</option>
+              <option>Wall Terrazzo</option>
+              <option>Plumbing Pipe</option>
+              <option>Plumbing Fittings</option>
+              <option>Paint Emulsion</option>
+              <option>Paint Primer</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>📝 Description</label>
+            <textarea id="prodDesc" placeholder="Product description..."></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label>💵 Price (UGX)</label>
+            <input type="number" id="prodPrice" placeholder="e.g. 150000">
+          </div>
+          
+          <div class="form-group">
+            <label>📊 Stock Quantity</label>
+            <input type="number" id="prodStock" placeholder="e.g. 10">
+          </div>
+          
+          <div class="form-group">
+            <label>🖼️ Image URL</label>
+            <input type="text" id="prodImage" placeholder="https://...">
+          </div>
+          
+          <button class="btn btn-primary" onclick="saveProduct()">💾 Save Product</button>
+          <button class="btn btn-outline hidden" id="cancelEditBtn" onclick="resetProductForm()">❌ Cancel</button>
+        </div>
+      </div>
+      
+      <div class="section-title">📋 All Products</div>
+      <div id="adminProductList"></div>
+    </div>
+
+    <!-- ADMIN ORDERS -->
+    <div id="adminOrders" class="page hidden">
+      <div class="section-title">📋 All Orders</div>
+      
+      <div class="card">
+        <input type="text" id="transactionSearchPhone" placeholder="🔍 Search by phone number" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ddd; margin-bottom:10px;">
+        
+        <button class="btn btn-primary" onclick="searchTransactionByPhone()" style="margin-bottom:10px;">Search</button>
+        <button class="btn btn-outline" onclick="resetTransactionSearch()">Show All</button>
+        <button class="btn btn-green" onclick="exportTransactionsCSV()" style="width:auto; margin-left:10px;">📎 Export CSV</button>
+      </div>
+      
+      <div id="adminOrdersList"></div>
+    </div>
+
+    <!-- ADMIN BOOKS -->
+    <div id="adminBooks" class="page hidden">
+      <div class="section-title">📚 Balance Books</div>
+      <div id="booksSummary"></div>
+    </div>
+
+    <!-- ADMIN MONITOR -->
+    <div id="adminMonitor" class="page hidden">
+      <div class="section-title">👁️ Live Agent Monitor</div>
+      <div id="monitorFeed"></div>
+    </div>
+
+    <!-- ADMIN CHATS -->
+    <div id="adminChats" class="page hidden">
+      <div class="section-title">💬 All Conversations</div>
+      <div id="allChatsList"></div>
+    </div>
+
+    <!-- ADMIN TEAM -->
+    <div id="adminTeam" class="page hidden">
+      <div class="section-title">👥 Support Team</div>
+      <div id="teamList"></div>
+    </div>
+
+    <!-- ADMIN DELIVERY -->
+    <div id="adminDelivery" class="page hidden">
+      <div class="section-title">🚚 Delivery Management</div>
+      <div id="adminDeliveryList"></div>
+    </div>
+
+    <!-- ADMIN MESSAGES -->
+    <div id="adminMessages" class="page hidden">
+      <div class="section-title">💬 Manager Messages</div>
+      <div id="managerMsgList"></div>
+      
+      <div class="card">
+        <div class="card-title">📤 Send Message to Team</div>
+        
+        <div class="form-group">
+          <label>👥 Recipient</label>
+          <select id="msgRecipient">
+            <option value="all">All Agents</option>
+            <option value="agent">Specific Agent</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>📝 Message</label>
+          <textarea id="msgContent" placeholder="Type your message..."></textarea>
+        </div>
+        
+        <button class="btn btn-primary" onclick="sendManagerMessage()">📤 Send</button>
+      </div>
+    </div>
+
+    <!-- AGENT PANEL -->
+    <div id="agentPanel" class="page hidden">
+      <div class="section-title">📦 My Assigned Orders</div>
+      
+      <div class="agent-stats">
+        <div class="agent-stat-box">
+          <div class="agent-stat-value" id="agentAssignedCount">0</div>
+          <div class="agent-stat-label">Assigned</div>
+        </div>
+        
+        <div class="agent-stat-box">
+          <div class="agent-stat-value" id="agentCompletedCount">0</div>
+          <div class="agent-stat-label">Completed</div>
+        </div>
+        
+        <div class="agent-stat-box">
+          <div class="agent-stat-value" id="agentPendingCount">0</div>
+          <div class="agent-stat-label">Pending</div>
+        </div>
+      </div>
+      
+      <div id="agentAssignedOrders"></div>
+      
+      <div class="section-title">🆓 Available Orders</div>
+      <div id="agentAvailableOrders"></div>
+      
+      <div class="section-title">💬 My Conversations</div>
+      <div id="agentChatList"></div>
+      
+      <button class="btn btn-primary" style="margin:15px;" onclick="openAgentToManagerChat()">💬 Message Manager</button>
+      
+      <div class="section-title">🖨️ My Receipts</div>
+      <div id="agentReceipts"></div>
+    </div>
+
+    <!-- USER SHOP -->
+    <div id="userShop" class="page hidden">
+      <div class="hero-slider" id="heroSlider">
+        <div class="slider-container">
+          <div class="slider-slide" style="background-image:linear-gradient(rgba(0,0,0,0.4),rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800')">
+            <div class="slide-caption">🏛️ Premium Terrazzo</div>
+          </div>
+          
+          <div class="slider-slide" style="background-image:linear-gradient(rgba(0,0,0,0.4),rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1581092160562-40aa08e7882a?w=800')">
+            <div class="slide-caption">🔧 Professional Plumbing</div>
+          </div>
+          
+          <div class="slider-slide" style="background-image:linear-gradient(rgba(0,0,0,0.4),rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=800')">
+            <div class="slide-caption">🎨 Expert Painting</div>
+          </div>
+        </div>
+        
+        <div class="slider-dots" id="sliderDots"></div>
+      </div>
+      
       <div style="padding:15px;">
-        <input type="hidden" id="editProductId">
-        <div class="form-group"><label>🏷️ Product Name</label><input type="text" id="prodName" placeholder="e.g. Classic Floor Terrazzo"></div>
-        <div class="form-group"><label>📂 Type</label><select id="prodType"><option>Floor Terrazzo</option><option>Wall Terrazzo</option><option>Plumbing Pipe</option><option>Plumbing Fittings</option><option>Paint Emulsion</option><option>Paint Primer</option></select></div>
-        <div class="form-group"><label>📝 Description</label><textarea id="prodDesc" placeholder="Product description..."></textarea></div>
-        <div class="form-group"><label>💵 Price (UGX)</label><input type="number" id="prodPrice" placeholder="e.g. 150000"></div>
-        <div class="form-group"><label>📊 Stock Quantity</label><input type="number" id="prodStock" placeholder="e.g. 10"></div>
-        <div class="form-group"><label>️ Image URL</label><input type="text" id="prodImage" placeholder="https://..."></div>
-        <button class="btn btn-primary" onclick="saveProduct()">💾 Save Product</button>
-        <button class="btn btn-outline hidden" id="cancelEditBtn" onclick="resetProductForm()"> Cancel</button>
+        <input type="text" id="searchInput" placeholder="🔍 Search products..." style="width:100%; padding:14px; border-radius:12px; border:1px solid #ddd; font-size:15px;" onkeyup="searchProducts(this.value)">
+      </div>
+      
+      <div class="filter-row">
+        <button class="filter-btn active" onclick="filterProducts('all', this)">🏠 All</button>
+        <button class="filter-btn" onclick="filterProducts('Floor', this)">🏠 Terrazzo</button>
+        <button class="filter-btn" onclick="filterProducts('Plumbing', this)">🔧 Plumbing</button>
+        <button class="filter-btn" onclick="filterProducts('Paint', this)">🎨 Painting</button>
+      </div>
+      
+      <div class="product-grid" id="shopGrid"></div>
+    </div>
+
+    <!-- PRODUCT DETAIL -->
+    <div id="productDetail" class="page hidden">
+      <div id="detailContent"></div>
+    </div>
+
+    <!-- USER CART -->
+    <div id="userCart" class="page hidden">
+      <div class="section-title">🛒 My Cart</div>
+      <div id="cartItems"></div>
+      
+      <div class="card" id="cartSummary">
+        <div style="display:flex; justify-content:space-between; font-size:18px; font-weight:800;">
+          <span>💵 Total:</span>
+          <span id="cartTotal" style="color:var(--blue);">UGX 0</span>
+        </div>
+        
+        <button class="btn btn-green" style="margin-top:15px;" onclick="showCheckout()" id="checkoutBtn">
+          ✅ Proceed to Checkout
+        </button>
       </div>
     </div>
-    <div class="section-title">📋 All Products</div><div id="adminProductList"></div>
-  </div>
-  <div id="adminOrders" class="page hidden">
-    <div class="section-title">📋 All Orders</div>
-    <div class="card">
-      <input type="text" id="transactionSearchPhone" placeholder="🔍 Search by phone number" style="width:100%;padding:12px;border-radius:10px;border:1px solid #ddd;margin-bottom:10px;">
-      <button class="btn btn-primary" onclick="searchTransactionByPhone()" style="margin-bottom:10px;">Search</button>
-      <button class="btn btn-outline" onclick="resetTransactionSearch()">Show All</button>
-      <button class="btn btn-green" onclick="exportTransactionsCSV()" style="width:auto;margin-left:10px;">📎 Export CSV</button>
-    </div>
-    <div id="adminOrdersList"></div>
-  </div>
 
-  <div id="adminBooks" class="page hidden"><div class="section-title">📚 Balance Books</div><div id="booksSummary"></div></div>
-  <div id="adminMonitor" class="page hidden"><div class="section-title">👁️ Live Agent Monitor</div><div id="monitorFeed"></div></div>
-  <div id="adminChats" class="page hidden"><div class="section-title">💬 All Conversations</div><div id="allChatsList"></div></div>
-  <div id="adminTeam" class="page hidden"><div class="section-title">👥 Support Team</div><div id="teamList"></div></div>
-  <div id="adminDelivery" class="page hidden"><div class="section-title"> Delivery Management</div><div id="adminDeliveryList"></div></div>
-  <div id="adminMessages" class="page hidden">
-    <div class="section-title">💬 Manager Messages</div>
-    <div id="managerMsgList"></div>
-    <div class="card">
-      <div class="card-title">📤 Send Message to Team</div>
-      <div class="form-group"><label>👥 Recipient</label><select id="msgRecipient"><option value="all">All Agents</option><option value="agent">Specific Agent</option></select></div>
-      <div class="form-group"><label>📝 Message</label><textarea id="msgContent" placeholder="Type your message..."></textarea></div>
-      <button class="btn btn-primary" onclick="sendManagerMessage()">📤 Send</button>
-    </div>
-  </div>
-
-  <div id="agentPanel" class="page hidden">
-    <div class="section-title">📦 My Assigned Orders</div>
-    <div class="agent-stats">
-      <div class="agent-stat-box"><div class="agent-stat-value" id="agentAssignedCount">0</div><div class="agent-stat-label">Assigned</div></div>
-      <div class="agent-stat-box"><div class="agent-stat-value" id="agentCompletedCount">0</div><div class="agent-stat-label">Completed</div></div>
-      <div class="agent-stat-box"><div class="agent-stat-value" id="agentPendingCount">0</div><div class="agent-stat-label">Pending</div></div>
-    </div>
-    <div id="agentAssignedOrders"></div>
-    <div class="section-title">🆓 Available Orders</div><div id="agentAvailableOrders"></div>
-    <div class="section-title"> My Conversations</div><div id="agentChatList"></div>
-    <button class="btn btn-primary" style="margin:15px;" onclick="openAgentToManagerChat()">💬 Message Manager</button>
-    <div class="section-title">️ My Receipts</div><div id="agentReceipts"></div>
-  </div>
-
-  <div id="userShop" class="page hidden">
-    <div class="hero-slider" id="heroSlider">
-      <div class="slider-container">
-        <div class="slider-slide" style="background-image:linear-gradient(rgba(0,0,0,0.4),rgba(0,0,0,0.4)),url('https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800')"><div class="slide-caption">🏛️ Premium Terrazzo</div></div>
-        <div class="slider-slide" style="background-image:linear-gradient(rgba(0,0,0,0.4),rgba(0,0,0,0.4)),url('https://images.unsplash.com/photo-1581092160562-40aa08e7882a?w=800')"><div class="slide-caption">🔧 Professional Plumbing</div></div>
-        <div class="slider-slide" style="background-image:linear-gradient(rgba(0,0,0,0.4),rgba(0,0,0,0.4)),url('https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=800')"><div class="slide-caption">🎨 Expert Painting</div></div>
-      </div>
-      <div class="slider-dots" id="sliderDots"></div>
-    </div>    <div style="padding:15px;"><input type="text" id="searchInput" placeholder="🔍 Search products..." style="width:100%;padding:14px;border-radius:12px;border:1px solid #ddd;font-size:15px;" onkeyup="searchProducts(this.value)"></div>
-    <div class="filter-row">
-      <button class="filter-btn active" onclick="filterProducts('all',this)">🏠 All</button>
-      <button class="filter-btn" onclick="filterProducts('Floor',this)">🏠 Terrazzo</button>
-      <button class="filter-btn" onclick="filterProducts('Plumbing',this)">🔧 Plumbing</button>
-      <button class="filter-btn" onclick="filterProducts('Paint',this)">🎨 Painting</button>
-    </div>
-    <div class="product-grid" id="shopGrid"></div>
-  </div>
-
-  <div id="productDetail" class="page hidden"><div id="detailContent"></div></div>
-  <div id="userCart" class="page hidden"><div class="section-title">🛒 My Cart</div><div id="cartItems"></div><div class="card" id="cartSummary"><div style="display:flex;justify-content:space-between;font-size:18px;font-weight:800;"><span>💵 Total:</span><span id="cartTotal" style="color:var(--blue);">UGX 0</span></div><button class="btn btn-green" style="margin-top:15px;" onclick="showCheckout()" id="checkoutBtn">✅ Proceed to Checkout</button></div></div>
-  
-  <div id="checkoutPage" class="page hidden">
-    <div class="section-title">💳 Checkout</div>
-    <div class="card">
-      <div class="card-title">💳 Payment Method</div>
-      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
-        <label style="display:flex;align-items:center;gap:10px;padding:15px;border:2px solid var(--blue);border-radius:12px;cursor:pointer;"><input type="radio" name="payMethod" value="mtn" checked style="width:20px;height:20px;"><span style="font-weight:700;">📱 MTN Mobile Money</span></label>
-        <label style="display:flex;align-items:center;gap:10px;padding:15px;border:2px solid #ddd;border-radius:12px;cursor:pointer;"><input type="radio" name="payMethod" value="airtel" style="width:20px;height:20px;"><span style="font-weight:700;">📡 Airtel Money</span></label>
-        <label style="display:flex;align-items:center;gap:10px;padding:15px;border:2px solid #ddd;border-radius:12px;cursor:pointer;"><input type="radio" name="payMethod" value="card" style="width:20px;height:20px;"><span style="font-weight:700;">💳 Bank Card</span></label>
-        <label style="display:flex;align-items:center;gap:10px;padding:15px;border:2px solid #ddd;border-radius:12px;cursor:pointer;"><input type="radio" name="payMethod" value="cod" style="width:20px;height:20px;"><span style="font-weight:700;">💵 Cash on Delivery</span></label>
-      </div>
-      <div id="cardFields" class="hidden">
-        <div class="form-group"><label>💳 Card Number</label><input type="text" id="cardNumber" placeholder="1234 5678 9012 3456"></div>
-        <div class="form-group"><label>📅 Expiry (MM/YY)</label><input type="text" id="cardExpiry" placeholder="MM/YY"></div>
-        <div class="form-group"><label> CVV</label><input type="password" id="cardCvv" placeholder="123"></div>
-      </div>
-      <div class="form-group">
-        <label>📱 Phone Number</label><input type="tel" id="payPhone" placeholder="07XX XXX XXX" value="0770000000">
-        <div id="networkBadge" class="hidden" style="margin-top:5px;padding:5px 10px;background:var(--blue);color:var(--white);border-radius:15px;display:inline-block;font-size:12px;font-weight:600;"></div>
-      </div>
-      <div style="background:#fff3cd;padding:15px;border-radius:10px;margin:15px 0;font-size:13px;color:#856404;"><strong>⚠️ DEMO MODE:</strong> No real money will be deducted.</div>
-      <div style="display:flex;justify-content:space-between;font-size:20px;font-weight:800;margin:20px 0;"><span>💵 Total:</span><span id="checkoutTotal" style="color:var(--green);">UGX 0</span></div>
-      <button class="btn btn-green" onclick="processPayment()">💰 Pay Now</button>
-      <button class="btn btn-outline" onclick="navigateTo('userCart')">⬅️ Back to Cart</button>
-    </div>
-  </div>
-
-  <div id="userOrders" class="page hidden"><div class="section-title">📦 My Orders & Delivery Info</div><div id="userOrderList"></div></div>
-  <div id="userDashboard" class="page hidden">
-    <div class="section-title">👤 My Account</div>
-    <div class="card">
-      <div style="display:flex;align-items:center;gap:15px;margin-bottom:15px;">
-        <div style="width:60px;height:60px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--white);font-size:28px;"></div>
-        <div><div style="font-weight:800;font-size:18px;" id="userNameDisplay">Customer</div><div style="color:var(--gray-dark);font-size:13px;" id="userEmailDisplay">email@example.com</div></div>
+    <!-- CHECKOUT PAGE -->
+    <div id="checkoutPage" class="page hidden">
+      <div class="section-title">💳 Checkout</div>
+      
+      <div class="card">
+        <div class="card-title">💳 Payment Method</div>
+        
+        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+          <label style="display:flex; align-items:center; gap:10px; padding:15px; border:2px solid var(--blue); border-radius:12px; cursor:pointer;">
+            <input type="radio" name="payMethod" value="mtn" checked style="width:20px; height:20px;">
+            <span style="font-weight:700;">📱 MTN Mobile Money</span>
+          </label>
+          
+          <label style="display:flex; align-items:center; gap:10px; padding:15px; border:2px solid #ddd; border-radius:12px; cursor:pointer;">
+            <input type="radio" name="payMethod" value="airtel" style="width:20px; height:20px;">
+            <span style="font-weight:700;">📡 Airtel Money</span>
+          </label>
+          
+          <label style="display:flex; align-items:center; gap:10px; padding:15px; border:2px solid #ddd; border-radius:12px; cursor:pointer;">
+            <input type="radio" name="payMethod" value="card" style="width:20px; height:20px;">
+            <span style="font-weight:700;">💳 Bank Card</span>
+          </label>
+          
+          <label style="display:flex; align-items:center; gap:10px; padding:15px; border:2px solid #ddd; border-radius:12px; cursor:pointer;">
+            <input type="radio" name="payMethod" value="cod" style="width:20px; height:20px;">
+            <span style="font-weight:700;">💵 Cash on Delivery</span>
+          </label>
+        </div>
+        
+        <div id="cardFields" class="hidden">
+          <div class="form-group">
+            <label>💳 Card Number</label>
+            <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456">
+          </div>
+          
+          <div class="form-group">
+            <label>📅 Expiry (MM/YY)</label>
+            <input type="text" id="cardExpiry" placeholder="MM/YY">
+          </div>
+          
+          <div class="form-group">
+            <label>🔒 CVV</label>
+            <input type="password" id="cardCvv" placeholder="123">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>📱 Phone Number</label>
+          <input type="tel" id="payPhone" placeholder="07XX XXX XXX" value="0770000000">
+          <div id="networkBadge" class="hidden" style="margin-top:5px; padding:5px 10px; background:var(--blue); color:var(--white); border-radius:15px; display:inline-block; font-size:12px; font-weight:600;"></div>
+        </div>
+        
+        <div style="background:#fff3cd; padding:15px; border-radius:10px; margin:15px 0; font-size:13px; color:#856404;">
+          <strong>⚠️ DEMO MODE:</strong> No real money will be deducted.
+        </div>
+        
+        <div style="display:flex; justify-content:space-between; font-size:20px; font-weight:800; margin:20px 0;">
+          <span>💵 Total:</span>
+          <span id="checkoutTotal" style="color:var(--green);">UGX 0</span>
+        </div>
+        
+        <button class="btn btn-green" onclick="processPayment()">💰 Pay Now</button>
+        <button class="btn btn-outline" onclick="navigateTo('userCart')">⬅️ Back to Cart</button>
       </div>
     </div>
-    <div class="stats-grid">
-      <div class="stat-card"><div class="stat-value" id="userTotalOrders">0</div><div class="stat-label">📦 Total Orders</div></div>      <div class="stat-card green"><div class="stat-value" id="userPendingOrders">0</div><div class="stat-label">⏳ Pending</div></div>
+
+    <!-- USER ORDERS -->
+    <div id="userOrders" class="page hidden">
+      <div class="section-title">📦 My Orders & Delivery Info</div>
+      <div id="userOrderList"></div>
     </div>
-    <div class="card">
-      <div class="card-title"> My Profile</div>
-      <div class="form-group"><label>👤 Full Name</label><input type="text" id="profileName" placeholder="Your name"></div>
-      <div class="form-group"><label>📧 Email</label><input type="email" id="profileEmail" placeholder="Your email" style="background:#f0f0f0;" readonly></div>
-      <div class="form-group"><label>📱 Phone Number</label><input type="tel" id="profilePhone" placeholder="07XX XXX XXX"></div>
-      <div class="form-group"><label> Delivery Address</label><textarea id="profileAddress" placeholder="Enter your full delivery address..."></textarea></div>
-      <button class="btn btn-primary" onclick="saveUserProfile()">💾 Save Profile</button>
+
+    <!-- USER DASHBOARD -->
+    <div id="userDashboard" class="page hidden">
+      <div class="section-title">👤 My Account</div>
+      
+      <div class="card">
+        <div style="display:flex; align-items:center; gap:15px; margin-bottom:15px;">
+          <div style="width:60px; height:60px; background:var(--blue); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--white); font-size:28px;">👤</div>
+          
+          <div>
+            <div style="font-weight:800; font-size:18px;" id="userNameDisplay">Customer</div>
+            <div style="color:var(--gray-dark); font-size:13px;" id="userEmailDisplay">email@example.com</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="userTotalOrders">0</div>
+          <div class="stat-label">📦 Total Orders</div>
+        </div>
+        
+        <div class="stat-card green">
+          <div class="stat-value" id="userPendingOrders">0</div>
+          <div class="stat-label">⏳ Pending</div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-title">📝 My Profile</div>
+        
+        <div class="form-group">
+          <label>👤 Full Name</label>
+          <input type="text" id="profileName" placeholder="Your name">
+        </div>
+        
+        <div class="form-group">
+          <label>📧 Email</label>
+          <input type="email" id="profileEmail" placeholder="Your email" style="background:#f0f0f0;" readonly>
+        </div>
+        
+        <div class="form-group">
+          <label>📱 Phone Number</label>
+          <input type="tel" id="profilePhone" placeholder="07XX XXX XXX">
+        </div>
+        
+        <div class="form-group">
+          <label>🏠 Delivery Address</label>
+          <textarea id="profileAddress" placeholder="Enter your full delivery address..."></textarea>
+        </div>
+        
+        <button class="btn btn-primary" onclick="saveUserProfile()">💾 Save Profile</button>
+      </div>
+      
+      <div class="card">
+        <div class="card-title">❤️ My Wishlist</div>
+        <div id="wishlistItems"></div>
+      </div>
+      
+      <div class="card">
+        <div class="card-title">⭐ My Reviews & Ratings</div>
+        <div id="userReviews"></div>
+      </div>
     </div>
-    <div class="card"><div class="card-title">❤️ My Wishlist</div><div id="wishlistItems"></div></div>
-    <div class="card"><div class="card-title">⭐ My Reviews & Ratings</div><div id="userReviews"></div></div>
-  </div>
 
-  <div class="chat-widget hidden" id="chatWidgetContainer"><button class="chat-btn" onclick="toggleChat()">💬</button></div>
-  <div id="chatBox" class="chat-box hidden">
-    <div class="chat-header"><div>🤖 WAMP Assistant<div id="chatStatus"><small>🟢 Online</small></div></div><button class="chat-close" onclick="toggleChat()">✕</button></div>
-    <div class="chat-messages" id="chatMessages"></div>
-    <div class="chat-input-area"><input type="text" id="chatInput" placeholder="Type message..." onkeypress="if(event.key==='Enter')sendChat()"><button class="btn btn-green" style="width:auto;padding:10px 16px;" onclick="sendChat()">📤</button></div>
-  </div>
-  <div class="whatsapp-widget hidden" id="whatsappWidget"><a href="https://wa.me/256772123456?text=Hello%20WAMP%20Enterprises" class="whatsapp-btn" target="_blank">💬</a></div>
-  <div class="bottom-nav" id="bottomNav"></div>
-</div>
-
-<div id="modalOverlay" class="modal-overlay hidden" onclick="closeModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <div class="modal-header" id="modalTitle">Title</div><div id="modalBody"></div>
-    <button class="btn btn-outline" style="margin-top:15px;" onclick="hideModal()">❌ Close</button>
-  </div>
-</div>
-
-<script>
-const AppState = { user: null, products: [], cart: [], orders: [], notifications: [], chatOpen: false, currentPage: '', pendingAuthCallback: null };
-const API_BASE = 'https://raven-terazzo.onrender.com/api';
-
-function showToast(msg, isError) { const t=document.getElementById('toast'); t.textContent=msg; t.style.background=isError?'#e74c3c':'#154360'; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
-function showModal(title, html){ document.getElementById('modalTitle').textContent=title; document.getElementById('modalBody').innerHTML=html; document.getElementById('modalOverlay').classList.remove('hidden'); }
-function hideModal(){ document.getElementById('modalOverlay').classList.add('hidden'); }
-function closeModal(e){ if(e.target===document.getElementById('modalOverlay')) hideModal(); }
-function escapeHtml(text){ if(!text)return ''; return String(text).replace(/[&<>]/g, m=> m==='&'?'&':m==='<'?'<':'>'); }
-function detectNetwork(phone){ const p=String(phone).replace(/\D/g,''); if(/^(077|078|076|079|039)/.test(p))return 'MTN'; if(/^(075|074|070|071)/.test(p))return 'Airtel'; return null; }
-function validateUgPhone(phone){ const p=String(phone).replace(/\D/g,''); return p.length>=9 && p.length<=12; }
-
-function getAccessToken(){ return localStorage.getItem('access_token'); }
-function setAccessToken(t){ if(t)localStorage.setItem('access_token',t); else localStorage.removeItem('access_token'); }
-function getRefreshToken(){ return localStorage.getItem('refresh_token'); }
-function setRefreshToken(t){ if(t)localStorage.setItem('refresh_token',t); else localStorage.removeItem('refresh_token'); }
-function clearTokens(){ localStorage.removeItem('access_token'); localStorage.removeItem('refresh_token'); }
-
-async function apiCall(endpoint, options={}){  const token=getAccessToken(); const headers={'Content-Type':'application/json',...options.headers};
-  if(token) headers['Authorization']=`Bearer ${token}`;
-  const res=await fetch(`${API_BASE}${endpoint}`,{...options,headers});
-  if(res.status===401){ const r=await refreshToken(); if(r)return apiCall(endpoint,options); else{showToast('Session expired',true);logout();throw new Error('Expired');} }
-  if(!res.ok) throw new Error(await res.text()||`HTTP ${res.status}`);
-  return await res.json();
-}
-
-async function refreshToken(){
-  const ref=getRefreshToken(); if(!ref)return false;
-  try{ const r=await fetch(`${API_BASE}/refresh`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${ref}`}});
-    if(r.ok){ const d=await r.json(); setAccessToken(d.access_token); return true; }
-  }catch(e){} return false;
-}
-
-async function handleLogin(){
-  const email=document.getElementById('loginEmail').value; const pwd=document.getElementById('loginPassword').value;
-  if(!email||!pwd){showToast('Enter email and password',true);return;}
-  try{
-    const res=await fetch(`${API_BASE}/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pwd})});
-    const data=await res.json();
-    if(res.ok && data.success){
-      setAccessToken(data.access_token); setRefreshToken(data.refresh_token); AppState.user=data.user;
-      showToast(`Welcome ${data.user.name}!`);
-      document.getElementById('loginPage').classList.add('hidden'); document.getElementById('appContainer').classList.remove('hidden');
-      await refreshData(); setupNav();
-      if(AppState.user.role==='admin')navigateTo('adminDashboard');
-      else if(AppState.user.role==='agent')navigateTo('agentPanel');
-      else navigateTo('userShop');
-      if(window.pendingAuthCallback){ const cb=window.pendingAuthCallback; window.pendingAuthCallback=null; cb(); }
-    } else showToast(data.error||'Login failed',true);
-  }catch(e){showToast('Network error',true);}
-}
-
-async function handleRegister(){
-  const name=document.getElementById('regName').value, phone=document.getElementById('regPhone').value, email=document.getElementById('regEmail').value, pwd=document.getElementById('regPassword').value, conf=document.getElementById('regConfirmPassword').value;
-  if(pwd!==conf){showToast('Passwords mismatch',true);return;}
-  try{
-    const res=await fetch(`${API_BASE}/register`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,phone,password:pwd})});
-    const data=await res.json();
-    if(res.ok && data.success){showToast('Registered! Please login'); toggleAuth();}
-    else showToast(data.error||'Registration failed',true);
-  }catch(e){showToast('Network error',true);}
-}
-
-function logout(){ clearTokens(); AppState.user=null; document.getElementById('appContainer').classList.add('hidden'); document.getElementById('loginPage').classList.remove('hidden'); showToast('Logged out'); }
-function toggleAuth(){ const l=document.getElementById('loginForm'), r=document.getElementById('registerForm'), f=document.getElementById('forgotForm'); if(!l.classList.contains('hidden')){l.classList.add('hidden');r.classList.remove('hidden');f.classList.add('hidden');}else{l.classList.remove('hidden');r.classList.add('hidden');f.classList.add('hidden');} }
-function showForgotPassword(){ document.getElementById('loginForm').classList.add('hidden'); document.getElementById('registerForm').classList.add('hidden'); document.getElementById('forgotForm').classList.remove('hidden'); }
-function showLoginForm(){ document.getElementById('loginForm').classList.remove('hidden'); document.getElementById('registerForm').classList.add('hidden'); document.getElementById('forgotForm').classList.add('hidden'); }
-async function handleForgotPassword(){ const email=document.getElementById('forgotEmail').value; if(!email){showToast('Enter your email',true);return;} showToast('Password reset link sent (Demo)'); showLoginForm(); }
-async function refreshData(){
-  if(!AppState.user)return;
-  try{AppState.products=await apiCall('/products');}catch(e){AppState.products=[];}
-  try{AppState.cart=await apiCall('/cart'); updateCartBadge();}catch(e){AppState.cart=[];}
-  try{AppState.orders=await apiCall('/orders');}catch(e){AppState.orders=[];}
-}
-
-function requireAuth(cb){
-  if(AppState.user) cb();
-  else{
-    showModal('🔐 Login Required', `<div style="text-align:center"><p style="margin-bottom:20px">Please login to continue</p><div style="display:flex;gap:12px;margin-bottom:16px"><button class="btn btn-primary" style="flex:1" onclick="showAuthLoginModal()">🔐 Login</button><button class="btn btn-green" style="flex:1" onclick="showAuthRegisterModal()">📝 Register</button></div></div>`);
-    window.pendingAuthCallback=cb;
-  }
-}
-function showAuthLoginModal(){ hideModal(); document.getElementById('appContainer').classList.add('hidden'); document.getElementById('loginPage').classList.remove('hidden'); }
-function showAuthRegisterModal(){ hideModal(); document.getElementById('appContainer').classList.add('hidden'); document.getElementById('loginPage').classList.remove('hidden'); toggleAuth(); }
-
-function navigateTo(pageId){
-  document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));
-  document.getElementById(pageId).classList.remove('hidden');
-  AppState.currentPage=pageId;
-  if(pageId==='userShop'){renderShop(); initSlider();}
-  if(pageId==='userCart') renderCart();
-  if(pageId==='userOrders') renderUserOrders();
-  if(pageId==='userDashboard') renderUserDashboard();
-  if(pageId==='adminProducts') renderAdminProducts();
-  if(pageId==='adminOrders') renderAdminOrders();
-  if(pageId==='adminDashboard') renderAdminDashboard();
-  if(pageId==='agentPanel') renderAgentPanel();
-  if(pageId==='adminBooks') document.getElementById('booksSummary').innerHTML='<div class="empty-state">Balance books - Backend pending</div>';
-  if(pageId==='adminChats') document.getElementById('allChatsList').innerHTML='<div class="empty-state">Conversations - Backend pending</div>';
-  if(pageId==='adminMessages') document.getElementById('managerMsgList').innerHTML='<div class="empty-state">Messages - Backend pending</div>';
-}
-
-function setupNav(){
-  const nav=document.getElementById('bottomNav');
-  if(!AppState.user){
-    nav.innerHTML='<div class="nav-item" onclick="navigateTo(\'userShop\')"><span class="nav-icon">🏪</span>Shop</div><div class="nav-item" onclick="showCart()"><span class="nav-icon"></span>Cart</div><div class="nav-item" onclick="showAuthModalNav()"><span class="nav-icon">🔐</span>Login</div>';
-  } else if(AppState.user.role==='admin'){
-    nav.innerHTML='<div class="nav-item" onclick="navigateTo(\'adminDashboard\')"><span class="nav-icon">📊</span>Dashboard</div><div class="nav-item" onclick="navigateTo(\'adminProducts\')"><span class="nav-icon">📦</span>Products</div><div class="nav-item" onclick="navigateTo(\'adminOrders\')"><span class="nav-icon">📋</span>Orders</div><div class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span>Exit</div>';
-  } else if(AppState.user.role==='agent'){
-    nav.innerHTML='<div class="nav-item" onclick="navigateTo(\'agentPanel\')"><span class="nav-icon">📦</span>Orders</div><div class="nav-item" onclick="renderAgentReceipts()"><span class="nav-icon">🖨️</span>Receipts</div><div class="nav-item" onclick="logout()"><span class="nav-icon"></span>Exit</div>';
-  } else {
-    nav.innerHTML='<div class="nav-item" onclick="navigateTo(\'userShop\')"><span class="nav-icon">🏪</span>Shop</div><div class="nav-item" onclick="navigateTo(\'userOrders\')"><span class="nav-icon">📦</span>Orders</div><div class="nav-item" onclick="navigateTo(\'userCart\')"><span class="nav-icon"></span>Cart</div><div class="nav-item" onclick="navigateTo(\'userDashboard\')"><span class="nav-icon">👤</span>Profile</div>';
-  }
-  const chat=document.getElementById('chatWidgetContainer'), wa=document.getElementById('whatsappWidget');
-  if(!AppState.user || AppState.user.role==='user'){ chat?.classList.remove('hidden'); wa?.classList.remove('hidden'); }
-  else{ chat?.classList.add('hidden'); wa?.classList.add('hidden'); }
-}function showAuthModalNav(){ requireAuth(()=>{}); }
-
-let sliderInterval;
-function initSlider(){
-  const slides=document.querySelectorAll('.slider-slide'), dots=document.getElementById('sliderDots');
-  if(!slides.length||!dots)return;
-  dots.innerHTML='';
-  slides.forEach((_,i)=>{let d=document.createElement('div'); d.className='slider-dot'+(i===0?' active':''); d.onclick=()=>goToSlide(i); dots.appendChild(d);});
-  let cur=0;
-  window.goToSlide=(idx)=>{slides.forEach((s,i)=>{s.classList.toggle('active',i===idx); if(dots.children[i])dots.children[i].classList.toggle('active',i===idx);}); cur=idx;};
-  function next(){goToSlide((cur+1)%slides.length);}
-  if(sliderInterval)clearInterval(sliderInterval);
-  sliderInterval=setInterval(next,4000); goToSlide(0);
-}
-
-function renderProductCard(p){
-  const sc=(p.stock||0)<5?'low':'';
-  const img=p.image_url&&p.image_url.trim()?p.image_url:'https://placehold.co/600x400/1a5276/white?text=WAMP';
-  return `<div class="product-card" onclick="showProductDetail(${p.id||0})"><img src="${escapeHtml(img)}" loading="lazy"><div class="product-info"><div class="product-name">${escapeHtml(p.name)}</div><div class="product-type">${escapeHtml(p.type||'General')}</div><div class="product-price">UGX ${(p.price||0).toLocaleString()}</div><div class="product-stock ${sc}">${p.stock||0} in stock</div><button class="btn-sm btn-green" style="margin-top:8px;width:100%;" onclick="event.stopPropagation();addToCart(${p.id||0})">🛒 Add to Cart</button></div></div>`;
-}
-
-async function renderShop(f='all'){
-  if(!AppState.products.length) await refreshData();
-  let prods=AppState.products;
-  if(f!=='all') prods=prods.filter(p=>p.type&&p.type.toLowerCase().includes(f.toLowerCase()));
-  document.getElementById('shopGrid').innerHTML=prods.map(p=>renderProductCard(p)).join('')||'<div class="empty-state">No products found</div>';
-}
-function searchProducts(q){ if(!q) renderShop(); else{const f=AppState.products.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())); document.getElementById('shopGrid').innerHTML=f.map(p=>renderProductCard(p)).join('')||'<div class="empty-state">No products found</div>'; } }
-function filterProducts(t,btn){ document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active')); if(btn)btn.classList.add('active'); renderShop(t); }
-
-async function showProductDetail(id){
-  const p=AppState.products.find(pr=>pr.id===id); if(!p)return;
-  const img=p.image_url&&p.image_url.trim()?p.image_url:'https://placehold.co/600x400/1a5276/white?text=WAMP';
-  document.getElementById('detailContent').innerHTML=`<img src="${escapeHtml(img)}" style="width:100%;height:250px;object-fit:cover;"><div class="card"><div class="product-name" style="font-size:22px;">${escapeHtml(p.name)}</div><div class="product-price" style="font-size:28px;">UGX ${(p.price||0).toLocaleString()}</div><p style="margin:15px 0;">${escapeHtml(p.description||'No description')}</p><div style="margin:15px 0;"><strong>Stock:</strong> ${p.stock||0} units</div><button class="btn btn-green" onclick="addToCart(${p.id})"> Add to Cart</button><button class="btn btn-outline" style="margin-top:10px;" onclick="navigateTo('userShop')">⬅️ Back</button></div>`;
-  navigateTo('productDetail');
-}
-
-async function addToCart(pid){ requireAuth(async()=>{ try{await apiCall('/cart',{method:'POST',body:JSON.stringify({product_id:pid,quantity:1})}); await refreshData(); showToast('Added to cart'); renderCart();}catch(e){showToast('Failed',true);} }); }
-async function removeFromCart(cid){ try{await apiCall(`/cart/${cid}`,{method:'DELETE'}); await refreshData(); renderCart();}catch(e){} }
-async function renderCart(){
-  if(!AppState.cart||!AppState.cart.length){ document.getElementById('cartItems').innerHTML='<div class="empty-state">Cart is empty</div>'; document.getElementById('cartSummary').classList.add('hidden'); return; }
-  let total=0, html='';
-  for(let c of AppState.cart){ let p=AppState.products.find(pr=>pr.id===c.product_id); if(p){ let it=(p.price||0)*(c.quantity||1); total+=it; html+=`<div class="list-item"><div class="list-info"><h4>${escapeHtml(p.name)}</h4><p>UGX ${(p.price||0).toLocaleString()} x ${c.quantity} = UGX ${it.toLocaleString()}</p></div><button class="btn-sm btn-red" onclick="removeFromCart(${c.id})">Remove</button></div>`; } }
-  document.getElementById('cartItems').innerHTML=html; document.getElementById('cartTotal').textContent='UGX '+total.toLocaleString(); document.getElementById('cartSummary').classList.remove('hidden');
-}
-function showCart(){ navigateTo('userCart'); renderCart(); }
-function updateCartBadge(){ let t=AppState.cart.reduce((s,c)=>s+(c.quantity||0),0); let b=document.getElementById('cartBadge'); if(t>0){b.textContent=t; b.classList.remove('hidden');}else b.classList.add('hidden'); }
-
-function showCheckout(){ requireAuth(()=>{ if(!AppState.cart.length){showToast('Cart empty',true);return;} let total=AppState.cart.reduce((s,c)=>{let p=AppState.products.find(pr=>pr.id===c.product_id);return s+((p?.price||0)*(c.quantity||1));},0); document.getElementById('checkoutTotal').textContent='UGX '+total.toLocaleString(); navigateTo('checkoutPage'); }); }
-async function processPayment(){
-  const method=document.querySelector('input[name="payMethod"]:checked').value; const phone=document.getElementById('payPhone').value;
-  if(method!=='card'&&method!=='cod'&&(!phone||!validateUgPhone(phone))){showToast('Valid phone required',true);return;}
-  if(!AppState.cart.length){showToast('Cart empty',true);return;}
-  let total=0, items=[];
-  for(let c of AppState.cart){ let p=AppState.products.find(pr=>pr.id===c.product_id); if(p){total+=(p.price||0)*(c.quantity||1); items.push({productId:c.product_id,quantity:c.quantity||1});} }
-  const payMethod=method==='mtn'?'MTN':(method==='airtel'?'Airtel':(method==='cod'?'Cash on Delivery':'Card'));
-  try{
-    const res=await apiCall('/orders',{method:'POST',body:JSON.stringify({items,total,payment_method:payMethod})});
-    showToast(method==='cod'?'Order placed! Pay on delivery.':'Order placed successfully!');
-    await refreshData(); navigateTo('userOrders'); renderUserOrders();
-    const newOrder={id:res.order_id||Date.now(),user_id:AppState.user.id,total,status:'pending',payment_method:payMethod,date:new Date().toISOString(),customer_name:AppState.user.name,items:AppState.cart.map(c=>{const p=AppState.products.find(pr=>pr.id===c.product_id);return{name:p?.name||'Product',price:p?.price||0,quantity:c.quantity};})};
-    printReceipt(newOrder);
-  }catch(e){showToast('Order failed',true);}
-}
-
-async function renderUserOrders(){
-  if(!AppState.user)return;
-  const my=(AppState.orders||[]).filter(o=>o.user_id===AppState.user.id);
-  if(!my.length){document.getElementById('userOrderList').innerHTML='<div class="empty-state">No orders yet</div>';return;}
-  document.getElementById('userOrderList').innerHTML=my.map(o=>`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><strong>Order #${o.id}</strong><span class="status-badge status-${o.status}">${o.status}</span></div><div style="margin-bottom:8px;"><strong>Total:</strong> UGX ${(o.total||0).toLocaleString()}</div><div style="margin-bottom:8px;"><strong>Payment:</strong> ${o.payment_method||'N/A'}</div><div style="margin-bottom:10px;"><strong>Rider:</strong> ${escapeHtml(o.rider_name||'Not assigned')}</div><button class="btn-sm btn-primary" onclick='printReceipt(${JSON.stringify(o).replace(/'/g,"'")})'>🖨️ Print Receipt</button></div>`).join('');
-}
-
-function printReceipt(order){
-  if(!order)return;
-  const html=`<div class="receipt-print-area"><h2>🏗️ WAMP ENTERPRISES LTD</h2><p style="text-align:center;margin-bottom:15px;">Terrazzo • Plumbing • Painting<br>Tel: +256 772 123456</p><div style="margin-bottom:15px;border-bottom:1px solid #ccc;padding-bottom:10px;"><p><strong>Order #:</strong> ${order.id}</p><p><strong>Date:</strong> ${order.date?new Date(order.date).toLocaleString():'N/A'}</p><p><strong>Customer:</strong> ${escapeHtml(order.customer_name||AppState.user?.name||'N/A')}</p><p><strong>Payment:</strong> ${order.payment_method||'N/A'}</p></div><div style="margin:15px 0;"><table style="width:100%;font-size:12px;"><thead><tr><th style="text-align:left;">Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>${(order.items||[]).map(item=>`<tr><td>${escapeHtml(item.name||item.product_name||'Product')}</td><td style="text-align:center;">${item.quantity}</td><td style="text-align:right;">UGX ${(item.price||0).toLocaleString()}</td><td style="text-align:right;">UGX ${((item.price||0)*(item.quantity||1)).toLocaleString()}</td></tr>`).join('')}</tbody></table></div><div style="text-align:right;font-size:18px;font-weight:bold;margin:15px 0;border-top:2px dashed #ccc;padding-top:10px;">Total: UGX ${(order.total||0).toLocaleString()}</div><div style="text-align:center;margin-top:20px;font-size:11px;border-top:2px dashed #ccc;padding-top:10px;"><p>Thank you for shopping with WAMP!</p><p>Delivery within 24-48 hours</p></div></div>`;
-  const w=window.open('','_blank'); w.document.write(`<html><head><title>Receipt #${order.id}</title><style>body{font-family:monospace;margin:0;padding:20px;}@media print{body{margin:0;padding:0;}}</style></head><body>${html}</body></html>`); w.document.close(); w.print();
-}
-
-async function renderAdminProducts(){
-  let html=(AppState.products||[]).map(p=>`<div class="list-item"><div class="list-info" onclick="editProduct(${p.id})"><h4>${escapeHtml(p.name)}</h4><p>${escapeHtml(p.type)} - Stock: ${p.stock||0} - UGX ${(p.price||0).toLocaleString()}</p></div><button class="btn-sm btn-red" onclick="deleteProductItem(${p.id})">Delete</button></div>`).join('');
-  document.getElementById('adminProductList').innerHTML=html||'<div class="empty-state">No products</div>';
-}
-function resetProductForm(){ document.getElementById('editProductId').value=''; document.getElementById('prodName').value=''; document.getElementById('prodDesc').value=''; document.getElementById('prodPrice').value=''; document.getElementById('prodStock').value=''; document.getElementById('prodImage').value=''; document.getElementById('productFormTitle').innerHTML='📤 Add New Product'; document.getElementById('cancelEditBtn').classList.add('hidden'); }
-async function saveProduct(){
-  const id=document.getElementById('editProductId').value; const data={name:document.getElementById('prodName').value,type:document.getElementById('prodType').value,description:document.getElementById('prodDesc').value,price:parseInt(document.getElementById('prodPrice').value)||0,stock:parseInt(document.getElementById('prodStock').value)||0,image_url:document.getElementById('prodImage').value};
-  if(!data.name){showToast('Name required',true);return;}
-  try{ if(id){await apiCall(`/admin/products/${id}`,{method:'PUT',body:JSON.stringify(data)});showToast('Updated');} else{await apiCall('/admin/products',{method:'POST',body:JSON.stringify(data)});showToast('Added');} await refreshData(); renderAdminProducts(); resetProductForm(); }catch(e){showToast('Failed',true);}
-}
-function editProduct(id){ const p=AppState.products.find(pr=>pr.id===id); if(p){ document.getElementById('editProductId').value=p.id; document.getElementById('prodName').value=p.name; document.getElementById('prodType').value=p.type; document.getElementById('prodDesc').value=p.description||''; document.getElementById('prodPrice').value=p.price||0; document.getElementById('prodStock').value=p.stock||0; document.getElementById('prodImage').value=p.image_url||''; document.getElementById('productFormTitle').innerHTML='✏️ Edit Product'; document.getElementById('cancelEditBtn').classList.remove('hidden'); window.scrollTo(0,0); } }
-async function deleteProductItem(id){ if(confirm('Delete?')){ try{await apiCall(`/admin/products/${id}`,{method:'DELETE'}); await refreshData(); renderAdminProducts(); showToast('Deleted');}catch(e){showToast('Failed',true);} } }
-
-async function renderAdminOrders(){
-  let html=(AppState.orders||[]).map(o=>`<div class="list-item" onclick="viewTransactionDetails(${o.id})"><div><h4>Order #${o.id}</h4><p>UGX ${(o.total||0).toLocaleString()} - ${o.payment_method||'N/A'}</p></div><span class="status-badge status-${o.status}">${o.status}</span></div>`).join('');
-  document.getElementById('adminOrdersList').innerHTML=html||'<div class="empty-state">No orders</div>';
-}
-async function renderAdminDashboard(){
-  const delivered=(AppState.orders||[]).filter(o=>o.status==='delivered'||o.status==='completed').reduce((s,o)=>s+(o.total||0),0);
-  const pending=(AppState.orders||[]).filter(o=>o.status==='pending'||o.status==='paid').length;
-  const low=(AppState.products||[]).filter(p=>(p.stock||0)<5).length;  document.getElementById('adminTodaySales').innerHTML='UGX '+delivered.toLocaleString();
-  document.getElementById('adminPendingOrders').textContent=pending;
-  document.getElementById('adminTotalProducts').textContent=AppState.products?.length||0;
-  document.getElementById('adminLowStock').textContent=low;
-  document.getElementById('adminAgentStatus').innerHTML='<div class="empty-state">Agent status - Backend pending</div>';
-  const recent=(AppState.orders||[]).slice(0,5);
-  document.getElementById('adminRecentOrders').innerHTML=recent.map(o=>`<div class="list-item"><div><h4>Order #${o.id}</h4><p>${o.date?new Date(o.date).toLocaleDateString():'N/A'}</p></div><span class="status-badge status-${o.status}">${o.status}</span></div>`).join('')||'<div class="empty-state">No recent orders</div>';
-}
-function viewTransactionDetails(id){ const o=AppState.orders.find(o=>o.id===id); if(o){ showModal('Order #'+o.id, `<div style="margin-bottom:10px;"><strong>Total:</strong> UGX ${(o.total||0).toLocaleString()}</div><div style="margin-bottom:10px;"><strong>Status:</strong> ${o.status}</div><div style="margin-bottom:10px;"><strong>Payment:</strong> ${o.payment_method||'N/A'}</div><button class="btn-sm btn-primary" onclick='printReceipt(${JSON.stringify(o).replace(/'/g,"'")})'>🖨️ Print Receipt</button>`); } }
-function searchTransactionByPhone(){ showToast('Search by phone (Backend pending)'); }
-function resetTransactionSearch(){ renderAdminOrders(); }
-function exportTransactionsCSV(){ showToast('Export CSV (Backend pending)'); }
-function showSalesDetail(){ showModal('Sales','Backend pending'); }
-function showPendingDetail(){ const p=(AppState.orders||[]).filter(o=>o.status==='pending'||o.status==='paid'); showModal('Pending',p.map(o=>`Order #${o.id} - UGX ${(o.total||0).toLocaleString()}`).join('<br>')||'None'); }
-function showProductsDetail(){ showModal('Products','Total: '+(AppState.products?.length||0)); }
-function showLowStockDetail(){ const l=(AppState.products||[]).filter(p=>(p.stock||0)<5); showModal('Low Stock',l.map(p=>`${p.name} - ${p.stock}`).join('<br>')||'All good'); }
-
-async function renderAgentPanel(){
-  const ao=(AppState.orders||[]).filter(o=>o.agent_id===AppState.user.id);
-  const assigned=ao.filter(o=>o.status==='pending'||o.status==='processing').length;
-  const completed=ao.filter(o=>o.status==='delivered'||o.status==='completed').length;
-  document.getElementById('agentAssignedCount').textContent=assigned;
-  document.getElementById('agentCompletedCount').textContent=completed;
-  document.getElementById('agentPendingCount').textContent=ao.filter(o=>o.status==='assigned').length;
-  document.getElementById('agentAssignedOrders').innerHTML=ao.map(o=>`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><strong>Order #${o.id}</strong><span class="status-badge status-${o.status}">${o.status}</span></div><div>UGX ${(o.total||0).toLocaleString()}</div><button class="btn-sm btn-primary" style="margin-top:10px;" onclick='printReceipt(${JSON.stringify(o).replace(/'/g,"'")})'>️ Print Receipt</button></div>`).join('')||'<div class="empty-state">No assigned orders</div>';
-  const avail=(AppState.orders||[]).filter(o=>!o.agent_id&&o.status==='pending');
-  document.getElementById('agentAvailableOrders').innerHTML=avail.map(o=>`<div class="card"><div><strong>Order #${o.id}</strong> - UGX ${(o.total||0).toLocaleString()}</div><button class="btn-sm btn-green" style="margin-top:10px;" onclick="claimOrder(${o.id})">✅ Claim Order</button></div>`).join('')||'<div class="empty-state">No available orders</div>';
-  document.getElementById('agentChatList').innerHTML='<div class="empty-state">Conversations - Backend pending</div>';
-}
-function claimOrder(id){ showToast('Claiming order #'+id+' (Backend pending)'); }
-async function renderAgentReceipts(){
-  const ao=(AppState.orders||[]).filter(o=>o.agent_id===AppState.user.id);
-  document.getElementById('agentReceipts').innerHTML=ao.map(o=>`<div class="card"><div style="margin-bottom:10px;"><strong>Order #${o.id}</strong> - UGX ${(o.total||0).toLocaleString()}</div><button class="btn-sm btn-primary" onclick='printReceipt(${JSON.stringify(o).replace(/'/g,"'")})'>🖨️ Print Receipt</button></div>`).join('')||'<div class="empty-state">No receipts</div>';
-}
-function openAgentToManagerChat(){ showToast('Chat with manager (Backend pending)'); }
-
-function renderUserDashboard(){
-  if(!AppState.user)return;
-  document.getElementById('userNameDisplay').textContent=AppState.user.name;
-  document.getElementById('userEmailDisplay').textContent=AppState.user.email;
-  document.getElementById('profileName').value=AppState.user.name||'';
-  document.getElementById('profileEmail').value=AppState.user.email||'';
-  document.getElementById('profilePhone').value=AppState.user.phone||'';
-  document.getElementById('profileAddress').value=AppState.user.address||'';
-  const my=(AppState.orders||[]).filter(o=>o.user_id===AppState.user.id);
-  document.getElementById('userTotalOrders').textContent=my.length;
-  document.getElementById('userPendingOrders').textContent=my.filter(o=>o.status==='pending'||o.status==='processing').length;
-  document.getElementById('wishlistItems').innerHTML='<div class="empty-state">Wishlist - Backend pending</div>';
-  document.getElementById('userReviews').innerHTML='<div class="empty-state">Reviews - Backend pending</div>';
-}function saveUserProfile(){ showToast('Profile update - Backend pending'); }
-
-function showNotifications(){
-  const html=AppState.notifications.map(n=>`<div class="list-item"><div class="list-info"><h4>${escapeHtml(n.title)}</h4><p>${escapeHtml(n.message)}</p></div></div>`).join('')||'<div class="empty-state">No notifications</div>';
-  showModal('🔔 Notifications',html);
-  AppState.notifications.forEach(n=>n.read=true);
-  document.getElementById('notificationBadge').classList.add('hidden');
-}
-
-function setupPaymentMethodListener(){
-  document.querySelectorAll('input[name="payMethod"]').forEach(r=>r.addEventListener('change',()=>{document.getElementById('cardFields').classList.toggle('hidden',document.querySelector('input[name="payMethod"]:checked').value!=='card');}));
-  const pp=document.getElementById('payPhone');
-  if(pp){ pp.addEventListener('input',function(){ const n=detectNetwork(this.value); const b=document.getElementById('networkBadge'); if(b){ if(n){b.textContent=n; b.classList.remove('hidden');}else b.classList.add('hidden');} }); }
-}
-
-function toggleChat(){ const b=document.getElementById('chatBox'); AppState.chatOpen=!AppState.chatOpen; if(AppState.chatOpen){ b.classList.remove('hidden'); if(!document.getElementById('chatMessages').children.length) addChatMsg('bot','Welcome to WAMP! Ask about prices, delivery, or payments.'); } else b.classList.add('hidden'); }
-function addChatMsg(s,t){ const c=document.getElementById('chatMessages'); const d=document.createElement('div'); d.className='chat-msg '+s; d.textContent=t; c.appendChild(d); c.scrollTop=c.scrollHeight; }
-async function sendChat(){ const i=document.getElementById('chatInput'); const t=i.value.trim(); if(!t)return; addChatMsg('user',t); i.value=''; try{ const d=await apiCall('/chat/customer',{method:'POST',body:JSON.stringify({message:t})}); addChatMsg('bot',d.response||'Thanks!'); }catch(e){ addChatMsg('bot','Chat unavailable.'); } }
-
-function enterApp(){
-  document.getElementById('loginPage').classList.add('hidden');
-  document.getElementById('appContainer').classList.remove('hidden');
-  document.getElementById('headerGreeting').textContent='Hi, '+((AppState.user?.name||'User').split(' ')[0]);
-  setupNav();
-  refreshData().then(()=>{ if(AppState.user.role==='admin')navigateTo('adminDashboard'); else if(AppState.user.role==='agent')navigateTo('agentPanel'); else{navigateTo('userShop'); initSlider();} });
-}
-
-async function initApp() {
-  setupPaymentMethodListener();
-  
-  const splash = document.getElementById('splashPage');
-  
-  setTimeout(async () => {
-    splash.style.opacity = '0';
+    <!-- CHAT WIDGET -->
+    <div class="chat-widget hidden" id="chatWidgetContainer">
+      <button class="chat-btn" onclick="toggleChat()">💬</button>
+    </div>
     
-    setTimeout(async () => {
-      splash.classList.add('hidden');
-      document.getElementById('appContainer').classList.remove('hidden');
+    <div id="chatBox" class="chat-box hidden">
+      <div class="chat-header">
+        <div>
+          🤖 WAMP Assistant
+          <div id="chatStatus"><small>🟢 Online</small></div>
+        </div>
+        <button class="chat-close" onclick="toggleChat()">✕</button>
+      </div>
       
+      <div class="chat-messages" id="chatMessages"></div>
+      
+      <div class="chat-input-area">
+        <input type="text" id="chatInput" placeholder="Type message..." onkeypress="if(event.key==='Enter') sendChat()">
+        <button class="btn btn-green" style="width:auto; padding:10px 16px;" onclick="sendChat()">📤</button>
+      </div>
+    </div>
+
+    <!-- WHATSAPP WIDGET -->
+    <div class="whatsapp-widget hidden" id="whatsappWidget">
+      <a href="https://wa.me/256772123456?text=Hello%20WAMP%20Enterprises" class="whatsapp-btn" target="_blank">💬</a>
+    </div>
+
+    <!-- BOTTOM NAVIGATION -->
+    <div class="bottom-nav" id="bottomNav"></div>
+  </div>
+
+  <div id="modalOverlay" class="modal-overlay hidden" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-header" id="modalTitle">Title</div>
+      <div id="modalBody"></div>
+      <button class="btn btn-outline" style="margin-top:15px;" onclick="hideModal()">❌ Close</button>
+    </div>
+  </div>
+
+  <script>
+    const AppState = {
+      user: null,
+      products: [],
+      cart: [],
+      orders: [],
+      notifications: [],
+      chatOpen: false,
+      currentPage: '',
+      pendingAuthCallback: null
+    };
+    
+    const API_BASE = 'https://raven-terazzo.onrender.com/api';
+    
+    // ==================== UTILITIES ====================
+    
+    function showToast(msg, isError) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.background = isError ? '#e74c3c' : '#154360';
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+    
+    function showModal(title, html) {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalBody').innerHTML = html;
+      document.getElementById('modalOverlay').classList.remove('hidden');
+    }
+    
+    function hideModal() {
+      document.getElementById('modalOverlay').classList.add('hidden');
+    }
+    
+    function closeModal(e) {
+      if (e.target === document.getElementById('modalOverlay')) hideModal();
+    }
+    
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text).replace(/[&<>]/g, m => m === '&' ? '&' : m === '<' ? '<' : '>');
+    }
+    
+    function detectNetwork(phone) {
+      const p = String(phone).replace(/\D/g, '');
+      if (/^(077|078|076|079|039)/.test(p)) return 'MTN';
+      if (/^(075|074|070|071)/.test(p)) return 'Airtel';
+      return null;
+    }
+    
+    function validateUgPhone(phone) {
+      const p = String(phone).replace(/\D/g, '');
+      return p.length >= 9 && p.length <= 12;
+    }
+    
+    // ==================== TOKEN MANAGEMENT ====================
+    
+    function getAccessToken() {
+      return localStorage.getItem('access_token');
+    }
+    
+    function setAccessToken(t) {
+      if (t) localStorage.setItem('access_token', t);
+      else localStorage.removeItem('access_token');
+    }
+    
+    function getRefreshToken() {
+      return localStorage.getItem('refresh_token');
+    }
+    
+    function setRefreshToken(t) {
+      if (t) localStorage.setItem('refresh_token', t);
+      else localStorage.removeItem('refresh_token');
+    }
+    
+    function clearTokens() {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+    }
+    
+    // ==================== API CALLS ====================
+    
+    async function apiCall(endpoint, options = {}) {
       const token = getAccessToken();
+      const headers = { 'Content-Type': 'application/json', ...options.headers };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
       
-      if (token) {
-        try { 
-          await refreshData(); 
-        } catch(e) { 
-          clearTokens(); 
+      const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+      
+      if (res.status === 401) {
+        const r = await refreshToken();
+        if (r) return apiCall(endpoint, options);
+        else {
+          showToast('Session expired', true);
+          logout();
+          throw new Error('Expired');
         }
       }
       
-      navigateTo('userShop');
-      initSlider();
+      if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
+      return await res.json();
+    }
+    
+    async function refreshToken() {
+      const ref = getRefreshToken();
+      if (!ref) return false;
+      
+      try {
+        const r = await fetch(`${API_BASE}/refresh`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${ref}`
+          }
+        });
+        
+        if (r.ok) {
+          const d = await r.json();
+          setAccessToken(d.access_token);
+          return true;
+        }
+      } catch(e) {}
+      
+      return false;
+    }
+    
+    // ==================== AUTHENTICATION ====================
+    
+    async function handleLogin() {
+      const email = document.getElementById('loginEmail').value;
+      const pwd = document.getElementById('loginPassword').value;
+      
+      if (!email || !pwd) {
+        showToast('Enter email and password', true);
+        return;
+      }
+      
+      try {
+        const res = await fetch(`${API_BASE}/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password: pwd })
+        });
+        
+        const data = await res.json();
+        
+        if (res.ok && data.success) {
+          setAccessToken(data.access_token);
+          setRefreshToken(data.refresh_token);
+          AppState.user = data.user;
+          showToast(`Welcome ${data.user.name}!`);
+          
+          document.getElementById('loginPage').classList.add('hidden');
+          document.getElementById('appContainer').classList.remove('hidden');
+          await refreshData();
+          setupNav();
+          
+          if (AppState.user.role === 'admin') navigateTo('adminDashboard');
+          else if (AppState.user.role === 'agent') navigateTo('agentPanel');
+          else navigateTo('userShop');
+          
+          if (window.pendingAuthCallback) {
+            const cb = window.pendingAuthCallback;
+            window.pendingAuthCallback = null;
+            cb();
+          }
+        } else {
+          showToast(data.error || 'Login failed', true);
+        }
+      } catch(e) {
+        showToast('Network error', true);
+      }
+    }
+    
+    async function handleRegister() {
+      const name = document.getElementById('regName').value;
+      const phone = document.getElementById('regPhone').value;
+      const email = document.getElementById('regEmail').value;
+      const pwd = document.getElementById('regPassword').value;
+      const conf = document.getElementById('regConfirmPassword').value;
+      
+      if (pwd !== conf) {
+        showToast('Passwords mismatch', true);
+        return;
+      }
+      
+      try {
+        const res = await fetch(`${API_BASE}/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, phone, password: pwd })
+        });
+        
+        const data = await res.json();
+        
+        if (res.ok && data.success) {
+          showToast('Registered! Please login');
+          toggleAuth();
+        } else {
+          showToast(data.error || 'Registration failed', true);
+        }
+      } catch(e) {
+        showToast('Network error', true);
+      }
+    }
+    
+    function logout() {
+      clearTokens();
+      AppState.user = null;
+      document.getElementById('appContainer').classList.add('hidden');
+      document.getElementById('loginPage').classList.remove('hidden');
+      showToast('Logged out');
+    }
+    
+    function toggleAuth() {
+      const l = document.getElementById('loginForm');
+      const r = document.getElementById('registerForm');
+      const f = document.getElementById('forgotForm');
+      
+      if (!l.classList.contains('hidden')) {
+        l.classList.add('hidden');
+        r.classList.remove('hidden');
+        f.classList.add('hidden');
+      } else {
+        l.classList.remove('hidden');
+        r.classList.add('hidden');
+        f.classList.add('hidden');
+      }
+    }
+    
+    function showForgotPassword() {
+      document.getElementById('loginForm').classList.add('hidden');
+      document.getElementById('registerForm').classList.add('hidden');
+      document.getElementById('forgotForm').classList.remove('hidden');
+    }
+    
+    function showLoginForm() {
+      document.getElementById('loginForm').classList.remove('hidden');
+      document.getElementById('registerForm').classList.add('hidden');
+      document.getElementById('forgotForm').classList.add('hidden');
+    }
+    
+    async function handleForgotPassword() {
+      const email = document.getElementById('forgotEmail').value;
+      if (!email) {
+        showToast('Enter your email', true);
+        return;
+      }
+      showToast('Password reset link sent (Demo)');
+      showLoginForm();
+    }
+    
+    async function refreshData() {
+      if (!AppState.user) return;
+      
+      try { AppState.products = await apiCall('/products'); } catch(e) { AppState.products = []; }
+      try { AppState.cart = await apiCall('/cart'); updateCartBadge(); } catch(e) { AppState.cart = []; }
+      try { AppState.orders = await apiCall('/orders'); } catch(e) { AppState.orders = []; }
+    }
+    
+    function requireAuth(cb) {
+      if (AppState.user) {
+        cb();
+      } else {
+        showModal('🔐 Login Required', `
+          <div style="text-align:center">
+            <p style="margin-bottom:20px">Please login to continue</p>
+            <div style="display:flex; gap:12px; margin-bottom:16px">
+              <button class="btn btn-primary" style="flex:1" onclick="showAuthLoginModal()">🔐 Login</button>
+              <button class="btn btn-green" style="flex:1" onclick="showAuthRegisterModal()">📝 Register</button>
+            </div>
+          </div>
+        `);
+        window.pendingAuthCallback = cb;
+      }
+    }
+    
+    function showAuthLoginModal() {
+      hideModal();
+      document.getElementById('appContainer').classList.add('hidden');
+      document.getElementById('loginPage').classList.remove('hidden');
+    }
+    
+    function showAuthRegisterModal() {
+      hideModal();
+      document.getElementById('appContainer').classList.add('hidden');
+      document.getElementById('loginPage').classList.remove('hidden');
+      toggleAuth();
+    }
+    
+    // ==================== NAVIGATION ====================
+    
+    function navigateTo(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+      document.getElementById(pageId).classList.remove('hidden');
+      AppState.currentPage = pageId;
+      
+      if (pageId === 'userShop') { renderShop(); initSlider(); }
+      if (pageId === 'userCart') renderCart();
+      if (pageId === 'userOrders') renderUserOrders();
+      if (pageId === 'userDashboard') renderUserDashboard();
+      if (pageId === 'adminProducts') renderAdminProducts();
+      if (pageId === 'adminOrders') renderAdminOrders();
+      if (pageId === 'adminDashboard') renderAdminDashboard();
+      if (pageId === 'agentPanel') renderAgentPanel();
+      if (pageId === 'adminBooks') document.getElementById('booksSummary').innerHTML = '<div class="empty-state">Balance books - Backend pending</div>';
+      if (pageId === 'adminChats') document.getElementById('allChatsList').innerHTML = '<div class="empty-state">Conversations - Backend pending</div>';
+      if (pageId === 'adminMessages') document.getElementById('managerMsgList').innerHTML = '<div class="empty-state">Messages - Backend pending</div>';
+    }
+    
+    function setupNav() {
+      const nav = document.getElementById('bottomNav');
+      
+      if (!AppState.user) {
+        nav.innerHTML = '<div class="nav-item" onclick="navigateTo(\'userShop\')"><span class="nav-icon">🏪</span>Shop</div><div class="nav-item" onclick="showCart()"><span class="nav-icon">🛒</span>Cart</div><div class="nav-item" onclick="showAuthModalNav()"><span class="nav-icon">🔐</span>Login</div>';
+      } else if (AppState.user.role === 'admin') {
+        nav.innerHTML = '<div class="nav-item" onclick="navigateTo(\'adminDashboard\')"><span class="nav-icon">📊</span>Dashboard</div><div class="nav-item" onclick="navigateTo(\'adminProducts\')"><span class="nav-icon">📦</span>Products</div><div class="nav-item" onclick="navigateTo(\'adminOrders\')"><span class="nav-icon">📋</span>Orders</div><div class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span>Exit</div>';
+      } else if (AppState.user.role === 'agent') {
+        nav.innerHTML = '<div class="nav-item" onclick="navigateTo(\'agentPanel\')"><span class="nav-icon">📦</span>Orders</div><div class="nav-item" onclick="renderAgentReceipts()"><span class="nav-icon">🖨️</span>Receipts</div><div class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span>Exit</div>';
+      } else {
+        nav.innerHTML = '<div class="nav-item" onclick="navigateTo(\'userShop\')"><span class="nav-icon">🏪</span>Shop</div><div class="nav-item" onclick="navigateTo(\'userOrders\')"><span class="nav-icon">📦</span>Orders</div><div class="nav-item" onclick="navigateTo(\'userCart\')"><span class="nav-icon">🛒</span>Cart</div><div class="nav-item" onclick="navigateTo(\'userDashboard\')"><span class="nav-icon">👤</span>Profile</div>';
+      }
+      
+      const chat = document.getElementById('chatWidgetContainer');
+      const wa = document.getElementById('whatsappWidget');
+      
+      if (!AppState.user || AppState.user.role === 'user') {
+        if (chat) chat.classList.remove('hidden');
+        if (wa) wa.classList.remove('hidden');
+      } else {
+        if (chat) chat.classList.add('hidden');
+        if (wa) wa.classList.add('hidden');
+      }
+    }
+    
+    function showAuthModalNav() {
+      requireAuth(() => {});
+    }
+    
+    // ==================== SLIDER ====================
+    
+    let sliderInterval;
+    
+    function initSlider() {
+      const slides = document.querySelectorAll('.slider-slide');
+      const dots = document.getElementById('sliderDots');
+      if (!slides.length || !dots) return;
+      
+      dots.innerHTML = '';
+      slides.forEach((_, i) => {
+        let d = document.createElement('div');
+        d.className = 'slider-dot' + (i === 0 ? ' active' : '');
+        d.onclick = () => goToSlide(i);
+        dots.appendChild(d);
+      });
+      
+      let cur = 0;
+      
+      window.goToSlide = (idx) => {
+        slides.forEach((s, i) => {
+          s.classList.toggle('active', i === idx);
+          if (dots.children[i]) dots.children[i].classList.toggle('active', i === idx);
+        });
+        cur = idx;
+      };
+      
+      function next() {
+        goToSlide((cur + 1) % slides.length);
+      }
+      
+      if (sliderInterval) clearInterval(sliderInterval);
+      sliderInterval = setInterval(next, 4000);
+      goToSlide(0);
+    }
+    
+    // ==================== PRODUCTS ====================
+    
+    function renderProductCard(p) {
+      const sc = (p.stock || 0) < 5 ? 'low' : '';
+      const img = p.image_url && p.image_url.trim() ? p.image_url : 'https://placehold.co/600x400/1a5276/white?text=WAMP';
+      
+      return `<div class="product-card" onclick="showProductDetail(${p.id || 0})">
+        <img src="${escapeHtml(img)}" loading="lazy">
+        <div class="product-info">
+          <div class="product-name">${escapeHtml(p.name)}</div>
+          <div class="product-type">${escapeHtml(p.type || 'General')}</div>
+          <div class="product-price">UGX ${(p.price || 0).toLocaleString()}</div>
+          <div class="product-stock ${sc}">${p.stock || 0} in stock</div>
+          <button class="btn-sm btn-green" style="margin-top:8px; width:100%;" onclick="event.stopPropagation(); addToCart(${p.id || 0})">
+            🛒 Add to Cart
+          </button>
+        </div>
+      </div>`;
+    }
+    
+    async function renderShop(f = 'all') {
+      if (!AppState.products.length) await refreshData();
+      let prods = AppState.products;
+      if (f !== 'all') prods = prods.filter(p => p.type && p.type.toLowerCase().includes(f.toLowerCase()));
+      document.getElementById('shopGrid').innerHTML = prods.map(p => renderProductCard(p)).join('') || '<div class="empty-state">No products found</div>';
+    }
+    
+    function searchProducts(q) {
+      if (!q) renderShop();
+      else {
+        const f = AppState.products.filter(p => p.name.toLowerCase().includes(q.toLowerCase()));
+        document.getElementById('shopGrid').innerHTML = f.map(p => renderProductCard(p)).join('') || '<div class="empty-state">No products found</div>';
+      }
+    }
+    
+    function filterProducts(t, btn) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderShop(t);
+    }
+    
+    async function showProductDetail(id) {
+      const p = AppState.products.find(pr => pr.id === id);
+      if (!p) return;
+      
+      const img = p.image_url && p.image_url.trim() ? p.image_url : 'https://placehold.co/600x400/1a5276/white?text=WAMP';
+      
+      document.getElementById('detailContent').innerHTML = `
+        <img src="${escapeHtml(img)}" style="width:100%; height:250px; object-fit:cover;">
+        <div class="card">
+          <div class="product-name" style="font-size:22px;">${escapeHtml(p.name)}</div>
+          <div class="product-price" style="font-size:28px;">UGX ${(p.price || 0).toLocaleString()}</div>
+          <p style="margin:15px 0;">${escapeHtml(p.description || 'No description')}</p>
+          <div style="margin:15px 0;"><strong>Stock:</strong> ${p.stock || 0} units</div>
+          <button class="btn btn-green" onclick="addToCart(${p.id})">🛒 Add to Cart</button>
+          <button class="btn btn-outline" style="margin-top:10px;" onclick="navigateTo('userShop')">⬅️ Back</button>
+        </div>
+      `;
+      
+      navigateTo('productDetail');
+    }
+    
+    // ==================== CART ====================
+    
+    async function addToCart(pid) {
+      requireAuth(async () => {
+        try {
+          await apiCall('/cart', { method: 'POST', body: JSON.stringify({ product_id: pid, quantity: 1 }) });
+          await refreshData();
+          showToast('Added to cart');
+          renderCart();
+        } catch(e) {
+          showToast('Failed', true);
+        }
+      });
+    }
+    
+    async function removeFromCart(cid) {
+      try {
+        await apiCall(`/cart/${cid}`, { method: 'DELETE' });
+        await refreshData();
+        renderCart();
+      } catch(e) {}
+    }
+    
+    async function renderCart() {
+      if (!AppState.cart || !AppState.cart.length) {
+        document.getElementById('cartItems').innerHTML = '<div class="empty-state">Cart is empty</div>';
+        document.getElementById('cartSummary').classList.add('hidden');
+        return;
+      }
+      
+      let total = 0;
+      let html = '';
+      
+      for (let c of AppState.cart) {
+        let p = AppState.products.find(pr => pr.id === c.product_id);
+        if (p) {
+          let it = (p.price || 0) * (c.quantity || 1);
+          total += it;
+          html += `
+            <div class="list-item">
+              <div class="list-info">
+                <h4>${escapeHtml(p.name)}</h4>
+                <p>UGX ${(p.price || 0).toLocaleString()} x ${c.quantity} = UGX ${it.toLocaleString()}</p>
+              </div>
+              <button class="btn-sm btn-red" onclick="removeFromCart(${c.id})">Remove</button>
+            </div>
+          `;
+        }
+      }
+      
+      document.getElementById('cartItems').innerHTML = html;
+      document.getElementById('cartTotal').textContent = 'UGX ' + total.toLocaleString();
+      document.getElementById('cartSummary').classList.remove('hidden');
+    }
+    
+    function showCart() {
+      navigateTo('userCart');
+      renderCart();
+    }
+    
+    function updateCartBadge() {
+      let t = AppState.cart.reduce((s, c) => s + (c.quantity || 0), 0);
+      let b = document.getElementById('cartBadge');
+      if (t > 0) {
+        b.textContent = t;
+        b.classList.remove('hidden');
+      } else {
+        b.classList.add('hidden');
+      }
+    }
+    
+    // ==================== CHECKOUT & PAYMENT ====================
+    
+    function showCheckout() {
+      requireAuth(() => {
+        if (!AppState.cart.length) {
+          showToast('Cart empty', true);
+          return;
+        }
+        
+        let total = AppState.cart.reduce((s, c) => {
+          let p = AppState.products.find(pr => pr.id === c.product_id);
+          return s + ((p?.price || 0) * (c.quantity || 1));
+        }, 0);
+        
+        document.getElementById('checkoutTotal').textContent = 'UGX ' + total.toLocaleString();
+        navigateTo('checkoutPage');
+      });
+    }
+    
+    async function processPayment() {
+      const method = document.querySelector('input[name="payMethod"]:checked').value;
+      const phone = document.getElementById('payPhone').value;
+      
+      if (method !== 'card' && method !== 'cod' && (!phone || !validateUgPhone(phone))) {
+        showToast('Valid phone required', true);
+        return;
+      }
+      
+      if (!AppState.cart.length) {
+        showToast('Cart empty', true);
+        return;
+      }
+      
+      let total = 0;
+      let items = [];
+      
+      for (let c of AppState.cart) {
+        let p = AppState.products.find(pr => pr.id === c.product_id);
+        if (p) {
+          total += (p.price || 0) * (c.quantity || 1);
+          items.push({ productId: c.product_id, quantity: c.quantity || 1 });
+        }
+      }
+      
+      const payMethod = method === 'mtn' ? 'MTN' : (method === 'airtel' ? 'Airtel' : (method === 'cod' ? 'Cash on Delivery' : 'Card'));
+      
+      try {
+        const res = await apiCall('/orders', {
+          method: 'POST',
+          body: JSON.stringify({ items, total, payment_method: payMethod })
+        });
+        
+        showToast(method === 'cod' ? 'Order placed! Pay on delivery.' : 'Order placed successfully!');
+        await refreshData();
+        navigateTo('userOrders');
+        renderUserOrders();
+        
+        const newOrder = {
+          id: res.order_id || Date.now(),
+          user_id: AppState.user.id,
+          total: total,
+          status: 'pending',
+          payment_method: payMethod,
+          date: new Date().toISOString(),
+          customer_name: AppState.user.name,
+          items: AppState.cart.map(c => {
+            const p = AppState.products.find(pr => pr.id === c.product_id);
+            return { name: p?.name || 'Product', price: p?.price || 0, quantity: c.quantity };
+          })
+        };
+        
+        printReceipt(newOrder);
+      } catch(e) {
+        showToast('Order failed', true);
+      }
+    }
+    
+    // ==================== ORDERS ====================
+    
+    async function renderUserOrders() {
+      if (!AppState.user) return;
+      
+      const my = (AppState.orders || []).filter(o => o.user_id === AppState.user.id);
+      
+      if (!my.length) {
+        document.getElementById('userOrderList').innerHTML = '<div class="empty-state">No orders yet</div>';
+        return;
+      }
+      
+      document.getElementById('userOrderList').innerHTML = my.map(o => `
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <strong>Order #${o.id}</strong>
+            <span class="status-badge status-${o.status}">${o.status}</span>
+          </div>
+          <div style="margin-bottom:8px;"><strong>Total:</strong> UGX ${(o.total || 0).toLocaleString()}</div>
+          <div style="margin-bottom:8px;"><strong>Payment:</strong> ${o.payment_method || 'N/A'}</div>
+          <div style="margin-bottom:10px;"><strong>Rider:</strong> ${escapeHtml(o.rider_name || 'Not assigned')}</div>
+          <button class="btn-sm btn-primary" onclick='printReceipt(${JSON.stringify(o).replace(/'/g, "'")})'>🖨️ Print Receipt</button>
+        </div>
+      `).join('');
+    }
+    
+    function printReceipt(order) {
+      if (!order) return;
+      
+      const html = `
+        <div class="receipt-print-area">
+          <h2>🏗️ WAMP ENTERPRISES LTD</h2>
+          <p style="text-align:center; margin-bottom:15px;">Terrazzo • Plumbing • Painting<br>Tel: +256 772 123456</p>
+          
+          <div style="margin-bottom:15px; border-bottom:1px solid #ccc; padding-bottom:10px;">
+            <p><strong>Order #:</strong> ${order.id}</p>
+            <p><strong>Date:</strong> ${order.date ? new Date(order.date).toLocaleString() : 'N/A'}</p>
+            <p><strong>Customer:</strong> ${escapeHtml(order.customer_name || AppState.user?.name || 'N/A')}</p>
+            <p><strong>Payment:</strong> ${order.payment_method || 'N/A'}</p>
+          </div>
+          
+          <div style="margin:15px 0;">
+            <table style="width:100%; font-size:12px;">
+              <thead>
+                <tr>
+                  <th style="text-align:left;">Item</th>
+                  <th>Qty</th>
+                  <th>Price</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${(order.items || []).map(item => `
+                  <tr>
+                    <td style="text-align:left;">${escapeHtml(item.name || item.product_name || 'Product')}</td>
+                    <td style="text-align:center;">${item.quantity}</td>
+                    <td style="text-align:right;">UGX ${(item.price || 0).toLocaleString()}</td>
+                    <td style="text-align:right;">UGX ${((item.price || 0) * (item.quantity || 1)).toLocaleString()}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+          
+          <div style="text-align:right; font-size:18px; font-weight:bold; margin:15px 0; border-top:2px dashed #ccc; padding-top:10px;">
+            Total: UGX ${(order.total || 0).toLocaleString()}
+          </div>
+          
+          <div style="text-align:center; margin-top:20px; font-size:11px; border-top:2px dashed #ccc; padding-top:10px;">
+            <p>Thank you for shopping with WAMP!</p>
+            <p>Delivery within 24-48 hours</p>
+          </div>
+        </div>
+      `;
+      
+      const w = window.open('', '_blank');
+      w.document.write(`
+        <html>
+          <head>
+            <title>Receipt #${order.id}</title>
+            <style>
+              body { font-family: monospace; margin: 0; padding: 20px; }
+              @media print { body { margin: 0; padding: 0; } }
+            </style>
+          </head>
+          <body>${html}</body>
+        </html>
+      `);
+      w.document.close();
+      w.print();
+    }
+    
+    // ==================== ADMIN FUNCTIONS ====================
+    
+    async function renderAdminProducts() {
+      let html = (AppState.products || []).map(p => `
+        <div class="list-item">
+          <div class="list-info" onclick="editProduct(${p.id})">
+            <h4>${escapeHtml(p.name)}</h4>
+            <p>${escapeHtml(p.type)} - Stock: ${p.stock || 0} - UGX ${(p.price || 0).toLocaleString()}</p>
+          </div>
+          <button class="btn-sm btn-red" onclick="deleteProductItem(${p.id})">Delete</button>
+        </div>
+      `).join('');
+      
+      document.getElementById('adminProductList').innerHTML = html || '<div class="empty-state">No products</div>';
+    }
+    
+    function resetProductForm() {
+      document.getElementById('editProductId').value = '';
+      document.getElementById('prodName').value = '';
+      document.getElementById('prodDesc').value = '';
+      document.getElementById('prodPrice').value = '';
+      document.getElementById('prodStock').value = '';
+      document.getElementById('prodImage').value = '';
+      document.getElementById('productFormTitle').innerHTML = '📤 Add New Product';
+      document.getElementById('cancelEditBtn').classList.add('hidden');
+    }
+    
+    async function saveProduct() {
+      const id = document.getElementById('editProductId').value;
+      const data = {
+        name: document.getElementById('prodName').value,
+        type: document.getElementById('prodType').value,
+        description: document.getElementById('prodDesc').value,
+        price: parseInt(document.getElementById('prodPrice').value) || 0,
+        stock: parseInt(document.getElementById('prodStock').value) || 0,
+        image_url: document.getElementById('prodImage').value
+      };
+      
+      if (!data.name) {
+        showToast('Name required', true);
+        return;
+      }
+      
+      try {
+        if (id) {
+          await apiCall(`/admin/products/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+          showToast('Updated');
+        } else {
+          await apiCall('/admin/products', { method: 'POST', body: JSON.stringify(data) });
+          showToast('Added');
+        }
+        
+        await refreshData();
+        renderAdminProducts();
+        resetProductForm();
+      } catch(e) {
+        showToast('Failed', true);
+      }
+    }
+    
+    function editProduct(id) {
+      const p = AppState.products.find(pr => pr.id === id);
+      if (p) {
+        document.getElementById('editProductId').value = p.id;
+        document.getElementById('prodName').value = p.name;
+        document.getElementById('prodType').value = p.type;
+        document.getElementById('prodDesc').value = p.description || '';
+        document.getElementById('prodPrice').value = p.price || 0;
+        document.getElementById('prodStock').value = p.stock || 0;
+        document.getElementById('prodImage').value = p.image_url || '';
+        document.getElementById('productFormTitle').innerHTML = '✏️ Edit Product';
+        document.getElementById('cancelEditBtn').classList.remove('hidden');
+        window.scrollTo(0, 0);
+      }
+    }
+    
+    async function deleteProductItem(id) {
+      if (confirm('Delete?')) {
+        try {
+          await apiCall(`/admin/products/${id}`, { method: 'DELETE' });
+          await refreshData();
+          renderAdminProducts();
+          showToast('Deleted');
+        } catch(e) {
+          showToast('Failed', true);
+        }
+      }
+    }
+    
+    async function renderAdminOrders() {
+      let html = (AppState.orders || []).map(o => `
+        <div class="list-item" onclick="viewTransactionDetails(${o.id})">
+          <div>
+            <h4>Order #${o.id}</h4>
+            <p>UGX ${(o.total || 0).toLocaleString()} - ${o.payment_method || 'N/A'}</p>
+          </div>
+          <span class="status-badge status-${o.status}">${o.status}</span>
+        </div>
+      `).join('');
+      
+      document.getElementById('adminOrdersList').innerHTML = html || '<div class="empty-state">No orders</div>';
+    }
+    
+    async function renderAdminDashboard() {
+      const delivered = (AppState.orders || []).filter(o => o.status === 'delivered' || o.status === 'completed').reduce((s, o) => s + (o.total || 0), 0);
+      const pending = (AppState.orders || []).filter(o => o.status === 'pending' || o.status === 'paid').length;
+      const low = (AppState.products || []).filter(p => (p.stock || 0) < 5).length;
+      
+      document.getElementById('adminTodaySales').innerHTML = 'UGX ' + delivered.toLocaleString();
+      document.getElementById('adminPendingOrders').textContent = pending;
+      document.getElementById('adminTotalProducts').textContent = AppState.products?.length || 0;
+      document.getElementById('adminLowStock').textContent = low;
+      
+      document.getElementById('adminAgentStatus').innerHTML = '<div class="empty-state">Agent status - Backend pending</div>';
+      
+      const recent = (AppState.orders || []).slice(0, 5);
+      document.getElementById('adminRecentOrders').innerHTML = recent.map(o => `
+        <div class="list-item">
+          <div>
+            <h4>Order #${o.id}</h4>
+            <p>${o.date ? new Date(o.date).toLocaleDateString() : 'N/A'}</p>
+          </div>
+          <span class="status-badge status-${o.status}">${o.status}</span>
+        </div>
+      `).join('') || '<div class="empty-state">No recent orders</div>';
+    }
+    
+    function viewTransactionDetails(id) {
+      const o = AppState.orders.find(o => o.id === id);
+      if (o) {
+        showModal('Order #' + o.id, `
+          <div style="margin-bottom:10px;"><strong>Total:</strong> UGX ${(o.total || 0).toLocaleString()}</div>
+          <div style="margin-bottom:10px;"><strong>Status:</strong> ${o.status}</div>
+          <div style="margin-bottom:10px;"><strong>Payment:</strong> ${o.payment_method || 'N/A'}</div>
+          <button class="btn-sm btn-primary" onclick='printReceipt(${JSON.stringify(o).replace(/'/g, "'")})'>🖨️ Print Receipt</button>
+        `);
+      }
+    }
+    
+    function searchTransactionByPhone() {
+      showToast('Search by phone (Backend pending)');
+    }
+    
+    function resetTransactionSearch() {
+      renderAdminOrders();
+    }
+    
+    function exportTransactionsCSV() {
+      showToast('Export CSV (Backend pending)');
+    }
+    
+    function showSalesDetail() {
+      showModal('Sales', 'Backend pending');
+    }
+    
+    function showPendingDetail() {
+      const p = (AppState.orders || []).filter(o => o.status === 'pending' || o.status === 'paid');
+      showModal('Pending', p.map(o => `Order #${o.id} - UGX ${(o.total || 0).toLocaleString()}`).join('<br>') || 'None');
+    }
+    
+    function showProductsDetail() {
+      showModal('Products', 'Total: ' + (AppState.products?.length || 0));
+    }
+    
+    function showLowStockDetail() {
+      const l = (AppState.products || []).filter(p => (p.stock || 0) < 5);
+      showModal('Low Stock', l.map(p => `${p.name} - ${p.stock}`).join('<br>') || 'All good');
+    }
+    
+    // ==================== AGENT FUNCTIONS ====================
+    
+    async function renderAgentPanel() {
+      const ao = (AppState.orders || []).filter(o => o.agent_id === AppState.user.id);
+      const assigned = ao.filter(o => o.status === 'pending' || o.status === 'processing').length;
+      const completed = ao.filter(o => o.status === 'delivered' || o.status === 'completed').length;
+      
+      document.getElementById('agentAssignedCount').textContent = assigned;
+      document.getElementById('agentCompletedCount').textContent = completed;
+      document.getElementById('agentPendingCount').textContent = ao.filter(o => o.status === 'assigned').length;
+      
+      document.getElementById('agentAssignedOrders').innerHTML = ao.map(o => `
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <strong>Order #${o.id}</strong>
+            <span class="status-badge status-${o.status}">${o.status}</span>
+          </div>
+          <div>UGX ${(o.total || 0).toLocaleString()}</div>
+          <button class="btn-sm btn-primary" style="margin-top:10px;" onclick='printReceipt(${JSON.stringify(o).replace(/'/g, "'")})'>🖨️ Print Receipt</button>
+        </div>
+      `).join('') || '<div class="empty-state">No assigned orders</div>';
+      
+      const avail = (AppState.orders || []).filter(o => !o.agent_id && o.status === 'pending');
+      document.getElementById('agentAvailableOrders').innerHTML = avail.map(o => `
+        <div class="card">
+          <div><strong>Order #${o.id}</strong> - UGX ${(o.total || 0).toLocaleString()}</div>
+          <button class="btn-sm btn-green" style="margin-top:10px;" onclick="claimOrder(${o.id})">✅ Claim Order</button>
+        </div>
+      `).join('') || '<div class="empty-state">No available orders</div>';
+      
+      document.getElementById('agentChatList').innerHTML = '<div class="empty-state">Conversations - Backend pending</div>';
+    }
+    
+    function claimOrder(id) {
+      showToast('Claiming order #' + id + ' (Backend pending)');
+    }
+    
+    async function renderAgentReceipts() {
+      const ao = (AppState.orders || []).filter(o => o.agent_id === AppState.user.id);
+      document.getElementById('agentReceipts').innerHTML = ao.map(o => `
+        <div class="card">
+          <div style="margin-bottom:10px;"><strong>Order #${o.id}</strong> - UGX ${(o.total || 0).toLocaleString()}</div>
+          <button class="btn-sm btn-primary" onclick='printReceipt(${JSON.stringify(o).replace(/'/g, "'")})'>🖨️ Print Receipt</button>
+        </div>
+      `).join('') || '<div class="empty-state">No receipts</div>';
+    }
+    
+    function openAgentToManagerChat() {
+      showToast('Chat with manager (Backend pending)');
+    }
+    
+    // ==================== USER DASHBOARD ====================
+    
+    function renderUserDashboard() {
+      if (!AppState.user) return;
+      
+      document.getElementById('userNameDisplay').textContent = AppState.user.name;
+      document.getElementById('userEmailDisplay').textContent = AppState.user.email;
+      document.getElementById('profileName').value = AppState.user.name || '';
+      document.getElementById('profileEmail').value = AppState.user.email || '';
+      document.getElementById('profilePhone').value = AppState.user.phone || '';
+      document.getElementById('profileAddress').value = AppState.user.address || '';
+      
+      const my = (AppState.orders || []).filter(o => o.user_id === AppState.user.id);
+      document.getElementById('userTotalOrders').textContent = my.length;
+      document.getElementById('userPendingOrders').textContent = my.filter(o => o.status === 'pending' || o.status === 'processing').length;
+      
+      document.getElementById('wishlistItems').innerHTML = '<div class="empty-state">Wishlist - Backend pending</div>';
+      document.getElementById('userReviews').innerHTML = '<div class="empty-state">Reviews - Backend pending</div>';
+    }
+    
+    function saveUserProfile() {
+      showToast('Profile update - Backend pending');
+    }
+    
+    // ==================== NOTIFICATIONS ====================
+    
+    function showNotifications() {
+      const html = AppState.notifications.map(n => `
+        <div class="list-item">
+          <div class="list-info">
+            <h4>${escapeHtml(n.title)}</h4>
+            <p>${escapeHtml(n.message)}</p>
+          </div>
+        </div>
+      `).join('') || '<div class="empty-state">No notifications</div>';
+      
+      showModal('🔔 Notifications', html);
+      AppState.notifications.forEach(n => n.read = true);
+      document.getElementById('notificationBadge').classList.add('hidden');
+    }
+    
+    // ==================== PAYMENT UI ====================
+    
+    function setupPaymentMethodListener() {
+      document.querySelectorAll('input[name="payMethod"]').forEach(r => {
+        r.addEventListener('change', () => {
+          document.getElementById('cardFields').classList.toggle('hidden', document.querySelector('input[name="payMethod"]:checked').value !== 'card');
+        });
+      });
+      
+      const pp = document.getElementById('payPhone');
+      if (pp) {
+        pp.addEventListener('input', function() {
+          const n = detectNetwork(this.value);
+          const b = document.getElementById('networkBadge');
+          if (b) {
+            if (n) {
+              b.textContent = n;
+              b.classList.remove('hidden');
+            } else {
+              b.classList.add('hidden');
+            }
+          }
+        });
+      }
+    }
+    
+    // ==================== CHAT ====================
+    
+    function toggleChat() {
+      const b = document.getElementById('chatBox');
+      AppState.chatOpen = !AppState.chatOpen;
+      
+      if (AppState.chatOpen) {
+        b.classList.remove('hidden');
+        if (!document.getElementById('chatMessages').children.length) {
+          addChatMsg('bot', 'Welcome to WAMP! Ask about prices, delivery, or payments.');
+        }
+      } else {
+        b.classList.add('hidden');
+      }
+    }
+    
+    function addChatMsg(s, t) {
+      const c = document.getElementById('chatMessages');
+      const d = document.createElement('div');
+      d.className = 'chat-msg ' + s;
+      d.textContent = t;
+      c.appendChild(d);
+      c.scrollTop = c.scrollHeight;
+    }
+    
+    async function sendChat() {
+      const i = document.getElementById('chatInput');
+      const t = i.value.trim();
+      
+      if (!t) return;
+      
+      addChatMsg('user', t);
+      i.value = '';
+      
+      try {
+        const d = await apiCall('/chat/customer', { method: 'POST', body: JSON.stringify({ message: t }) });
+        addChatMsg('bot', d.response || 'Thanks!');
+      } catch(e) {
+        addChatMsg('bot', 'Chat unavailable.');
+      }
+    }
+    
+    // ==================== INITIALIZATION (FIXED) ====================
+    
+    function enterApp() {
+      document.getElementById('loginPage').classList.add('hidden');
+      document.getElementById('appContainer').classList.remove('hidden');
+      document.getElementById('headerGreeting').textContent = 'Hi, ' + ((AppState.user?.name || 'User').split(' ')[0]);
+      
       setupNav();
       
-    }, 600);
+      refreshData().then(() => {
+        if (AppState.user.role === 'admin') navigateTo('adminDashboard');
+        else if (AppState.user.role === 'agent') navigateTo('agentPanel');
+        else { navigateTo('userShop'); initSlider(); }
+      });
+    }
     
-  }, 1500);
-}
-  
-window.onload=initApp;
-window.navigateTo=navigateTo; window.addToCart=addToCart; window.showProductDetail=showProductDetail; window.removeFromCart=removeFromCart; window.processPayment=processPayment; window.saveProduct=saveProduct; window.editProduct=editProduct; window.deleteProductItem=deleteProductItem; window.resetProductForm=resetProductForm; window.renderShop=renderShop; window.searchProducts=searchProducts; window.filterProducts=filterProducts; window.showCart=showCart; window.showCheckout=showCheckout; window.handleLogin=handleLogin; window.handleRegister=handleRegister; window.handleForgotPassword=handleForgotPassword; window.logout=logout; window.toggleAuth=toggleAuth; window.showForgotPassword=showForgotPassword; window.showLoginForm=showLoginForm; window.saveUserProfile=saveUserProfile; window.toggleChat=toggleChat; window.sendChat=sendChat; window.searchTransactionByPhone=searchTransactionByPhone; window.resetTransactionSearch=resetTransactionSearch; window.exportTransactionsCSV=exportTransactionsCSV; window.showSalesDetail=showSalesDetail; window.showPendingDetail=showPendingDetail; window.showProductsDetail=showProductsDetail; window.showLowStockDetail=showLowStockDetail; window.viewTransactionDetails=viewTransactionDetails; window.openAgentToManagerChat=openAgentToManagerChat; window.renderAgentPanel=renderAgentPanel; window.renderAgentReceipts=renderAgentReceipts; window.printReceipt=printReceipt; window.showNotifications=showNotifications; window.sendManagerMessage=()=>showToast('Send message (Backend pending)'); window.claimOrder=claimOrder;
-</script>
+    async function initApp() {
+      setupPaymentMethodListener();
+      
+      const splash = document.getElementById('splashPage');
+      
+      setTimeout(async () => {
+        splash.style.opacity = '0';
+        
+        setTimeout(async () => {
+          splash.classList.add('hidden');
+          document.getElementById('appContainer').classList.remove('hidden');
+          
+          const token = getAccessToken();
+          
+          if (token) {
+            try { 
+              await refreshData(); 
+            } catch(e) { 
+              clearTokens(); 
+            }
+          }
+          
+          navigateTo('userShop');
+          initSlider();
+          setupNav();
+          
+        }, 600);
+        
+      }, 1500);
+    }
+    
+    // ==================== EXPOSE GLOBALS ====================
+    
+    window.onload = initApp;
+    window.navigateTo = navigateTo;
+    window.addToCart = addToCart;
+    window.showProductDetail = showProductDetail;
+    window.removeFromCart = removeFromCart;
+    window.processPayment = processPayment;
+    window.saveProduct = saveProduct;
+    window.editProduct = editProduct;
+    window.deleteProductItem = deleteProductItem;
+    window.resetProductForm = resetProductForm;
+    window.renderShop = renderShop;
+    window.searchProducts = searchProducts;
+    window.filterProducts = filterProducts;
+    window.showCart = showCart;
+    window.showCheckout = showCheckout;
+    window.handleLogin = handleLogin;
+    window.handleRegister = handleRegister;
+    window.handleForgotPassword = handleForgotPassword;
+    window.logout = logout;
+    window.toggleAuth = toggleAuth;
+    window.showForgotPassword = showForgotPassword;
+    window.showLoginForm = showLoginForm;
+    window.saveUserProfile = saveUserProfile;
+    window.toggleChat = toggleChat;
+    window.sendChat = sendChat;
+    window.searchTransactionByPhone = searchTransactionByPhone;
+    window.resetTransactionSearch = resetTransactionSearch;
+    window.exportTransactionsCSV = exportTransactionsCSV;
+    window.showSalesDetail = showSalesDetail;
+    window.showPendingDetail = showPendingDetail;
+    window.showProductsDetail = showProductsDetail;
+    window.showLowStockDetail = showLowStockDetail;
+    window.viewTransactionDetails = viewTransactionDetails;
+    window.openAgentToManagerChat = openAgentToManagerChat;
+    window.renderAgentPanel = renderAgentPanel;
+    window.renderAgentReceipts = renderAgentReceipts;
+    window.printReceipt = printReceipt;
+    window.showNotifications = showNotifications;
+    window.sendManagerMessage = () => showToast('Send message (Backend pending)');
+    window.claimOrder = claimOrder;
+  </script>
 </body>
-</html> wat of this now
+</html>
