@@ -728,6 +728,7 @@ body {
     <h1>🏗️ WAMP ENTERPRISES</h1>
     <div class="header-actions">
       <button class="icon-btn" onclick="showCart()">🛒<span class="badge hidden" id="cartBadge">0</span></button>
+      <button class="icon-btn" onclick="showNotifications()">🔔<span class="badge hidden" id="notificationBadge">0</span></button>
       <button class="icon-btn" onclick="logout()">🚪</button>
     </div>
   </div>
@@ -803,8 +804,14 @@ body {
     <div id="userOrderList"></div>
   </div>
 
-  <!-- USER DASHBOARD PAGE -->
+  <!-- USER DASHBOARD PAGE (FULL FEATURED) -->
   <div id="userDashboard" class="page hidden">
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-value" id="userTotalOrders">0</div><div class="stat-label">Total Orders</div></div>
+      <div class="stat-card"><div class="stat-value" id="userPendingOrders">0</div><div class="stat-label">Pending</div></div>
+      <div class="stat-card"><div class="stat-value" id="userDeliveredOrders">0</div><div class="stat-label">Delivered</div></div>
+      <div class="stat-card"><div class="stat-value" id="userTotalSpent">UGX 0</div><div class="stat-label">Total Spent</div></div>
+    </div>
     <div class="card">
       <div class="card-title">👤 My Profile</div>
       <div class="form-group">
@@ -835,10 +842,12 @@ body {
   <div id="adminDashboard" class="page hidden">
     <div class="section-title">📊 Admin Dashboard</div>
     <div class="stats-grid">
-      <div class="stat-card"><div class="stat-value" id="adminTotalSales">UGX 0</div><div class="stat-label">Today's Sales</div></div>
+      <div class="stat-card"><div class="stat-value" id="adminTodaySales">UGX 0</div><div class="stat-label">Today's Sales</div></div>
       <div class="stat-card"><div class="stat-value" id="adminPendingOrders">0</div><div class="stat-label">Pending Orders</div></div>
       <div class="stat-card"><div class="stat-value" id="adminTotalProducts">0</div><div class="stat-label">Products</div></div>
       <div class="stat-card"><div class="stat-value" id="adminLowStock">0</div><div class="stat-label">Low Stock</div></div>
+      <div class="stat-card"><div class="stat-value" id="adminTotalUsers">0</div><div class="stat-label">Users</div></div>
+      <div class="stat-card"><div class="stat-value" id="adminTotalAgents">0</div><div class="stat-label">Agents</div></div>
     </div>
     <div class="card">
       <div class="card-title">➕ Add/Edit Product</div>
@@ -863,6 +872,30 @@ body {
       <div class="card-title">📦 Products List</div>
       <div id="adminProductList"></div>
     </div>
+    <div class="card">
+      <div class="card-title">💬 Broadcast to All Agents</div>
+      <div class="form-group"><textarea id="broadcastMessage" placeholder="Type message to all agents..." rows="3"></textarea></div>
+      <button class="btn btn-primary" onclick="sendBroadcast()">📢 Send Broadcast</button>
+    </div>
+    <div class="card">
+      <div class="card-title">💬 Chat with Agents</div>
+      <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 200px; max-height: 300px; overflow-y: auto; border-right: 1px solid #ddd; padding-right: 15px;">
+          <div id="agentConversationList"></div>
+        </div>
+        <div style="flex: 2; min-width: 250px;">
+          <div id="adminChatArea" style="display: none;">
+            <div id="adminChatHeader" style="font-weight: 700; padding: 10px; background: var(--blue); color: white; border-radius: 10px; margin-bottom: 10px;"></div>
+            <div id="adminChatMessages" style="height: 250px; overflow-y: auto; padding: 10px; background: var(--gray); border-radius: 10px; margin-bottom: 10px;"></div>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="adminChatInput" placeholder="Type message..." style="flex: 1; padding: 12px; border-radius: 20px; border: 1px solid #ddd;">
+              <button class="btn-sm btn-primary" onclick="sendAdminMessage()">📤 Send</button>
+            </div>
+          </div>
+          <div id="adminNoChatSelected" class="empty-state" style="padding: 40px;">Select an agent to start chatting</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ADMIN ORDERS -->
@@ -876,7 +909,6 @@ body {
 
   <!-- AGENT PANEL -->
   <div id="agentPanel" class="page hidden">
-    <div class="section-title">📦 Agent Dashboard</div>
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-value" id="agentAssignedCount">0</div><div class="stat-label">Assigned</div></div>
       <div class="stat-card"><div class="stat-value" id="agentCompletedCount">0</div><div class="stat-label">Completed</div></div>
@@ -890,10 +922,39 @@ body {
       <div id="agentAvailableOrders"></div>
     </div>
     <div class="card">
+      <div class="card-title">📢 Send Update to Customer</div>
+      <div class="form-group">
+        <select id="agentOrderSelect" class="form-control">
+          <option value="">Select an order</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <select id="agentStatusSelect">
+          <option value="processing">🔄 Processing</option>
+          <option value="shipped">🚚 Shipped</option>
+          <option value="delivered">🏠 Delivered</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <textarea id="agentCustomerMessage" placeholder="Message to customer (e.g., Your order is on the way!)" rows="2"></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="sendOrderUpdate()">📤 Send Update to Customer</button>
+    </div>
+    <div class="card">
+      <div class="card-title">💬 Agent Group Chat (All Agents)</div>
+      <div id="agentGroupChatMessages" style="height: 250px; overflow-y: auto; background: var(--gray); border-radius: 12px; padding: 10px; margin-bottom: 10px;">
+        <div class="empty-state">No messages yet</div>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <input type="text" id="agentGroupChatInput" placeholder="Type message to all agents..." style="flex: 1; padding: 12px; border-radius: 20px; border: 1px solid #ddd;">
+        <button class="btn-sm btn-primary" onclick="sendGroupMessage()">📤 Send</button>
+      </div>
+    </div>
+    <div class="card">
       <div class="card-title">💬 Chat with Admin</div>
-      <div id="agentChatMessages" style="max-height:200px; overflow-y:auto; margin-bottom:10px; background:var(--gray); border-radius:12px; padding:10px;"></div>
-      <div style="display:flex; gap:8px;">
-        <input type="text" id="agentChatInput" placeholder="Type message..." style="flex:1; padding:12px; border-radius:20px; border:1px solid #ddd;">
+      <div id="agentChatMessages" style="max-height: 200px; overflow-y: auto; margin-bottom: 10px; background: var(--gray); border-radius: 12px; padding: 10px;"></div>
+      <div style="display: flex; gap: 8px;">
+        <input type="text" id="agentChatInput" placeholder="Type message to admin..." style="flex: 1; padding: 12px; border-radius: 20px; border: 1px solid #ddd;">
         <button class="btn-sm btn-primary" onclick="sendAgentMessage()">📤 Send</button>
       </div>
     </div>
@@ -905,7 +966,7 @@ body {
   </div>
   <div id="chatBox" class="chat-box hidden">
     <div class="chat-header">
-      🤖 WAMP Assistant
+      🤖 WAMP Assistant (AI-Powered)
       <span style="cursor:pointer" onclick="toggleChat()">✕</span>
     </div>
     <div class="chat-messages" id="chatMessages"></div>
@@ -931,6 +992,7 @@ let AppState = {
   orders: [],
   wishlist: [],
   reviews: [],
+  notifications: [],
   pendingAction: null
 };
 
@@ -1096,6 +1158,60 @@ async function refreshAllData() {
   try { AppState.orders = await apiCall('/orders'); } catch(e) { AppState.orders = []; }
   try { AppState.wishlist = await apiCall('/wishlist'); } catch(e) { AppState.wishlist = []; }
   try { AppState.reviews = await apiCall('/reviews/user'); } catch(e) { AppState.reviews = []; }
+  try { 
+    const notifData = await apiCall('/notifications');
+    AppState.notifications = notifData.notifications || [];
+    const unreadCount = notifData.unread_count || 0;
+    const badge = document.getElementById('notificationBadge');
+    if (unreadCount > 0) {
+      badge.textContent = unreadCount;
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
+  } catch(e) { AppState.notifications = []; }
+}
+
+// ==================== NOTIFICATIONS ====================
+async function showNotifications() {
+  try {
+    const notifData = await apiCall('/notifications');
+    const notifications = notifData.notifications || [];
+    
+    if (!notifications.length) {
+      showModal('🔔 Notifications', '<div class="empty-state">No notifications</div>');
+      return;
+    }
+    
+    const html = notifications.map(n => `
+      <div class="list-item">
+        <div>
+          <strong>${escapeHtml(n.title)}</strong><br>
+          <small>${escapeHtml(n.message)}</small><br>
+          <small style="color: gray;">${new Date(n.date).toLocaleString()}</small>
+        </div>
+      </div>
+    `).join('');
+    
+    showModal('🔔 Notifications', html);
+    
+    // Mark as read
+    for (const n of notifications) {
+      if (!n.is_read) {
+        await apiCall(`/notifications/${n.id}/read`, { method: 'POST' }).catch(() => {});
+      }
+    }
+    document.getElementById('notificationBadge').classList.add('hidden');
+  } catch(e) {
+    showToast('Failed to load notifications', true);
+  }
+}
+
+function showModal(title, html) {
+  const modal = document.getElementById('authModal');
+  document.querySelector('#authModal .modal-header').innerHTML = title + '<span style="cursor:pointer; font-size:24px;" onclick="closeAuthModal()">×</span>';
+  document.querySelector('#authModal .modal-content').innerHTML = `<div class="modal-header">${title}<span style="cursor:pointer; font-size:24px;" onclick="closeAuthModal()">×</span></div><div>${html}</div><button class="btn btn-outline" style="margin-top:15px;" onclick="closeAuthModal()">Close</button>`;
+  modal.classList.remove('hidden');
 }
 
 // ==================== NAVIGATION ====================
@@ -1143,7 +1259,16 @@ function renderProductCard(p) {
   `;
 }
 
-function renderShop() {
+async function renderShop() {
+  try {
+    const res = await fetch(`${API_BASE}/products`);
+    if (res.ok) {
+      AppState.products = await res.json();
+    }
+  } catch(e) {
+    console.error('Failed to load products:', e);
+  }
+  
   const grid = document.getElementById('shopGrid');
   if (grid) {
     grid.innerHTML = AppState.products.map(p => renderProductCard(p)).join('') || '<div class="empty-state">No products found. Admin can add products.</div>';
@@ -1183,11 +1308,49 @@ function showProductDetail(id) {
       <div class="product-price" style="font-size:28px; margin:15px 0;">UGX ${(p.price || 0).toLocaleString()}</div>
       <p style="margin:15px 0;">${escapeHtml(p.description || 'No description available.')}</p>
       <div style="margin:15px 0;"><strong>Stock:</strong> ${p.stock || 0} units</div>
-      <button class="btn btn-green" onclick="addToCart(${p.id})">🛒 Add to Cart</button>
+      <div class="star-rating" id="detailRatingStars">${[1,2,3,4,5].map(s => `<span class="star" data-rating="${s}" style="font-size:24px; cursor:pointer; margin-right:5px;">☆</span>`).join('')}</div>
+      <textarea id="reviewComment" placeholder="Write a review..." rows="2" style="width:100%; margin:10px 0; padding:10px; border-radius:8px;"></textarea>
+      <button class="btn btn-outline" onclick="submitReview(${p.id})">⭐ Submit Review</button>
+      <button class="btn btn-green" style="margin-top:10px;" onclick="addToCart(${p.id})">🛒 Add to Cart</button>
       <button class="btn btn-outline" style="margin-top:10px;" onclick="navigateTo('userShop')">⬅️ Back to Shop</button>
     </div>
   `;
+  
+  // Setup star rating
+  document.querySelectorAll('#detailRatingStars .star').forEach(star => {
+    star.onclick = () => {
+      const rating = parseInt(star.dataset.rating);
+      document.querySelectorAll('#detailRatingStars .star').forEach((s, i) => {
+        s.textContent = i < rating ? '★' : '☆';
+      });
+      window.selectedRating = rating;
+    };
+  });
+  
   navigateTo('productDetail');
+}
+
+async function submitReview(productId) {
+  requireAuth(async () => {
+    const rating = window.selectedRating || 0;
+    const comment = document.getElementById('reviewComment').value;
+    
+    if (rating === 0) {
+      showToast('Please select a rating', true);
+      return;
+    }
+    
+    try {
+      await apiCall('/reviews', {
+        method: 'POST',
+        body: JSON.stringify({ product_id: productId, rating, comment })
+      });
+      showToast('Review submitted!');
+      showProductDetail(productId);
+    } catch(e) {
+      showToast('Failed to submit review', true);
+    }
+  });
 }
 
 // ==================== CART FUNCTIONS ====================
@@ -1301,7 +1464,6 @@ async function processPayment() {
     navigateTo('userOrders');
     renderUserOrders();
     
-    // Print receipt
     const newOrder = {
       id: res.order_id,
       total: total,
@@ -1381,24 +1543,71 @@ async function renderUserOrders() {
       <div>Total: UGX ${(o.total || 0).toLocaleString()}</div>
       <div>Payment: ${o.payment_method || 'N/A'}</div>
       ${o.rider_name ? `<div>Rider: ${escapeHtml(o.rider_name)} (${o.rider_phone || ''})</div>` : ''}
-      <button class="btn-sm btn-primary" style="margin-top:10px;" onclick='printReceipt(${JSON.stringify(o).replace(/'/g, "'")})'>🖨️ Print Receipt</button>
+      <button class="btn-sm btn-primary" style="margin-top:10px;" onclick="trackOrder(${o.id})">📍 Track Order</button>
+      <button class="btn-sm btn-outline" style="margin-top:10px;" onclick='printReceipt(${JSON.stringify(o).replace(/'/g, "'")})'>🖨️ Print Receipt</button>
     </div>
   `).join('');
 }
 
+async function trackOrder(orderId) {
+  try {
+    const tracking = await apiCall(`/orders/${orderId}/track`);
+    showModal('Delivery Tracking', `
+      <div style="text-align: center;">
+        <div style="font-size: 48px;">${tracking.current_step.icon}</div>
+        <h3>${tracking.current_step.message}</h3>
+        <p>Order #${tracking.order_id}</p>
+        <p><strong>Status:</strong> ${tracking.status}</p>
+        ${tracking.rider ? `<p><strong>Rider:</strong> ${escapeHtml(tracking.rider.name)}<br>📱 ${tracking.rider.phone}</p>` : ''}
+        <p><strong>Delivery Address:</strong><br>${tracking.delivery_address || 'Not provided'}</p>
+        <p><strong>Estimated Delivery:</strong><br>${new Date(tracking.estimated_delivery).toLocaleDateString()}</p>
+        <button class="btn btn-primary" style="margin-top:15px;" onclick="closeAuthModal()">Close</button>
+      </div>
+    `);
+  } catch(e) {
+    showToast('Tracking unavailable', true);
+  }
+}
+
 // ==================== USER DASHBOARD ====================
-function renderUserDashboard() {
+async function renderUserDashboard() {
   if (!AppState.user) return;
+  
   document.getElementById('profileName').value = AppState.user.name || '';
   document.getElementById('profilePhone').value = AppState.user.phone || '';
   document.getElementById('profileAddress').value = AppState.user.address || '';
+  
+  try {
+    const stats = await apiCall('/user/stats');
+    document.getElementById('userTotalOrders').textContent = stats.total_orders || 0;
+    document.getElementById('userPendingOrders').textContent = stats.pending_orders || 0;
+    document.getElementById('userDeliveredOrders').textContent = stats.delivered_orders || 0;
+    document.getElementById('userTotalSpent').textContent = 'UGX ' + (stats.total_spent || 0).toLocaleString();
+  } catch(e) {}
   
   const wishlistContainer = document.getElementById('wishlistItems');
   if (wishlistContainer) {
     if (!AppState.wishlist.length) {
       wishlistContainer.innerHTML = '<div class="empty-state">No items in wishlist</div>';
     } else {
-      wishlistContainer.innerHTML = AppState.wishlist.map(w => `<div class="list-item">Product #${w.product_id}</div>`).join('');
+      wishlistContainer.innerHTML = AppState.wishlist.map(w => `<div class="list-item">Product #${w.product_id} - ${escapeHtml(w.name)}</div>`).join('');
+    }
+  }
+  
+  const reviewsContainer = document.getElementById('userReviewsList');
+  if (reviewsContainer) {
+    if (!AppState.reviews.length) {
+      reviewsContainer.innerHTML = '<div class="empty-state">No reviews yet</div>';
+    } else {
+      reviewsContainer.innerHTML = AppState.reviews.map(r => `
+        <div class="list-item">
+          <div>
+            <strong>${escapeHtml(r.product_name)}</strong><br>
+            Rating: ${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}<br>
+            ${escapeHtml(r.comment)}
+          </div>
+        </div>
+      `).join('');
     }
   }
 }
@@ -1424,10 +1633,12 @@ async function saveProfile() {
 async function renderAdminDashboard() {
   try {
     const stats = await apiCall('/admin/stats');
-    document.getElementById('adminTotalSales').textContent = 'UGX ' + (stats.today_sales || 0).toLocaleString();
+    document.getElementById('adminTodaySales').textContent = 'UGX ' + (stats.today_sales || 0).toLocaleString();
     document.getElementById('adminPendingOrders').textContent = stats.pending_orders || 0;
     document.getElementById('adminTotalProducts').textContent = stats.total_products || 0;
     document.getElementById('adminLowStock').textContent = stats.low_stock || 0;
+    document.getElementById('adminTotalUsers').textContent = stats.total_users || 0;
+    document.getElementById('adminTotalAgents').textContent = stats.total_agents || 0;
   } catch(e) {}
   
   const productList = document.getElementById('adminProductList');
@@ -1439,6 +1650,9 @@ async function renderAdminDashboard() {
       </div>
     `).join('') || '<div class="empty-state">No products</div>';
   }
+  
+  // Load agent conversations for admin chat
+  loadAgentConversations();
 }
 
 function clearProductForm() {
@@ -1503,15 +1717,14 @@ async function saveProduct() {
       });
     }
     
-    // Refresh products
+    showToast('Product saved');
+    clearProductForm();
+    
     const productsRes = await fetch(`${API_BASE}/products`);
     if (productsRes.ok) {
       AppState.products = await productsRes.json();
       renderShop();
     }
-    
-    showToast('Product saved');
-    clearProductForm();
     renderAdminDashboard();
   } catch(e) {
     showToast('Save failed: ' + e.message, true);
@@ -1552,10 +1765,33 @@ async function renderAdminOrders() {
       <div style="margin-top:10px;">
         <input type="text" id="riderName_${o.id}" placeholder="Rider Name" style="padding:8px; border-radius:8px; border:1px solid #ddd; margin-right:5px;">
         <input type="text" id="riderPhone_${o.id}" placeholder="Rider Phone" style="padding:8px; border-radius:8px; border:1px solid #ddd; margin-right:5px;">
-        <button class="btn-sm btn-primary" onclick="assignRider(${o.id})">Assign Rider</button>
+        <select id="orderStatus_${o.id}" style="padding:8px; border-radius:8px; border:1px solid #ddd; margin-right:5px;">
+          <option value="pending" ${o.status === 'pending' ? 'selected' : ''}>Pending</option>
+          <option value="processing" ${o.status === 'processing' ? 'selected' : ''}>Processing</option>
+          <option value="shipped" ${o.status === 'shipped' ? 'selected' : ''}>Shipped</option>
+          <option value="delivered" ${o.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+        </select>
+        <button class="btn-sm btn-primary" onclick="updateOrder(${o.id})">Update</button>
+        <button class="btn-sm btn-green" onclick="assignRider(${o.id})">Assign Rider</button>
       </div>
     </div>
   `).join('') || '<div class="empty-state">No orders</div>';
+}
+
+async function updateOrder(orderId) {
+  const newStatus = document.getElementById(`orderStatus_${orderId}`).value;
+  try {
+    await apiCall(`/orders/${orderId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status: newStatus })
+    });
+    showToast('Order status updated');
+    const ordersRes = await apiCall('/orders');
+    AppState.orders = ordersRes;
+    renderAdminOrders();
+  } catch(e) {
+    showToast('Update failed', true);
+  }
 }
 
 async function assignRider(orderId) {
@@ -1583,6 +1819,102 @@ async function exportOrdersCSV() {
   window.open(`${API_BASE}/admin/orders/export?token=${getToken()}`, '_blank');
 }
 
+async function sendBroadcast() {
+  const message = document.getElementById('broadcastMessage').value;
+  if (!message) {
+    showToast('Enter a message', true);
+    return;
+  }
+  try {
+    await apiCall('/admin/broadcast', {
+      method: 'POST',
+      body: JSON.stringify({ message, title: 'Admin Broadcast' })
+    });
+    showToast('Broadcast sent to all agents');
+    document.getElementById('broadcastMessage').value = '';
+  } catch(e) {
+    showToast('Broadcast failed', true);
+  }
+}
+
+// ==================== ADMIN CHAT FUNCTIONS ====================
+let currentChatAgentId = null;
+
+async function loadAgentConversations() {
+  try {
+    const convos = await apiCall('/admin/conversations');
+    const container = document.getElementById('agentConversationList');
+    
+    if (!convos.length) {
+      container.innerHTML = '<div class="empty-state">No conversations yet</div>';
+      return;
+    }
+    
+    container.innerHTML = convos.map(c => `
+      <div class="list-item" style="cursor: pointer; margin: 5px 0; padding: 10px;" onclick="loadChatWithAgent(${c.agent_id})">
+        <div>
+          <strong>${escapeHtml(c.agent_name)}</strong>
+          ${c.unread_count > 0 ? `<span style="background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; margin-left: 5px;">${c.unread_count}</span>` : ''}
+          <div style="font-size: 11px; color: gray;">${escapeHtml(c.last_message || 'No messages yet')}</div>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    console.error('Load conversations error:', e);
+  }
+}
+
+async function loadChatWithAgent(agentId) {
+  currentChatAgentId = agentId;
+  
+  try {
+    const messages = await apiCall(`/admin/conversations/${agentId}`);
+    const agent = await fetch(`${API_BASE}/user/profile`, { headers: { 'Authorization': `Bearer ${getToken()}` } }).then(r => r.json());
+    
+    document.getElementById('adminChatHeader').innerHTML = `💬 Chat with ${escapeHtml(agent.name || 'Agent')}`;
+    
+    const container = document.getElementById('adminChatMessages');
+    container.innerHTML = messages.map(m => `
+      <div style="text-align: ${m.sender_id === AppState.user?.id ? 'right' : 'left'}; margin: 5px 0;">
+        <div style="display: inline-block; padding: 8px 12px; border-radius: 12px; background: ${m.sender_id === AppState.user?.id ? '#1a5276' : '#e2e3f3'}; color: ${m.sender_id === AppState.user?.id ? 'white' : '#2c3e50'}; max-width: 80%;">
+          <small>${escapeHtml(m.sender_name)}</small><br>
+          ${escapeHtml(m.content)}<br>
+          <small style="font-size: 10px;">${new Date(m.created_at).toLocaleTimeString()}</small>
+        </div>
+      </div>
+    `).join('') || '<div class="empty-state">No messages yet</div>';
+    
+    document.getElementById('adminChatArea').style.display = 'block';
+    document.getElementById('adminNoChatSelected').style.display = 'none';
+    container.scrollTop = container.scrollHeight;
+  } catch(e) {
+    console.error('Load chat error:', e);
+  }
+}
+
+async function sendAdminMessage() {
+  if (!currentChatAgentId) {
+    showToast('Select an agent first', true);
+    return;
+  }
+  
+  const input = document.getElementById('adminChatInput');
+  const content = input.value.trim();
+  if (!content) return;
+  
+  try {
+    await apiCall('/admin/send-message', {
+      method: 'POST',
+      body: JSON.stringify({ agent_id: currentChatAgentId, content })
+    });
+    input.value = '';
+    loadChatWithAgent(currentChatAgentId);
+    loadAgentConversations();
+  } catch(e) {
+    showToast('Send failed', true);
+  }
+}
+
 // ==================== AGENT FUNCTIONS ====================
 async function renderAgentPanel() {
   try {
@@ -1595,6 +1927,7 @@ async function renderAgentPanel() {
       assignedContainer.innerHTML = (data.assigned || []).map(o => `
         <div class="list-item">
           <div><strong>Order #${o.id}</strong><br>UGX ${o.total.toLocaleString()}<br>Status: ${o.status}</div>
+          <button class="btn-sm btn-primary" onclick="trackOrder(${o.id})">📍 Track</button>
         </div>
       `).join('') || '<div class="empty-state">No assigned orders</div>';
     }
@@ -1609,6 +1942,17 @@ async function renderAgentPanel() {
       `).join('') || '<div class="empty-state">No available orders</div>';
     }
     
+    // Load agent orders for select dropdown
+    const orderSelect = document.getElementById('agentOrderSelect');
+    if (orderSelect) {
+      orderSelect.innerHTML = '<option value="">Select an order</option>' + 
+        (data.assigned || []).map(o => `<option value="${o.id}">Order #${o.id} - UGX ${o.total.toLocaleString()}</option>`).join('');
+    }
+    
+    // Load agent group chat
+    loadGroupMessages();
+    
+    // Load agent-manager chat
     const messages = await apiCall('/communications');
     const chatContainer = document.getElementById('agentChatMessages');
     if (chatContainer) {
@@ -1635,6 +1979,29 @@ async function claimOrder(orderId) {
   }
 }
 
+async function sendOrderUpdate() {
+  const orderId = document.getElementById('agentOrderSelect').value;
+  const newStatus = document.getElementById('agentStatusSelect').value;
+  const message = document.getElementById('agentCustomerMessage').value;
+  
+  if (!orderId) {
+    showToast('Select an order first', true);
+    return;
+  }
+  
+  try {
+    await apiCall(`/agent/orders/${orderId}/update`, {
+      method: 'POST',
+      body: JSON.stringify({ order_id: parseInt(orderId), status: newStatus, customer_message: message })
+    });
+    showToast(`Update sent! Order #${orderId} is now ${newStatus}`);
+    document.getElementById('agentCustomerMessage').value = '';
+    renderAgentPanel();
+  } catch(e) {
+    showToast('Failed to send update', true);
+  }
+}
+
 async function sendAgentMessage() {
   const input = document.getElementById('agentChatInput');
   const content = input.value.trim();
@@ -1643,7 +2010,7 @@ async function sendAgentMessage() {
   try {
     await apiCall('/communications', {
       method: 'POST',
-      body: JSON.stringify({ receiver_id: 1, content })
+      body: JSON.stringify({ receiver_id: 1, content }) // 1 is admin
     });
     input.value = '';
     renderAgentPanel();
@@ -1652,7 +2019,62 @@ async function sendAgentMessage() {
   }
 }
 
-// ==================== CHAT WIDGET ====================
+// ==================== AGENT GROUP CHAT ====================
+let groupChatPolling = null;
+
+async function loadGroupMessages() {
+  try {
+    const messages = await apiCall('/agent/group-messages');
+    const container = document.getElementById('agentGroupChatMessages');
+    
+    if (!messages.length) {
+      container.innerHTML = '<div class="empty-state">No messages yet. Be the first to say something!</div>';
+      return;
+    }
+    
+    container.innerHTML = messages.map(m => `
+      <div style="margin-bottom: 10px; text-align: ${m.sender_id === AppState.user?.id ? 'right' : 'left'};">
+        <div style="display: inline-block; max-width: 80%; padding: 10px 14px; border-radius: 12px; background: ${m.sender_id === AppState.user?.id ? '#1a5276' : (m.sender_role === 'admin' ? '#f39c12' : '#e2e3f3')}; color: ${m.sender_id === AppState.user?.id ? 'white' : '#2c3e50'};">
+          <small><strong>${escapeHtml(m.sender_name)}</strong> ${m.sender_role === 'admin' ? '👑' : '👤'}</small><br>
+          ${escapeHtml(m.message)}<br>
+          <small style="font-size: 10px;">${new Date(m.created_at).toLocaleTimeString()}</small>
+        </div>
+      </div>
+    `).join('');
+    
+    container.scrollTop = container.scrollHeight;
+  } catch(e) {
+    console.error('Load group messages error:', e);
+  }
+}
+
+async function sendGroupMessage() {
+  const input = document.getElementById('agentGroupChatInput');
+  const message = input.value.trim();
+  if (!message) return;
+  
+  try {
+    await apiCall('/agent/group-messages', {
+      method: 'POST',
+      body: JSON.stringify({ message })
+    });
+    input.value = '';
+    loadGroupMessages();
+  } catch(e) {
+    showToast('Failed to send message', true);
+  }
+}
+
+function startGroupChatPolling() {
+  if (groupChatPolling) clearInterval(groupChatPolling);
+  groupChatPolling = setInterval(() => {
+    if (document.getElementById('agentPanel') && !document.getElementById('agentPanel').classList.contains('hidden')) {
+      loadGroupMessages();
+    }
+  }, 5000);
+}
+
+// ==================== CHAT WIDGET (AI-POWERED) ====================
 function toggleChat() {
   document.getElementById('chatBox').classList.toggle('hidden');
 }
@@ -1674,7 +2096,8 @@ async function sendChat() {
       body: JSON.stringify({ message })
     });
     const data = await res.json();
-    messagesDiv.innerHTML += `<div class="chat-msg bot">${escapeHtml(data.response)}</div>`;
+    const aiBadge = data.ai_used ? ' 🤖' : '';
+    messagesDiv.innerHTML += `<div class="chat-msg bot">${escapeHtml(data.response)}${aiBadge}</div>`;
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   } catch(e) {
     messagesDiv.innerHTML += `<div class="chat-msg bot">Sorry, I'm having trouble connecting.</div>`;
@@ -1694,10 +2117,8 @@ async function initApp() {
     AppState.products = [];
   }
   
-  // Setup navigation (no user yet)
   setupNavigation();
   
-  // Check for existing token and restore session
   const token = getToken();
   if (token) {
     try {
@@ -1710,6 +2131,9 @@ async function initApp() {
         if (userData.valid && userData.user) {
           AppState.user = userData.user;
           setupNavigation();
+          if (AppState.user.role === 'admin') navigateTo('adminDashboard');
+          else if (AppState.user.role === 'agent') { navigateTo('agentPanel'); startGroupChatPolling(); }
+          else navigateTo('userShop');
         }
       } else {
         clearTokens();
@@ -1727,7 +2151,7 @@ async function initApp() {
       splash.classList.add('hidden');
       document.getElementById('appContainer').classList.remove('hidden');
       renderShop();
-      navigateTo('userShop');
+      if (!AppState.user) navigateTo('userShop');
     }, 600);
   }, 1500);
   
@@ -1749,9 +2173,11 @@ async function initApp() {
         if (document.getElementById('agentPanel') && !document.getElementById('agentPanel').classList.contains('hidden')) {
           renderAgentPanel();
         }
+        if (document.getElementById('adminDashboard') && !document.getElementById('adminDashboard').classList.contains('hidden')) {
+          loadAgentConversations();
+        }
       } catch(e) {}
     } else {
-      // Just refresh products for browsing
       try {
         const productsRes = await fetch(`${API_BASE}/products`);
         if (productsRes.ok) {
@@ -1787,13 +2213,21 @@ window.editProduct = editProduct;
 window.deleteProduct = deleteProduct;
 window.clearProductForm = clearProductForm;
 window.assignRider = assignRider;
+window.updateOrder = updateOrder;
 window.exportOrdersCSV = exportOrdersCSV;
 window.claimOrder = claimOrder;
+window.sendOrderUpdate = sendOrderUpdate;
 window.sendAgentMessage = sendAgentMessage;
+window.sendGroupMessage = sendGroupMessage;
 window.toggleChat = toggleChat;
 window.sendChat = sendChat;
 window.saveProfile = saveProfile;
 window.printReceipt = printReceipt;
+window.trackOrder = trackOrder;
+window.showNotifications = showNotifications;
+window.sendBroadcast = sendBroadcast;
+window.loadChatWithAgent = loadChatWithAgent;
+window.sendAdminMessage = sendAdminMessage;
 
 // Start app
 initApp();
