@@ -5,19 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
 <title>WAMP Enterprises - Terrazzo, Plumbing & Painting</title>
 
-  <button id="installBtn" class="btn btn-primary" style="display: none; position: fixed; bottom: 80px; right: 20px; z-index: 300; width: auto; padding: 12px 20px;">
+<button id="installBtn" class="btn btn-primary" style="display: none; position: fixed; bottom: 80px; right: 20px; z-index: 300; width: auto; padding: 12px 20px;">
   📱 Install App
-  </button>
+</button>
 
-  
-<!-- PWA Meta Tags -->
 <link rel="manifest" href="/raven-terazzo/manifest.json">
 <meta name="theme-color" content="#1a5276">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="WAMP">
 <meta name="mobile-web-app-capable" content="yes">
-  
+
+<!-- QR Code Library -->
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
 <style>
 /* ==================== RESET & VARIABLES ==================== */
 * {
@@ -96,7 +97,7 @@ body {
   to { transform: rotate(360deg); }
 }
 
-/* ==================== LOGIN MODAL (SMALL POPUP) ==================== */
+/* ==================== LOGIN MODAL ==================== */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -433,11 +434,6 @@ body {
   color: #155724;
 }
 
-.status-completed {
-  background: #d4edda;
-  color: #155724;
-}
-
 /* ==================== BUTTONS ==================== */
 .btn {
   width: 100%;
@@ -518,7 +514,204 @@ body {
   border-color: var(--blue);
 }
 
-/* ==================== WHATSAPP DROPDOWN ==================== */
+/* ==================== IMAGE PREVIEW ==================== */
+.image-preview {
+  margin-top: 10px;
+  width: 100%;
+  max-height: 150px;
+  object-fit: cover;
+  border-radius: 12px;
+  display: none;
+}
+
+/* ==================== RECEIPT STYLES ==================== */
+.receipt-print-area {
+  font-family: 'Courier New', monospace;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 20px;
+  background: white;
+}
+
+.receipt-header {
+  text-align: center;
+  border-bottom: 2px dashed #ccc;
+  padding-bottom: 15px;
+  margin-bottom: 15px;
+}
+
+.receipt-header h2 {
+  color: var(--blue);
+  margin-bottom: 5px;
+}
+
+.receipt-header p {
+  font-size: 11px;
+  color: #666;
+}
+
+.receipt-details {
+  margin-bottom: 20px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 15px;
+}
+
+.receipt-details p {
+  margin: 5px 0;
+  font-size: 12px;
+}
+
+.receipt-items {
+  width: 100%;
+  margin: 15px 0;
+  font-size: 12px;
+  border-collapse: collapse;
+}
+
+.receipt-items th,
+.receipt-items td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px dotted #ddd;
+}
+
+.receipt-items th {
+  font-weight: 800;
+  background: #f5f5f5;
+}
+
+.receipt-total {
+  text-align: right;
+  font-size: 16px;
+  font-weight: 800;
+  margin: 15px 0;
+  padding-top: 10px;
+  border-top: 2px dashed #ccc;
+}
+
+.receipt-barcode {
+  text-align: center;
+  margin: 20px 0;
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.receipt-barcode p {
+  font-size: 11px;
+  margin-top: 8px;
+  color: #666;
+}
+
+.receipt-footer {
+  text-align: center;
+  font-size: 11px;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 2px dashed #ccc;
+}
+
+/* ==================== CHAT STYLES ==================== */
+.chat-container {
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.chat-messages-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 15px;
+  background: var(--gray);
+}
+
+.chat-message {
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-message.sent {
+  align-items: flex-end;
+}
+
+.chat-message.received {
+  align-items: flex-start;
+}
+
+.chat-bubble {
+  max-width: 75%;
+  padding: 10px 14px;
+  border-radius: 18px;
+  font-size: 13px;
+  word-wrap: break-word;
+}
+
+.chat-message.sent .chat-bubble {
+  background: var(--blue);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.chat-message.received .chat-bubble {
+  background: white;
+  color: #2c3e50;
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.chat-meta {
+  font-size: 10px;
+  margin-top: 4px;
+  color: var(--gray-dark);
+}
+
+.chat-input-area {
+  display: flex;
+  padding: 12px;
+  gap: 8px;
+  background: white;
+  border-top: 1px solid #eee;
+}
+
+.chat-input-area input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  outline: none;
+}
+
+.client-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.client-list-item:hover {
+  background: var(--gray);
+}
+
+.client-unread {
+  background: var(--red);
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ==================== WHATSAPP WIDGET ==================== */
 .whatsapp-widget {
   position: fixed;
   bottom: 80px;
@@ -604,101 +797,7 @@ body {
   font-size: 22px;
 }
 
-/* ==================== CHAT WIDGET ==================== */
-.chat-widget {
-  position: fixed;
-  bottom: 80px;
-  right: 20px;
-  z-index: 200;
-}
-
-.chat-btn {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: var(--green);
-  color: var(--white);
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.chat-box {
-  position: fixed;
-  bottom: 150px;
-  right: 20px;
-  width: calc(100% - 40px);
-  max-width: 350px;
-  height: 450px;
-  background: var(--white);
-  border-radius: 20px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  z-index: 250;
-}
-
-.chat-header {
-  background: var(--blue);
-  color: var(--white);
-  padding: 15px;
-  font-weight: 700;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.chat-messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.chat-msg {
-  max-width: 80%;
-  padding: 10px 14px;
-  border-radius: 14px;
-  font-size: 14px;
-}
-
-.chat-msg.user {
-  align-self: flex-end;
-  background: var(--blue);
-  color: var(--white);
-  border-bottom-right-radius: 4px;
-}
-
-.chat-msg.bot {
-  align-self: flex-start;
-  background: var(--gray);
-  color: #2c3e50;
-  border-bottom-left-radius: 4px;
-}
-
-.chat-input-area {
-  display: flex;
-  padding: 10px;
-  border-top: 1px solid #eee;
-  gap: 8px;
-}
-
-.chat-input-area input {
-  flex: 1;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 20px;
-  outline: none;
-}
-
-/* ==================== TOAST & EMPTY STATE ==================== */
+/* ==================== TOAST ==================== */
 .toast {
   position: fixed;
   top: 70px;
@@ -725,66 +824,6 @@ body {
   padding: 40px 20px;
   color: var(--gray-dark);
 }
-
-/* ==================== RECEIPT PRINT ==================== */
-@media print {
-  body * {
-    visibility: hidden;
-  }
-  .receipt-print-area,
-  .receipt-print-area * {
-    visibility: visible;
-  }
-  .receipt-print-area {
-    position: absolute;
-    inset: 0;
-    padding: 20px;
-    background: var(--white);
-  }
-  .no-print {
-    display: none !important;
-  }
-}
-
-.receipt-print-area {
-  font-family: monospace;
-  max-width: 300px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.receipt-print-area h2 {
-  text-align: center;
-  border-bottom: 2px dashed #ccc;
-  padding-bottom: 10px;
-  margin-bottom: 10px;
-}
-
-/* ==================== UPDATE BANNER ==================== */
-.update-banner {
-  position: fixed;
-  bottom: 70px;
-  left: 0;
-  right: 0;
-  background: #1a5276;
-  color: white;
-  padding: 12px;
-  text-align: center;
-  z-index: 1000;
-  font-size: 14px;
-  animation: slideUp 0.3s ease;
-}
-
-.update-banner button {
-  background: white;
-  color: #1a5276;
-  border: none;
-  padding: 5px 15px;
-  border-radius: 20px;
-  margin-left: 10px;
-  cursor: pointer;
-  font-weight: bold;
-}
 </style>
 </head>
 <body>
@@ -798,7 +837,7 @@ body {
   <div class="splash-loader"></div>
 </div>
 
-<!-- LOGIN MODAL (SMALL POPUP) -->
+<!-- LOGIN MODAL -->
 <div id="authModal" class="modal-overlay hidden">
   <div class="modal-content">
     <div class="modal-header">
@@ -855,11 +894,12 @@ body {
     <div class="header-actions">
       <button class="icon-btn" onclick="showCart()">🛒<span class="badge hidden" id="cartBadge">0</span></button>
       <button class="icon-btn" onclick="showNotifications()">🔔<span class="badge hidden" id="notificationBadge">0</span></button>
+      <button class="icon-btn" onclick="showReceiptsHistory()">🧾</button>
       <button class="icon-btn" onclick="logout()">🚪</button>
     </div>
   </div>
 
-  <!-- USER SHOP PAGE (BROWSE FIRST - NO LOGIN REQUIRED) -->
+  <!-- USER SHOP PAGE -->
   <div id="userShop" class="page">
     <div style="padding:15px;">
       <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search products..." onkeyup="searchProducts(this.value)">
@@ -930,6 +970,12 @@ body {
     <div id="userOrderList"></div>
   </div>
 
+  <!-- RECEIPTS HISTORY PAGE -->
+  <div id="receiptsHistory" class="page hidden">
+    <div class="section-title">🧾 My Receipts</div>
+    <div id="receiptsList"></div>
+  </div>
+
   <!-- USER DASHBOARD PAGE -->
   <div id="userDashboard" class="page hidden">
     <div class="stats-grid">
@@ -953,6 +999,16 @@ body {
         <textarea id="profileAddress" rows="3"></textarea>
       </div>
       <button class="btn btn-primary" onclick="saveProfile()">💾 Save Profile</button>
+    </div>
+    <div class="card">
+      <div class="card-title">💬 Chat with My Agent</div>
+      <div id="customerChatArea" class="chat-container" style="height: 300px;">
+        <div id="customerChatMessages" class="chat-messages-area" style="height: 240px;"></div>
+        <div class="chat-input-area">
+          <input type="text" id="customerChatInput" placeholder="Message your agent..." onkeypress="if(event.key==='Enter')sendCustomerMessage()">
+          <button class="btn-sm btn-primary" onclick="sendCustomerMessage()">📤 Send</button>
+        </div>
+      </div>
     </div>
     <div class="card">
       <div class="card-title">❤️ My Wishlist</div>
@@ -989,7 +1045,11 @@ body {
       <div class="form-group"><input type="number" id="prodPrice" placeholder="Price UGX"></div>
       <div class="form-group"><input type="number" id="prodStock" placeholder="Stock Quantity"></div>
       <div class="form-group"><input type="text" id="prodImageUrl" placeholder="Image URL (optional)"></div>
-      <div class="form-group"><label>📸 Upload Image</label><input type="file" id="prodImageFile" accept="image/*"></div>
+      <div class="form-group">
+        <label>📸 Upload Image</label>
+        <input type="file" id="prodImageFile" accept="image/*" onchange="previewImage(this)">
+        <img id="imagePreview" class="image-preview" alt="Image preview">
+      </div>
       <div class="form-group"><textarea id="prodDesc" placeholder="Product description" rows="3"></textarea></div>
       <button class="btn btn-primary" onclick="saveProduct()">💾 Save Product</button>
       <button class="btn btn-outline" onclick="clearProductForm()">🗑️ Clear</button>
@@ -1002,6 +1062,10 @@ body {
       <div class="card-title">💬 Broadcast to All Agents</div>
       <div class="form-group"><textarea id="broadcastMessage" placeholder="Type message to all agents..." rows="3"></textarea></div>
       <button class="btn btn-primary" onclick="sendBroadcast()">📢 Send Broadcast</button>
+    </div>
+    <div class="card">
+      <div class="card-title">💬 Monitor Agent-Client Chats</div>
+      <div id="adminMonitorChats"></div>
     </div>
     <div class="card">
       <div class="card-title">💬 Chat with Agents</div>
@@ -1046,6 +1110,18 @@ body {
     <div class="card">
       <div class="card-title">🆓 Available to Claim</div>
       <div id="agentAvailableOrders"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">💬 My Clients (Shielded Chat)</div>
+      <div id="agentClientsList" style="max-height: 300px; overflow-y: auto;"></div>
+      <div id="agentClientChatArea" class="chat-container" style="height: 350px; margin-top: 15px; display: none;">
+        <div id="agentClientChatHeader" style="padding: 10px; background: var(--blue); color: white; border-radius: 10px; margin-bottom: 10px;"></div>
+        <div id="agentClientChatMessages" class="chat-messages-area" style="height: 220px;"></div>
+        <div class="chat-input-area">
+          <input type="text" id="agentClientChatInput" placeholder="Type message..." onkeypress="if(event.key==='Enter')sendAgentClientMessage()">
+          <button class="btn-sm btn-primary" onclick="sendAgentClientMessage()">📤 Send</button>
+        </div>
+      </div>
     </div>
     <div class="card">
       <div class="card-title">📢 Send Update to Customer</div>
@@ -1108,10 +1184,10 @@ body {
       💬
     </div>
     <div class="whatsapp-menu" id="whatsappMenu">
-      <a href="https://wa.me/256772123456?text=Hello%20Manager%2C%20I%20need%20assistance!" class="whatsapp-option" target="_blank" id="whatsappManagerLink">
+      <a href="https://wa.me/256741227707?text=Hello%20Manager%2C%20I%20need%20assistance!" class="whatsapp-option" target="_blank">
         <span class="whatsapp-icon">👑</span> Manager
       </a>
-      <a href="https://wa.me/256770000000?text=Hello%20Support%2C%20I%20need%20help!" class="whatsapp-option" target="_blank" id="whatsappAssistantLink">
+      <a href="https://wa.me/256741333544?text=Hello%20Support%2C%20I%20need%20help!" class="whatsapp-option" target="_blank">
         <span class="whatsapp-icon">🤖</span> Assistant
       </a>
     </div>
@@ -1122,8 +1198,9 @@ body {
 </div>
 
 <script>  
-  // ==================== CONFIGURATION ====================
+// ==================== CONFIGURATION ====================
 const API_BASE = 'https://raven-terazzo.onrender.com/api';
+const RECEIPT_PHONE_NUMBERS = ['0741227707', '0741333544'];
 
 // ==================== APP STATE ====================
 let AppState = {
@@ -1134,7 +1211,23 @@ let AppState = {
   wishlist: [],
   reviews: [],
   notifications: [],
-  pendingAction: null
+  pendingAction: null,
+  receipts: [],
+  agentClientChats: {},
+  customerChats: {}
+};
+
+// ==================== INDEXEDDB SETUP ====================
+let dbRequest = indexedDB.open('WAMPOfflineDB', 2);
+
+dbRequest.onupgradeneeded = function(event) {
+  let db = event.target.result;
+  if (!db.objectStoreNames.contains('receipts')) {
+    db.createObjectStore('receipts', { keyPath: 'id' });
+  }
+  if (!db.objectStoreNames.contains('agentClientChats')) {
+    db.createObjectStore('agentClientChats', { keyPath: 'conversationId' });
+  }
 };
 
 // ==================== UTILITIES ====================
@@ -1161,9 +1254,9 @@ async function apiCall(endpoint, opts = {}) {
   const token = getToken();
   const headers = { 'Content-Type': 'application/json', ...opts.headers };
   if (token) headers['Authorization'] = `Bearer ${token}`;
-  
+
   const res = await fetch(`${API_BASE}${endpoint}`, { ...opts, headers });
-  
+
   if (res.status === 401) {
     if (endpoint !== '/notifications') {
       showToast('Session expired. Please login again.', true);
@@ -1171,44 +1264,21 @@ async function apiCall(endpoint, opts = {}) {
     }
     throw new Error('Session expired');
   }
-  
+
   if (!res.ok) {
     const errorText = await res.text();
     throw new Error(errorText || `HTTP ${res.status}`);
   }
-  
+
   return res.json();
 }
 
 // ==================== WHATSAPP CONTACTS ====================
-async function loadWhatsAppContacts() {
-  try {
-    const res = await fetch(`${API_BASE}/whatsapp/contacts`);
-    const contacts = await res.json();
-    
-    const managerLink = document.getElementById('whatsappManagerLink');
-    const assistantLink = document.getElementById('whatsappAssistantLink');
-    
-    if (managerLink && contacts.manager) {
-      managerLink.href = `https://wa.me/${contacts.manager.number}?text=${encodeURIComponent(contacts.manager.message)}`;
-      managerLink.innerHTML = `<span class="whatsapp-icon">${contacts.manager.icon}</span> ${contacts.manager.name}`;
-    }
-    
-    if (assistantLink && contacts.assistant) {
-      assistantLink.href = `https://wa.me/${contacts.assistant.number}?text=${encodeURIComponent(contacts.assistant.message)}`;
-      assistantLink.innerHTML = `<span class="whatsapp-icon">${contacts.assistant.icon}</span> ${contacts.assistant.name}`;
-    }
-  } catch(e) {
-    console.error('Failed to load WhatsApp contacts:', e);
-  }
-}
-
 function toggleWhatsAppMenu() {
   const menu = document.getElementById('whatsappMenu');
   menu.classList.toggle('show');
 }
 
-// Close WhatsApp menu when clicking outside
 document.addEventListener('click', function(event) {
   const widget = document.getElementById('whatsappWidget');
   if (widget && !widget.contains(event.target)) {
@@ -1241,12 +1311,12 @@ function showRegisterForm() {
 async function submitLogin() {
   const email = document.getElementById('loginEmail').value;
   const password = document.getElementById('loginPassword').value;
-  
+
   if (!email || !password) {
     showToast('Enter email and password', true);
     return;
   }
-  
+
   try {
     const res = await fetch(`${API_BASE}/login`, {
       method: 'POST',
@@ -1254,19 +1324,24 @@ async function submitLogin() {
       body: JSON.stringify({ email, password })
     });
     const data = await res.json();
-    
+
     if (res.ok && data.success) {
       setToken(data.access_token);
       AppState.user = data.user;
       closeAuthModal();
       showToast(`Welcome ${data.user.name}!`);
       await refreshAllData();
+      loadReceiptsFromIndexedDB();
       setupNavigation();
-      
+
       if (AppState.user.role === 'admin') navigateTo('adminDashboard');
-      else if (AppState.user.role === 'agent') navigateTo('agentPanel');
+      else if (AppState.user.role === 'agent') {
+        navigateTo('agentPanel');
+        loadAgentClients();
+        startGroupChatPolling();
+      }
       else navigateTo('userShop');
-      
+
       if (AppState.pendingAction) {
         const cb = AppState.pendingAction;
         AppState.pendingAction = null;
@@ -1286,12 +1361,12 @@ async function submitRegister() {
   const email = document.getElementById('regEmail').value;
   const password = document.getElementById('regPassword').value;
   const confirm = document.getElementById('regConfirmPassword').value;
-  
+
   if (password !== confirm) {
     showToast('Passwords do not match', true);
     return;
   }
-  
+
   try {
     const res = await fetch(`${API_BASE}/register`, {
       method: 'POST',
@@ -1299,7 +1374,7 @@ async function submitRegister() {
       body: JSON.stringify({ name, email, phone, password })
     });
     const data = await res.json();
-    
+
     if (res.ok && data.success) {
       showToast('Registration successful! Please login.');
       showLoginForm();
@@ -1333,7 +1408,7 @@ function requireAuth(callback) {
 // ==================== DATA REFRESH ====================
 async function refreshAllData() {
   if (!AppState.user) return;
-  
+
   try { AppState.cart = await apiCall('/cart'); updateCartBadge(); } catch(e) { AppState.cart = []; }
   try { AppState.orders = await apiCall('/orders'); } catch(e) { AppState.orders = []; }
   try { AppState.wishlist = await apiCall('/wishlist'); } catch(e) { AppState.wishlist = []; }
@@ -1358,16 +1433,16 @@ async function showNotifications() {
     openAuthModal(() => showNotifications());
     return;
   }
-  
+
   try {
     const notifData = await apiCall('/notifications');
     const notifications = notifData.notifications || [];
-    
+
     if (!notifications.length) {
       showModal('🔔 Notifications', '<div class="empty-state">No notifications</div>');
       return;
     }
-    
+
     const html = notifications.map(n => `
       <div class="list-item">
         <div>
@@ -1377,9 +1452,9 @@ async function showNotifications() {
         </div>
       </div>
     `).join('');
-    
+
     showModal('🔔 Notifications', html);
-    
+
     for (const n of notifications) {
       if (!n.is_read) {
         await apiCall(`/notifications/${n.id}/read`, { method: 'POST' }).catch(() => {});
@@ -1403,13 +1478,14 @@ function navigateTo(pageId) {
   document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
   const page = document.getElementById(pageId);
   if (page) page.classList.remove('hidden');
-  
+
   if (pageId === 'userCart') renderCart();
   if (pageId === 'userOrders') renderUserOrders();
   if (pageId === 'userDashboard') renderUserDashboard();
   if (pageId === 'adminDashboard') renderAdminDashboard();
   if (pageId === 'adminOrders') renderAdminOrders();
   if (pageId === 'agentPanel') renderAgentPanel();
+  if (pageId === 'receiptsHistory') renderReceiptsHistory();
 }
 
 function setupNavigation() {
@@ -1419,15 +1495,30 @@ function setupNavigation() {
   } else if (AppState.user.role === 'admin') {
     nav.innerHTML = '<div class="nav-item" onclick="navigateTo(\'adminDashboard\')"><span class="nav-icon">📊</span>Dashboard</div><div class="nav-item" onclick="navigateTo(\'adminOrders\')"><span class="nav-icon">📋</span>Orders</div><div class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span>Exit</div>';
   } else if (AppState.user.role === 'agent') {
-    nav.innerHTML = '<div class="nav-item" onclick="navigateTo(\'agentPanel\')"><span class="nav-icon">📦</span>Orders</div><div class="nav-item" onclick="navigateTo(\'userOrders\')"><span class="nav-icon">📜</span>My Orders</div><div class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span>Exit</div>';
+    nav.innerHTML = '<div class="nav-item" onclick="navigateTo(\'agentPanel\')"><span class="nav-icon">📦</span>Orders</div><div class="nav-item" onclick="navigateTo(\'userOrders\')"><span class="nav-icon">📜</span>My Orders</div><div class="nav-item" onclick="navigateTo(\'receiptsHistory\')"><span class="nav-icon">🧾</span>Receipts</div><div class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span>Exit</div>';
   } else {
     nav.innerHTML = '<div class="nav-item" onclick="navigateTo(\'userShop\')"><span class="nav-icon">🏪</span>Shop</div><div class="nav-item" onclick="navigateTo(\'userOrders\')"><span class="nav-icon">📦</span>Orders</div><div class="nav-item" onclick="navigateTo(\'userCart\')"><span class="nav-icon">🛒</span>Cart</div><div class="nav-item" onclick="navigateTo(\'userDashboard\')"><span class="nav-icon">👤</span>Profile</div>';
   }
 }
 
+// ==================== IMAGE PREVIEW ====================
+function previewImage(input) {
+  const preview = document.getElementById('imagePreview');
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+    };
+    reader.readAsDataURL(input.files[0]);
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
 // ==================== PRODUCT RENDERING ====================
 function renderProductCard(p) {
-  const imgUrl = p.image_url || 'https://placehold.co/600x400/1a5276/white?text=WAMP';
+  const imgUrl = p.image_url || (p.image_data ? `data:${p.image_mime || 'image/jpeg'};base64,${p.image_data}` : 'https://placehold.co/600x400/1a5276/white?text=WAMP');
   const categoryIcon = p.category === 'Terrazzo' ? '🏛️' : (p.category === 'Plumbing' ? '🔧' : '📦');
   return `
     <div class="product-card" onclick="showProductDetail(${p.id})">
@@ -1452,7 +1543,7 @@ async function renderShop() {
   } catch(e) {
     console.error('Failed to load products:', e);
   }
-  
+
   const grid = document.getElementById('shopGrid');
   if (grid) {
     grid.innerHTML = AppState.products.map(p => renderProductCard(p)).join('') || '<div class="empty-state">No products found. Admin can add products.</div>';
@@ -1468,7 +1559,7 @@ function searchProducts(query) {
 function filterProducts(category, btn) {
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  
+
   if (category === 'all') {
     renderShop();
   } else {
@@ -1480,10 +1571,10 @@ function filterProducts(category, btn) {
 function showProductDetail(id) {
   const p = AppState.products.find(pr => pr.id === id);
   if (!p) return;
-  
-  const imgUrl = p.image_url || 'https://placehold.co/600x400/1a5276/white?text=WAMP';
+
+  const imgUrl = p.image_url || (p.image_data ? `data:${p.image_mime || 'image/jpeg'};base64,${p.image_data}` : 'https://placehold.co/600x400/1a5276/white?text=WAMP');
   const categoryIcon = p.category === 'Terrazzo' ? '🏛️' : (p.category === 'Plumbing' ? '🔧' : '📦');
-  
+
   document.getElementById('detailContent').innerHTML = `
     <div class="card">
       <img src="${escapeHtml(imgUrl)}" style="width:100%; height:250px; object-fit:cover; border-radius:12px;">
@@ -1499,7 +1590,7 @@ function showProductDetail(id) {
       <button class="btn btn-outline" style="margin-top:10px;" onclick="navigateTo('userShop')">⬅️ Back to Shop</button>
     </div>
   `;
-  
+
   document.querySelectorAll('#detailRatingStars .star').forEach(star => {
     star.onclick = () => {
       const rating = parseInt(star.dataset.rating);
@@ -1509,7 +1600,7 @@ function showProductDetail(id) {
       window.selectedRating = rating;
     };
   });
-  
+
   navigateTo('productDetail');
 }
 
@@ -1517,12 +1608,12 @@ async function submitReview(productId) {
   requireAuth(async () => {
     const rating = window.selectedRating || 0;
     const comment = document.getElementById('reviewComment').value;
-    
+
     if (rating === 0) {
       showToast('Please select a rating', true);
       return;
     }
-    
+
     try {
       await apiCall('/reviews', {
         method: 'POST',
@@ -1566,7 +1657,7 @@ async function renderCart() {
     document.getElementById('cartSummary').classList.add('hidden');
     return;
   }
-  
+
   let total = 0;
   let html = '';
   for (const item of AppState.cart) {
@@ -1625,18 +1716,18 @@ async function processPayment() {
   const method = document.getElementById('payMethod').value;
   const phone = document.getElementById('payPhone').value;
   const deliveryAddress = document.getElementById('deliveryAddress').value;
-  
+
   if (method !== 'Cash on Delivery' && !phone) {
     showToast('Phone number required', true);
     return;
   }
-  
+
   const items = AppState.cart.map(c => ({ productId: c.product_id, quantity: c.quantity }));
   const total = AppState.cart.reduce((s, c) => {
     const p = AppState.products.find(pr => pr.id === c.product_id);
     return s + ((p?.price || 0) * (c.quantity || 1));
   }, 0);
-  
+
   try {
     const res = await apiCall('/orders', {
       method: 'POST',
@@ -1644,8 +1735,6 @@ async function processPayment() {
     });
     showToast('Order placed successfully!');
     await refreshAllData();
-    navigateTo('userOrders');
-    renderUserOrders();
     
     const newOrder = {
       id: res.order_id,
@@ -1654,60 +1743,211 @@ async function processPayment() {
       created_at: new Date().toISOString(),
       items: AppState.cart.map(c => {
         const p = AppState.products.find(pr => pr.id === c.product_id);
-        return { name: p?.name, price: p?.price, quantity: c.quantity };
-      })
+        return { name: p?.name, price: p?.price, quantity: c.quantity, product_id: c.product_id };
+      }),
+      delivery_address: deliveryAddress,
+      customer_name: AppState.user?.name,
+      customer_phone: AppState.user?.phone
     };
+    
+    saveReceiptToIndexedDB(newOrder);
     printReceipt(newOrder);
+    navigateTo('userOrders');
+    renderUserOrders();
   } catch(e) {
     showToast('Order failed: ' + e.message, true);
   }
 }
 
-// ==================== RECEIPT PRINTING ====================
+// ==================== RECEIPT SYSTEM ====================
+function saveReceiptToIndexedDB(order) {
+  const receipt = {
+    id: `RCP-${order.id}-${Date.now()}`,
+    order_id: order.id,
+    receipt_number: `WAMP-${new Date().getFullYear()}-${order.id}`,
+    order_date: order.created_at,
+    customer_name: order.customer_name || AppState.user?.name || 'Customer',
+    customer_phone: order.customer_phone || AppState.user?.phone || '',
+    delivery_address: order.delivery_address || '',
+    items: order.items,
+    total: order.total,
+    payment_method: order.payment_method,
+    barcode_numbers: RECEIPT_PHONE_NUMBERS,
+    issued_at: new Date().toISOString()
+  };
+  
+  let request = indexedDB.open('WAMPOfflineDB', 2);
+  request.onsuccess = function(event) {
+    let db = event.target.result;
+    let tx = db.transaction('receipts', 'readwrite');
+    let store = tx.objectStore('receipts');
+    store.put(receipt);
+    tx.oncomplete = () => showToast('Receipt saved to history');
+  };
+}
+
+function loadReceiptsFromIndexedDB() {
+  let request = indexedDB.open('WAMPOfflineDB', 2);
+  request.onsuccess = function(event) {
+    let db = event.target.result;
+    let tx = db.transaction('receipts', 'readonly');
+    let store = tx.objectStore('receipts');
+    let getAll = store.getAll();
+    getAll.onsuccess = function() {
+      AppState.receipts = getAll.result || [];
+    };
+  };
+}
+
+function showReceiptsHistory() {
+  navigateTo('receiptsHistory');
+  renderReceiptsHistory();
+}
+
+function renderReceiptsHistory() {
+  const container = document.getElementById('receiptsList');
+  if (!container) return;
+  
+  if (!AppState.receipts.length) {
+    container.innerHTML = '<div class="empty-state">No receipts yet. Place an order to get your first receipt!</div>';
+    return;
+  }
+  
+  container.innerHTML = AppState.receipts.map(r => `
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <strong>🧾 ${escapeHtml(r.receipt_number)}</strong><br>
+          <small>Order #${r.order_id}</small><br>
+          <small>${new Date(r.order_date).toLocaleDateString()}</small>
+        </div>
+        <button class="btn-sm btn-primary" onclick="printReceiptFromHistory('${r.id}')">🖨️ Print</button>
+      </div>
+      <div style="margin-top: 10px;">
+        <strong>Total:</strong> UGX ${(r.total || 0).toLocaleString()}
+      </div>
+    </div>
+  `).join('');
+}
+
+function printReceiptFromHistory(receiptId) {
+  const receipt = AppState.receipts.find(r => r.id === receiptId);
+  if (receipt) {
+    printReceipt(receipt);
+  }
+}
+
 function printReceipt(order) {
+  const qrContainerId = `qrcode-${Date.now()}`;
+  const telLink = `TEL:${RECEIPT_PHONE_NUMBERS[0]}`;
+  
   const receiptHtml = `
-    <div class="receipt-print-area">
-      <h2>🏗️ WAMP ENTERPRISES LTD</h2>
-      <p style="text-align:center; margin-bottom:15px;">Terrazzo • Plumbing • General Merchandise<br>Tel: +256 772 123456</p>
-      <div style="margin-bottom:15px; border-bottom:1px solid #ccc; padding-bottom:10px;">
-        <p><strong>Order #:</strong> ${order.id}</p>
-        <p><strong>Date:</strong> ${new Date(order.created_at).toLocaleString()}</p>
-        <p><strong>Customer:</strong> ${escapeHtml(AppState.user?.name || 'Customer')}</p>
+    <div class="receipt-print-area" id="printReceiptArea">
+      <div class="receipt-header">
+        <h2>🏗️ WAMP ENTERPRISES LTD</h2>
+        <p>Terrazzo • Plumbing • General Merchandise</p>
+        <p>Tel: 0741227707 / 0741333544</p>
+        <p>Email: info@wamp.com</p>
+      </div>
+      
+      <div class="receipt-details">
+        <p><strong>Receipt #:</strong> ${order.receipt_number || `WAMP-${order.id}`}</p>
+        <p><strong>Order #:</strong> ${order.order_id || order.id}</p>
+        <p><strong>Date:</strong> ${new Date(order.order_date || order.created_at || Date.now()).toLocaleString()}</p>
+        <p><strong>Customer:</strong> ${escapeHtml(order.customer_name || AppState.user?.name || 'Customer')}</p>
+        <p><strong>Phone:</strong> ${order.customer_phone || AppState.user?.phone || ''}</p>
+        <p><strong>Delivery:</strong> ${escapeHtml(order.delivery_address || 'N/A')}</p>
         <p><strong>Payment:</strong> ${order.payment_method || 'N/A'}</p>
       </div>
-      <div style="margin:15px 0;">
-        <table style="width:100%; font-size:12px;">
-          <thead><tr><th style="text-align:left;">Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
-          <tbody>
-            ${(order.items || []).map(item => `
-              <tr>
-                <td style="text-align:left;">${escapeHtml(item.name)}</td>
-                <td style="text-align:center;">${item.quantity}</td>
-                <td style="text-align:right;">UGX ${(item.price || 0).toLocaleString()}</td>
-                <td style="text-align:right;">UGX ${((item.price || 0) * (item.quantity || 1)).toLocaleString()}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
+      
+      <table class="receipt-items">
+        <thead>
+          <tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>
+        </thead>
+        <tbody>
+          ${(order.items || []).map(item => `
+            <tr>
+              <td>${escapeHtml(item.name)}</td>
+              <td>${item.quantity}</td>
+              <td>UGX ${(item.price || 0).toLocaleString()}</td>
+              <td>UGX ${((item.price || 0) * (item.quantity || 1)).toLocaleString()}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      
+      <div class="receipt-total">
+        <strong>GRAND TOTAL: UGX ${(order.total || 0).toLocaleString()}</strong>
       </div>
-      <div style="text-align:right; font-size:18px; font-weight:bold; margin:15px 0; border-top:2px dashed #ccc; padding-top:10px;">
-        Total: UGX ${(order.total || 0).toLocaleString()}
+      
+      <div class="receipt-barcode">
+        <div id="${qrContainerId}"></div>
+        <p>Scan to contact support: ${RECEIPT_PHONE_NUMBERS.join(' / ')}</p>
       </div>
-      <div style="text-align:center; margin-top:20px; font-size:11px; border-top:2px dashed #ccc; padding-top:10px;">
-        <p>Thank you for shopping with WAMP!</p>
-        <p>Delivery within 24-48 hours</p>
+      
+      <div class="receipt-footer">
+        <p>Thank you for shopping with WAMP Enterprises!</p>
+        <p>Delivery within 24-48 hours | Quality Guaranteed</p>
+        <p>For support, call: 0741227707 or 0741333544</p>
       </div>
     </div>
   `;
-  
+
   const printWindow = window.open('', '_blank');
   printWindow.document.write(`
-    <html><head><title>Receipt #${order.id}</title>
-    <style>body{font-family:monospace; margin:0; padding:20px;} @media print{body{margin:0; padding:0;}}</style>
-    </head><body>${receiptHtml}</body></html>
+    <html>
+      <head>
+        <title>Receipt ${order.receipt_number || order.id}</title>
+        <style>
+          body {
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 20px;
+            background: white;
+          }
+          .receipt-print-area {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+          }
+          .receipt-header { text-align: center; border-bottom: 2px dashed #ccc; padding-bottom: 15px; margin-bottom: 15px; }
+          .receipt-header h2 { color: #1a5276; margin-bottom: 5px; }
+          .receipt-header p { font-size: 11px; color: #666; margin: 3px 0; }
+          .receipt-details { margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 15px; }
+          .receipt-details p { margin: 5px 0; font-size: 12px; }
+          .receipt-items { width: 100%; margin: 15px 0; font-size: 12px; border-collapse: collapse; }
+          .receipt-items th, .receipt-items td { padding: 8px; text-align: left; border-bottom: 1px dotted #ddd; }
+          .receipt-items th { font-weight: 800; background: #f5f5f5; }
+          .receipt-total { text-align: right; font-size: 16px; font-weight: 800; margin: 15px 0; padding-top: 10px; border-top: 2px dashed #ccc; }
+          .receipt-barcode { text-align: center; margin: 20px 0; padding: 15px; background: #f9f9f9; border-radius: 8px; }
+          .receipt-barcode p { font-size: 11px; margin-top: 8px; color: #666; }
+          .receipt-footer { text-align: center; font-size: 11px; margin-top: 20px; padding-top: 15px; border-top: 2px dashed #ccc; }
+          @media print {
+            body { margin: 0; padding: 0; }
+            .receipt-print-area { margin: 0; padding: 10px; }
+          }
+        </style>
+        <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"><\/script>
+      </head>
+      <body>
+        ${receiptHtml}
+        <script>
+          new QRCode(document.getElementById("${qrContainerId}"), {
+            text: "${telLink}",
+            width: 120,
+            height: 120
+          });
+        <\/script>
+        <script>
+          setTimeout(() => {
+            window.print();
+            window.onafterprint = () => window.close();
+          }, 500);
+        <\/script>
+      </body>
+    </html>
   `);
   printWindow.document.close();
-  printWindow.print();
 }
 
 // ==================== USER ORDERS ====================
@@ -1727,9 +1967,24 @@ async function renderUserOrders() {
       <div>Payment: ${o.payment_method || 'N/A'}</div>
       ${o.rider_name ? `<div>Rider: ${escapeHtml(o.rider_name)} (${o.rider_phone || ''})</div>` : ''}
       <button class="btn-sm btn-primary" style="margin-top:10px;" onclick="trackOrder(${o.id})">📍 Track Order</button>
-      <button class="btn-sm btn-outline" style="margin-top:10px;" onclick='printReceipt(${JSON.stringify(o).replace(/'/g, "'")})'>🖨️ Print Receipt</button>
+      <button class="btn-sm btn-outline" style="margin-top:10px;" onclick='printReceiptFromOrder(${JSON.stringify(o).replace(/'/g, "&apos;")})'>🖨️ Print Receipt</button>
     </div>
   `).join('');
+}
+
+function printReceiptFromOrder(order) {
+  const enrichedOrder = {
+    id: order.id,
+    order_id: order.id,
+    total: order.total,
+    payment_method: order.payment_method,
+    created_at: order.created_at,
+    items: order.items || [],
+    delivery_address: order.delivery_location,
+    customer_name: AppState.user?.name,
+    customer_phone: AppState.user?.phone
+  };
+  printReceipt(enrichedOrder);
 }
 
 async function trackOrder(orderId) {
@@ -1755,11 +2010,11 @@ async function trackOrder(orderId) {
 // ==================== USER DASHBOARD ====================
 async function renderUserDashboard() {
   if (!AppState.user) return;
-  
+
   document.getElementById('profileName').value = AppState.user.name || '';
   document.getElementById('profilePhone').value = AppState.user.phone || '';
   document.getElementById('profileAddress').value = AppState.user.address || '';
-  
+
   try {
     const stats = await apiCall('/user/stats');
     document.getElementById('userTotalOrders').textContent = stats.total_orders || 0;
@@ -1767,7 +2022,7 @@ async function renderUserDashboard() {
     document.getElementById('userDeliveredOrders').textContent = stats.delivered_orders || 0;
     document.getElementById('userTotalSpent').textContent = 'UGX ' + (stats.total_spent || 0).toLocaleString();
   } catch(e) {}
-  
+
   const wishlistContainer = document.getElementById('wishlistItems');
   if (wishlistContainer) {
     if (!AppState.wishlist.length) {
@@ -1776,7 +2031,7 @@ async function renderUserDashboard() {
       wishlistContainer.innerHTML = AppState.wishlist.map(w => `<div class="list-item">Product #${w.product_id} - ${escapeHtml(w.name)}</div>`).join('');
     }
   }
-  
+
   const reviewsContainer = document.getElementById('userReviewsList');
   if (reviewsContainer) {
     if (!AppState.reviews.length) {
@@ -1793,6 +2048,8 @@ async function renderUserDashboard() {
       `).join('');
     }
   }
+  
+  loadCustomerChatMessages();
 }
 
 async function saveProfile() {
@@ -1812,6 +2069,207 @@ async function saveProfile() {
   }
 }
 
+// ==================== CUSTOMER-AGENT CHAT (SHIELDED) ====================
+function loadCustomerChatMessages() {
+  if (!AppState.user) return;
+  
+  const conversationId = `customer_${AppState.user.id}`;
+  let request = indexedDB.open('WAMPOfflineDB', 2);
+  request.onsuccess = function(event) {
+    let db = event.target.result;
+    let tx = db.transaction('agentClientChats', 'readonly');
+    let store = tx.objectStore('agentClientChats');
+    let get = store.get(conversationId);
+    get.onsuccess = function() {
+      const chat = get.result;
+      const messages = chat ? chat.messages : [];
+      const container = document.getElementById('customerChatMessages');
+      if (container) {
+        container.innerHTML = messages.map(m => `
+          <div class="chat-message ${m.sender === 'customer' ? 'sent' : 'received'}">
+            <div class="chat-bubble">${escapeHtml(m.message)}</div>
+            <div class="chat-meta">${new Date(m.timestamp).toLocaleTimeString()}</div>
+          </div>
+        `).join('') || '<div class="empty-state">No messages yet. Your agent will respond soon.</div>';
+        container.scrollTop = container.scrollHeight;
+      }
+    };
+  };
+}
+
+function sendCustomerMessage() {
+  const input = document.getElementById('customerChatInput');
+  const message = input.value.trim();
+  if (!message || !AppState.user) return;
+  
+  const conversationId = `customer_${AppState.user.id}`;
+  const newMessage = {
+    sender: 'customer',
+    sender_id: AppState.user.id,
+    sender_name: AppState.user.name,
+    message: message,
+    timestamp: new Date().toISOString()
+  };
+  
+  let request = indexedDB.open('WAMPOfflineDB', 2);
+  request.onsuccess = function(event) {
+    let db = event.target.result;
+    let tx = db.transaction('agentClientChats', 'readwrite');
+    let store = tx.objectStore('agentClientChats');
+    let get = store.get(conversationId);
+    get.onsuccess = function() {
+      let chat = get.result || { conversationId: conversationId, customer_id: AppState.user.id, messages: [] };
+      chat.messages.push(newMessage);
+      chat.last_message = message;
+      chat.last_update = new Date().toISOString();
+      store.put(chat);
+      input.value = '';
+      loadCustomerChatMessages();
+      showToast('Message sent to agent');
+    };
+  };
+}
+
+// ==================== AGENT CLIENT CHAT ====================
+function loadAgentClients() {
+  const customers = [];
+  const customerIds = new Set();
+  
+  AppState.orders.forEach(order => {
+    if (order.user_id && !customerIds.has(order.user_id)) {
+      customerIds.add(order.user_id);
+      customers.push({
+        user_id: order.user_id,
+        customer_name: `Customer #${order.user_id}`,
+        last_order_id: order.id
+      });
+    }
+  });
+  
+  const container = document.getElementById('agentClientsList');
+  if (!container) return;
+  
+  if (!customers.length) {
+    container.innerHTML = '<div class="empty-state">No customers yet. When customers place orders, they will appear here.</div>';
+    return;
+  }
+  
+  container.innerHTML = customers.map(c => `
+    <div class="client-list-item" onclick="openAgentClientChat(${c.user_id}, '${escapeHtml(c.customer_name)}')">
+      <div>
+        <strong>👤 ${escapeHtml(c.customer_name)}</strong>
+        <div style="font-size: 11px; color: gray;">Order #${c.last_order_id}</div>
+      </div>
+      <div id="unread_badge_${c.user_id}" style="display: none;" class="client-unread">!</div>
+    </div>
+  `).join('');
+}
+
+let currentChatCustomerId = null;
+
+function openAgentClientChat(customerId, customerName) {
+  currentChatCustomerId = customerId;
+  
+  const conversationId = `customer_${customerId}`;
+  const chatArea = document.getElementById('agentClientChatArea');
+  const chatHeader = document.getElementById('agentClientChatHeader');
+  const messagesContainer = document.getElementById('agentClientChatMessages');
+  
+  chatHeader.innerHTML = `💬 Chat with ${escapeHtml(customerName)}`;
+  chatArea.style.display = 'flex';
+  chatArea.style.flexDirection = 'column';
+  
+  let request = indexedDB.open('WAMPOfflineDB', 2);
+  request.onsuccess = function(event) {
+    let db = event.target.result;
+    let tx = db.transaction('agentClientChats', 'readonly');
+    let store = tx.objectStore('agentClientChats');
+    let get = store.get(conversationId);
+    get.onsuccess = function() {
+      const chat = get.result;
+      const messages = chat ? chat.messages : [];
+      
+      messagesContainer.innerHTML = messages.map(m => `
+        <div class="chat-message ${m.sender === 'agent' ? 'sent' : 'received'}">
+          <div class="chat-bubble">${escapeHtml(m.message)}</div>
+          <div class="chat-meta">${new Date(m.timestamp).toLocaleTimeString()} - ${m.sender === 'agent' ? 'You' : escapeHtml(m.sender_name)}</div>
+        </div>
+      `).join('') || '<div class="empty-state">No messages yet. Start the conversation!</div>';
+      
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    };
+  };
+}
+
+function sendAgentClientMessage() {
+  const input = document.getElementById('agentClientChatInput');
+  const message = input.value.trim();
+  if (!message || !currentChatCustomerId || !AppState.user) return;
+  
+  const conversationId = `customer_${currentChatCustomerId}`;
+  const newMessage = {
+    sender: 'agent',
+    sender_id: AppState.user.id,
+    sender_name: AppState.user.name,
+    message: message,
+    timestamp: new Date().toISOString()
+  };
+  
+  let request = indexedDB.open('WAMPOfflineDB', 2);
+  request.onsuccess = function(event) {
+    let db = event.target.result;
+    let tx = db.transaction('agentClientChats', 'readwrite');
+    let store = tx.objectStore('agentClientChats');
+    let get = store.get(conversationId);
+    get.onsuccess = function() {
+      let chat = get.result || { conversationId: conversationId, customer_id: currentChatCustomerId, messages: [] };
+      chat.messages.push(newMessage);
+      chat.last_message = message;
+      chat.last_update = new Date().toISOString();
+      store.put(chat);
+      input.value = '';
+      openAgentClientChat(currentChatCustomerId, `Customer #${currentChatCustomerId}`);
+      showToast('Message sent to customer');
+    };
+  };
+}
+
+// ==================== ADMIN MONITOR CHATS ====================
+function loadAdminMonitorChats() {
+  let request = indexedDB.open('WAMPOfflineDB', 2);
+  request.onsuccess = function(event) {
+    let db = event.target.result;
+    let tx = db.transaction('agentClientChats', 'readonly');
+    let store = tx.objectStore('agentClientChats');
+    let getAll = store.getAll();
+    getAll.onsuccess = function() {
+      const chats = getAll.result || [];
+      const container = document.getElementById('adminMonitorChats');
+      if (!container) return;
+      
+      if (!chats.length) {
+        container.innerHTML = '<div class="empty-state">No agent-client conversations yet</div>';
+        return;
+      }
+      
+      container.innerHTML = chats.map(chat => `
+        <div class="card" style="margin: 10px 0;">
+          <div style="font-weight: bold;">👤 Customer #${chat.customer_id}</div>
+          <div style="font-size: 12px; color: gray;">Last message: ${escapeHtml(chat.last_message || 'None')}</div>
+          <div style="font-size: 11px;">${new Date(chat.last_update).toLocaleString()}</div>
+          <div style="margin-top: 10px; max-height: 150px; overflow-y: auto; background: var(--gray); padding: 10px; border-radius: 8px;">
+            ${(chat.messages || []).slice(-5).map(m => `
+              <div style="margin-bottom: 5px; font-size: 12px;">
+                <strong>${m.sender === 'agent' ? 'Agent' : 'Customer'}:</strong> ${escapeHtml(m.message)}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    };
+  };
+}
+
 // ==================== ADMIN FUNCTIONS ====================
 async function renderAdminDashboard() {
   try {
@@ -1823,7 +2281,7 @@ async function renderAdminDashboard() {
     document.getElementById('adminTotalUsers').textContent = stats.total_users || 0;
     document.getElementById('adminTotalAgents').textContent = stats.total_agents || 0;
   } catch(e) {}
-  
+
   const productList = document.getElementById('adminProductList');
   if (productList) {
     productList.innerHTML = AppState.products.map(p => `
@@ -1833,8 +2291,9 @@ async function renderAdminDashboard() {
       </div>
     `).join('') || '<div class="empty-state">No products</div>';
   }
-  
+
   loadAgentConversations();
+  loadAdminMonitorChats();
 }
 
 function clearProductForm() {
@@ -1846,6 +2305,7 @@ function clearProductForm() {
   document.getElementById('prodImageUrl').value = '';
   document.getElementById('prodImageFile').value = '';
   document.getElementById('prodDesc').value = '';
+  document.getElementById('imagePreview').style.display = 'none';
 }
 
 function editProduct(id) {
@@ -1872,12 +2332,12 @@ async function saveProduct() {
     image_url: document.getElementById('prodImageUrl').value,
     description: document.getElementById('prodDesc').value
   };
-  
+
   if (!data.name) {
     showToast('Product name required', true);
     return;
   }
-  
+
   try {
     let productId = id;
     if (!id) {
@@ -1886,7 +2346,7 @@ async function saveProduct() {
     } else {
       await apiCall(`/admin/products/${id}`, { method: 'PUT', body: JSON.stringify(data) });
     }
-    
+
     const fileInput = document.getElementById('prodImageFile');
     if (fileInput.files.length > 0) {
       const formData = new FormData();
@@ -1898,10 +2358,10 @@ async function saveProduct() {
         body: formData
       });
     }
-    
+
     showToast('Product saved');
     clearProductForm();
-    
+
     const productsRes = await fetch(`${API_BASE}/products`);
     if (productsRes.ok) {
       AppState.products = await productsRes.json();
@@ -1933,7 +2393,7 @@ async function deleteProduct(id) {
 async function renderAdminOrders() {
   const ordersContainer = document.getElementById('adminOrderList');
   if (!ordersContainer) return;
-  
+
   ordersContainer.innerHTML = AppState.orders.map(o => `
     <div class="card">
       <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
@@ -2026,12 +2486,12 @@ async function loadAgentConversations() {
   try {
     const convos = await apiCall('/admin/conversations');
     const container = document.getElementById('agentConversationList');
-    
+
     if (!convos.length) {
       container.innerHTML = '<div class="empty-state">No conversations yet</div>';
       return;
     }
-    
+
     container.innerHTML = convos.map(c => `
       <div class="list-item" style="cursor: pointer; margin: 5px 0; padding: 10px;" onclick="loadChatWithAgent(${c.agent_id})">
         <div>
@@ -2048,13 +2508,13 @@ async function loadAgentConversations() {
 
 async function loadChatWithAgent(agentId) {
   currentChatAgentId = agentId;
-  
+
   try {
     const messages = await apiCall(`/admin/conversations/${agentId}`);
     const agent = await fetch(`${API_BASE}/user/profile`, { headers: { 'Authorization': `Bearer ${getToken()}` } }).then(r => r.json());
-    
+
     document.getElementById('adminChatHeader').innerHTML = `💬 Chat with ${escapeHtml(agent.name || 'Agent')}`;
-    
+
     const container = document.getElementById('adminChatMessages');
     container.innerHTML = messages.map(m => `
       <div style="text-align: ${m.sender_id === AppState.user?.id ? 'right' : 'left'}; margin: 5px 0;">
@@ -2065,7 +2525,7 @@ async function loadChatWithAgent(agentId) {
         </div>
       </div>
     `).join('') || '<div class="empty-state">No messages yet</div>';
-    
+
     document.getElementById('adminChatArea').style.display = 'block';
     document.getElementById('adminNoChatSelected').style.display = 'none';
     container.scrollTop = container.scrollHeight;
@@ -2079,11 +2539,11 @@ async function sendAdminMessage() {
     showToast('Select an agent first', true);
     return;
   }
-  
+
   const input = document.getElementById('adminChatInput');
   const content = input.value.trim();
   if (!content) return;
-  
+
   try {
     await apiCall('/admin/send-message', {
       method: 'POST',
@@ -2103,7 +2563,7 @@ async function renderAgentPanel() {
     const data = await apiCall('/agent/panel');
     document.getElementById('agentAssignedCount').textContent = data.stats?.assigned || 0;
     document.getElementById('agentCompletedCount').textContent = data.stats?.completed || 0;
-    
+
     const assignedContainer = document.getElementById('agentAssignedOrders');
     if (assignedContainer) {
       assignedContainer.innerHTML = (data.assigned || []).map(o => `
@@ -2113,7 +2573,7 @@ async function renderAgentPanel() {
         </div>
       `).join('') || '<div class="empty-state">No assigned orders</div>';
     }
-    
+
     const availableContainer = document.getElementById('agentAvailableOrders');
     if (availableContainer) {
       availableContainer.innerHTML = (data.available || []).map(o => `
@@ -2123,15 +2583,16 @@ async function renderAgentPanel() {
         </div>
       `).join('') || '<div class="empty-state">No available orders</div>';
     }
-    
+
     const orderSelect = document.getElementById('agentOrderSelect');
     if (orderSelect) {
       orderSelect.innerHTML = '<option value="">Select an order</option>' + 
         (data.assigned || []).map(o => `<option value="${o.id}">Order #${o.id} - UGX ${o.total.toLocaleString()}</option>`).join('');
     }
-    
+
     loadGroupMessages();
-    
+    loadAgentClients();
+
     const messages = await apiCall('/communications');
     const chatContainer = document.getElementById('agentChatMessages');
     if (chatContainer) {
@@ -2162,12 +2623,12 @@ async function sendOrderUpdate() {
   const orderId = document.getElementById('agentOrderSelect').value;
   const newStatus = document.getElementById('agentStatusSelect').value;
   const message = document.getElementById('agentCustomerMessage').value;
-  
+
   if (!orderId) {
     showToast('Select an order first', true);
     return;
   }
-  
+
   try {
     await apiCall(`/agent/orders/${orderId}/update`, {
       method: 'POST',
@@ -2185,7 +2646,7 @@ async function sendAgentMessage() {
   const input = document.getElementById('agentChatInput');
   const content = input.value.trim();
   if (!content) return;
-  
+
   try {
     await apiCall('/communications', {
       method: 'POST',
@@ -2205,12 +2666,12 @@ async function loadGroupMessages() {
   try {
     const messages = await apiCall('/agent/group-messages');
     const container = document.getElementById('agentGroupChatMessages');
-    
+
     if (!messages.length) {
       container.innerHTML = '<div class="empty-state">No messages yet. Be the first to say something!</div>';
       return;
     }
-    
+
     container.innerHTML = messages.map(m => `
       <div style="margin-bottom: 10px; text-align: ${m.sender_id === AppState.user?.id ? 'right' : 'left'};">
         <div style="display: inline-block; max-width: 80%; padding: 10px 14px; border-radius: 12px; background: ${m.sender_id === AppState.user?.id ? '#1a5276' : (m.sender_role === 'admin' ? '#f39c12' : '#e2e3f3')}; color: ${m.sender_id === AppState.user?.id ? 'white' : '#2c3e50'};">
@@ -2220,7 +2681,7 @@ async function loadGroupMessages() {
         </div>
       </div>
     `).join('');
-    
+
     container.scrollTop = container.scrollHeight;
   } catch(e) {
     console.error('Load group messages error:', e);
@@ -2231,7 +2692,7 @@ async function sendGroupMessage() {
   const input = document.getElementById('agentGroupChatInput');
   const message = input.value.trim();
   if (!message) return;
-  
+
   try {
     await apiCall('/agent/group-messages', {
       method: 'POST',
@@ -2249,6 +2710,7 @@ function startGroupChatPolling() {
   groupChatPolling = setInterval(() => {
     if (document.getElementById('agentPanel') && !document.getElementById('agentPanel').classList.contains('hidden')) {
       loadGroupMessages();
+      loadAgentClients();
     }
   }, 5000);
 }
@@ -2262,12 +2724,12 @@ async function sendChat() {
   const input = document.getElementById('chatInput');
   const message = input.value.trim();
   if (!message) return;
-  
+
   const messagesDiv = document.getElementById('chatMessages');
   messagesDiv.innerHTML += `<div class="chat-msg user">${escapeHtml(message)}</div>`;
   input.value = '';
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
-  
+
   try {
     const res = await fetch(`${API_BASE}/chat/customer`, {
       method: 'POST',
@@ -2283,19 +2745,17 @@ async function sendChat() {
   }
 }
 
-// ==================== PWA SERVICE WORKER REGISTRATION ====================
-  <!-- Register Service Worker -->
+// ==================== PWA SERVICE WORKER ====================
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/raven-terazzo/sw.js')
       .then(reg => console.log('Service Worker registered:', reg))
       .catch(err => console.log('Service Worker error:', err));
   });
-} 
+}
 
 // ==================== INITIALIZATION ====================
 async function initApp() {
-  // Load products in background while splash is showing
   try {
     const productsRes = await fetch(`${API_BASE}/products`);
     if (productsRes.ok) {
@@ -2305,12 +2765,9 @@ async function initApp() {
     console.error('Failed to load products:', e);
     AppState.products = [];
   }
-  
-  // Load WhatsApp contacts
-  loadWhatsAppContacts();
-  
+
   setupNavigation();
-  
+
   const token = getToken();
   if (token) {
     try {
@@ -2323,6 +2780,7 @@ async function initApp() {
         if (userData.valid && userData.user) {
           AppState.user = userData.user;
           setupNavigation();
+          loadReceiptsFromIndexedDB();
           if (AppState.user.role === 'admin') navigateTo('adminDashboard');
           else if (AppState.user.role === 'agent') { navigateTo('agentPanel'); startGroupChatPolling(); }
           else navigateTo('userShop');
@@ -2334,8 +2792,7 @@ async function initApp() {
       clearTokens();
     }
   }
-  
-  // Hide splash screen and show app
+
   const splash = document.getElementById('splashPage');
   setTimeout(() => {
     splash.style.opacity = '0';
@@ -2346,8 +2803,7 @@ async function initApp() {
       if (!AppState.user) navigateTo('userShop');
     }, 600);
   }, 1500);
-  
-  // Auto-refresh every 15 seconds
+
   setInterval(async () => {
     if (getToken()) {
       try {
@@ -2367,6 +2823,7 @@ async function initApp() {
         }
         if (document.getElementById('adminDashboard') && !document.getElementById('adminDashboard').classList.contains('hidden')) {
           loadAgentConversations();
+          loadAdminMonitorChats();
         }
       } catch(e) {}
     } else {
@@ -2391,7 +2848,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
   installBtn.style.display = 'block';
-  
+
   installBtn.addEventListener('click', () => {
     installBtn.style.display = 'none';
     deferredPrompt.prompt();
@@ -2404,7 +2861,6 @@ window.addEventListener('beforeinstallprompt', (e) => {
   });
 });
 
-  
 // Expose globals
 window.navigateTo = navigateTo;
 window.addToCart = addToCart;
@@ -2443,8 +2899,14 @@ window.sendBroadcast = sendBroadcast;
 window.loadChatWithAgent = loadChatWithAgent;
 window.sendAdminMessage = sendAdminMessage;
 window.toggleWhatsAppMenu = toggleWhatsAppMenu;
+window.showReceiptsHistory = showReceiptsHistory;
+window.printReceiptFromOrder = printReceiptFromOrder;
+window.printReceiptFromHistory = printReceiptFromHistory;
+window.previewImage = previewImage;
+window.openAgentClientChat = openAgentClientChat;
+window.sendAgentClientMessage = sendAgentClientMessage;
+window.sendCustomerMessage = sendCustomerMessage;
 
-// Start app
 initApp();
 </script>
 </body>
