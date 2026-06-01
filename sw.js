@@ -1,8 +1,9 @@
+// Service Worker for WAMP Enterprises PWA
 const CACHE_NAME = 'wamp-v1';
+
+// Only cache what actually exists
 const urlsToCache = [
-  '/raven-terazzo/',
-  '/raven-terazzo/templates/index.html',
-  '/raven-terazzo/manifest.json'
+  '/raven-terazzo/templates/index.html'
 ];
 
 self.addEventListener('install', event => {
@@ -11,6 +12,8 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME).then(cache => {
       console.log('Caching files...');
       return cache.addAll(urlsToCache);
+    }).catch(err => {
+      console.log('Cache error:', err);
     })
   );
   self.skipWaiting();
@@ -34,29 +37,21 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  if (event.request.url.includes('/api/') || 
-      event.request.url.includes('unsplash.com') ||
-      event.request.url.includes('cloudinary.com')) {
+  // Don't cache API calls
+  if (event.request.url.includes('/api/')) {
     return;
   }
   
   event.respondWith(
     caches.match(event.request).then(response => {
-      if (response) return response;
-      return fetch(event.request).then(response => {
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
-        }
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, responseToCache);
-        });
+      if (response) {
         return response;
-      });
-    }).catch(() => {
-      return new Response('You are offline. Please check your internet connection.', {
-        status: 503,
-        statusText: 'Service Unavailable'
+      }
+      return fetch(event.request).catch(() => {
+        return new Response('You are offline', {
+          status: 503,
+          statusText: 'Service Unavailable'
+        });
       });
     })
   );
