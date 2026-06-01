@@ -1085,6 +1085,17 @@ def server_error(e):
     logger.error(f"Server error: {e}")
     return jsonify({'error': 'Internal server error'}), 500
 
+# ==================== FORCE DATABASE INITIALIZATION ON RENDER STARTUP ====================
+# This runs when Gunicorn loads the app (Render uses this)
+with app.app_context():
+    try:
+        db.create_all()
+        logger.info("✅ All tables created/verified")
+        create_default_accounts()
+        logger.info("✅ Default accounts and products created")
+    except Exception as e:
+        logger.error(f"Database init failed: {e}")
+
 # ==================== MAIN ====================
 if __name__ == '__main__':
     with app.app_context():
