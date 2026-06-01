@@ -1074,12 +1074,10 @@ function logout() {
   AppState.user = null;
   AppState.cart = [];
   AppState.orders = [];
-  document.getElementById('appContainer').classList.add('hidden');
-  document.getElementById('splashPage').classList.remove('hidden');
-  setTimeout(() => { document.getElementById('splashPage').style.opacity = '1'; }, 100);
-  showToast('Logged out');
+  updateCartBadge();
   setupNavigation();
   navigateTo('userShop');
+  showToast('Logged out');
 }
 
 function requireAuth(callback) {
@@ -1094,7 +1092,6 @@ function requireAuth(callback) {
 async function refreshAllData() {
   if (!AppState.user) return;
   
-  try { AppState.products = await apiCall('/products'); renderShop(); } catch(e) { AppState.products = []; }
   try { AppState.cart = await apiCall('/cart'); updateCartBadge(); } catch(e) { AppState.cart = []; }
   try { AppState.orders = await apiCall('/orders'); } catch(e) { AppState.orders = []; }
   try { AppState.wishlist = await apiCall('/wishlist'); } catch(e) { AppState.wishlist = []; }
@@ -1107,7 +1104,6 @@ function navigateTo(pageId) {
   const page = document.getElementById(pageId);
   if (page) page.classList.remove('hidden');
   
-  if (pageId === 'userShop') renderShop();
   if (pageId === 'userCart') renderCart();
   if (pageId === 'userOrders') renderUserOrders();
   if (pageId === 'userDashboard') renderUserDashboard();
@@ -1147,10 +1143,11 @@ function renderProductCard(p) {
   `;
 }
 
-async function renderShop() {
-  if (!AppState.products.length && getToken()) await refreshAllData();
+function renderShop() {
   const grid = document.getElementById('shopGrid');
-  if (grid) grid.innerHTML = AppState.products.map(p => renderProductCard(p)).join('') || '<div class="empty-state">No products found. Admin can add products.</div>';
+  if (grid) {
+    grid.innerHTML = AppState.products.map(p => renderProductCard(p)).join('') || '<div class="empty-state">No products found. Admin can add products.</div>';
+  }
 }
 
 function searchProducts(query) {
@@ -1506,9 +1503,15 @@ async function saveProduct() {
       });
     }
     
+    // Refresh products
+    const productsRes = await fetch(`${API_BASE}/products`);
+    if (productsRes.ok) {
+      AppState.products = await productsRes.json();
+      renderShop();
+    }
+    
     showToast('Product saved');
     clearProductForm();
-    await refreshAllData();
     renderAdminDashboard();
   } catch(e) {
     showToast('Save failed: ' + e.message, true);
@@ -1519,7 +1522,11 @@ async function deleteProduct(id) {
   if (confirm('Delete this product?')) {
     try {
       await apiCall(`/admin/products/${id}`, { method: 'DELETE' });
-      await refreshAllData();
+      const productsRes = await fetch(`${API_BASE}/products`);
+      if (productsRes.ok) {
+        AppState.products = await productsRes.json();
+        renderShop();
+      }
       renderAdminDashboard();
       showToast('Product deleted');
     } catch(e) {
@@ -1564,7 +1571,8 @@ async function assignRider(orderId) {
       body: JSON.stringify({ rider_name: riderName, rider_phone: riderPhone })
     });
     showToast('Rider assigned');
-    await refreshAllData();
+    const ordersRes = await apiCall('/orders');
+    AppState.orders = ordersRes;
     renderAdminOrders();
   } catch(e) {
     showToast('Assignment failed', true);
@@ -1619,7 +1627,8 @@ async function claimOrder(orderId) {
   try {
     await apiCall(`/agent/orders/${orderId}/claim`, { method: 'POST' });
     showToast('Order claimed!');
-    await refreshAllData();
+    const ordersRes = await apiCall('/orders');
+    AppState.orders = ordersRes;
     renderAgentPanel();
   } catch(e) {
     showToast('Claim failed: ' + e.message, true);
@@ -1674,48 +1683,86 @@ async function sendChat() {
 
 // ==================== INITIALIZATION ====================
 async function initApp() {
-  // Load products immediately (no login required)
+  // Load products in background while splash is showing
   try {
     const productsRes = await fetch(`${API_BASE}/products`);
     if (productsRes.ok) {
       AppState.products = await productsRes.json();
-      renderShop();
     }
   } catch(e) {
     console.error('Failed to load products:', e);
+    AppState.products = [];
   }
   
+  // Setup navigation (no user yet)
   setupNavigation();
-  navigateTo('userShop');
   
-  // Check for existing token
+  // Check for existing token and restore session
   const token = getToken();
   if (token) {
     try {
       await refreshAllData();
+      const userRes = await fetch(`${API_BASE}/verify-token`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (userRes.ok) {
+        const userData = await userRes.json();
+        if (userData.valid && userData.user) {
+          AppState.user = userData.user;
+          setupNavigation();
+        }
+      } else {
+        clearTokens();
+      }
     } catch(e) {
       clearTokens();
     }
   }
   
-  // Hide splash screen
+  // Hide splash screen and show app
   const splash = document.getElementById('splashPage');
   setTimeout(() => {
     splash.style.opacity = '0';
     setTimeout(() => {
       splash.classList.add('hidden');
       document.getElementById('appContainer').classList.remove('hidden');
+      renderShop();
+      navigateTo('userShop');
     }, 600);
   }, 1500);
   
-  // Auto-refresh every 10 seconds
+  // Auto-refresh every 15 seconds
   setInterval(async () => {
     if (getToken()) {
-      await refreshAllData();
-      if (document.getElementById('adminOrders') && !document.getElementById('adminOrders').classList.contains('hidden')) renderAdminOrders();
-      if (document.getElementById('agentPanel') && !document.getElementById('agentPanel').classList.contains('hidden')) renderAgentPanel();
+      try {
+        const productsRes = await fetch(`${API_BASE}/products`);
+        if (productsRes.ok) {
+          AppState.products = await productsRes.json();
+          if (document.getElementById('userShop') && !document.getElementById('userShop').classList.contains('hidden')) {
+            renderShop();
+          }
+        }
+        await refreshAllData();
+        if (document.getElementById('adminOrders') && !document.getElementById('adminOrders').classList.contains('hidden')) {
+          renderAdminOrders();
+        }
+        if (document.getElementById('agentPanel') && !document.getElementById('agentPanel').classList.contains('hidden')) {
+          renderAgentPanel();
+        }
+      } catch(e) {}
+    } else {
+      // Just refresh products for browsing
+      try {
+        const productsRes = await fetch(`${API_BASE}/products`);
+        if (productsRes.ok) {
+          AppState.products = await productsRes.json();
+          if (document.getElementById('userShop') && !document.getElementById('userShop').classList.contains('hidden')) {
+            renderShop();
+          }
+        }
+      } catch(e) {}
     }
-  }, 10000);
+  }, 15000);
 }
 
 // Expose globals
