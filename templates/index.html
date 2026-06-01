@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,7 +7,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=yes">
 <title>WAMP Enterprises - Terrazzo, Plumbing & Painting</title>
 <style>
-/* ============ ORIGINAL CSS (COMPLETELY UNCHANGED) ============ */
+/* ============ ORIGINAL CSS (KEPT) + SLIDER ADDITIONS ============ */
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 :root{--blue:#1a5276;--blue-dark:#154360;--green:#27ae60;--green-light:#2ecc71;--white:#ffffff;--gray:#f5f6fa;--gray-dark:#7f8c8d;--red:#e74c3c;--orange:#f39c12;--shadow:0 4px 20px rgba(0,0,0,.08)}
 body{background:var(--gray);color:#2c3e50;overflow-x:hidden;-webkit-tap-highlight-color:transparent;font-size:14px;line-height:1.5}
@@ -15,8 +17,7 @@ body{background:var(--gray);color:#2c3e50;overflow-x:hidden;-webkit-tap-highligh
 .splash-sub{color:var(--green-light);font-size:clamp(11px,3vw,13px);font-weight:600;text-transform:uppercase;letter-spacing:3px;margin-top:8px;text-align:center;padding:0 20px}
 .splash-loader{width:50px;height:50px;border:4px solid rgba(255,255,255,.2);border-top-color:var(--green-light);border-radius:50%;animation:spin 1s linear infinite;margin-top:30px}
 @keyframes spin{to{transform:rotate(360deg)}}
-/* Login page - kept but hidden by default, used as fallback */
-#loginPage{min-height:100vh;background:linear-gradient(135deg,var(--blue)0%,var(--blue-dark)100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;position:fixed;top:0;left:0;right:0;bottom:0;z-index:10000;overflow-y:auto}
+#loginPage{min-height:100vh;background:linear-gradient(135deg,var(--blue)0%,var(--blue-dark)100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
 .login-box{background:var(--white);width:100%;max-width:400px;border-radius:20px;padding:30px 20px;box-shadow:var(--shadow)}
 .logo-text{text-align:center;font-size:clamp(24px,6vw,32px);font-weight:800;color:var(--blue);margin-bottom:5px;letter-spacing:2px}
 .logo-sub{text-align:center;color:var(--green);font-size:12px;font-weight:600;margin-bottom:25px;text-transform:uppercase;letter-spacing:1px}
@@ -120,30 +121,77 @@ tr:last-child td{border-bottom:none}
 .filter-row{display:flex;gap:8px;overflow-x:auto;padding:0 15px 15px;-webkit-overflow-scrolling:touch}
 .filter-btn{padding:8px 16px;border:2px solid #ddd;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;background:var(--white);color:var(--gray-dark)}
 .filter-btn.active{background:var(--blue);color:var(--white);border-color:var(--blue)}
-.hero-slider{position:relative;width:100%;height:200px;overflow:hidden;margin-bottom:15px}
-@media(min-width:768px){.hero-slider{height:300px}}
-.slider-container{position:relative;width:100%;height:100%}
-.slider-slide{position:absolute;top:0;left:0;width:100%;height:100%;background-size:cover;background-position:center;opacity:0;transition:opacity 0.5s ease-in-out;display:flex;align-items:center;justify-content:center}
-.slider-slide.active{opacity:1}
-.slide-caption{background:rgba(0,0,0,0.6);color:white;padding:12px 20px;border-radius:30px;font-size:clamp(18px,5vw,28px);font-weight:800;text-transform:uppercase;letter-spacing:2px}
-.slider-dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:10px;z-index:5}
-.slider-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.5);cursor:pointer}
-.slider-dot.active{background:white;width:20px;border-radius:10px}
-.star-rating{display:flex;gap:4px;margin:8px 0;cursor:pointer}
-.star{font-size:22px;color:#ddd;transition:color .2s}
-.star.active{color:var(--orange)}
-.review-item{border-bottom:1px solid #eee;padding:12px 0}
-/* Quick auth modal styles */
-.auth-modal-small .modal-content{max-width:380px;text-align:center}
-.auth-buttons{display:flex;gap:15px;margin:20px 0}
-.auth-buttons .btn{flex:1;margin:0}
-.auth-note{font-size:12px;color:var(--gray-dark);margin-top:15px}
+
+/* ============ NEW SLIDER STYLES ============ */
+.hero-slider {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+@media(min-width: 768px) {
+    .hero-slider { height: 300px; }
+}
+.slider-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+.slider-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.slider-slide.active {
+    opacity: 1;
+}
+.slide-caption {
+    background: rgba(0,0,0,0.6);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 30px;
+    font-size: clamp(18px,5vw,28px);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+.slider-dots {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    z-index: 5;
+}
+.slider-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.5);
+    cursor: pointer;
+}
+.slider-dot.active {
+    background: white;
+    width: 20px;
+    border-radius: 10px;
+}
 </style>
 </head>
 <body>
 <div id="toast" class="toast"></div>
 <div id="splashPage"><div class="splash-logo">🏗️ WAMP</div><div class="splash-sub">Enterprises Ltd</div><div class="splash-loader"></div></div>
-<!-- Full login page (hidden by default, used as fallback) -->
 <div id="loginPage" class="hidden"><div class="login-box"><div class="logo-text">🏗️ WAMP</div><div class="logo-sub">Terrazzo • Plumbing • Painting</div>
 <div id="loginForm"><div class="form-group"><label>📧 Email</label><input type="email" id="loginEmail" placeholder="Enter email"></div><div class="form-group"><label>🔒 Password</label><input type="password" id="loginPassword" placeholder="Enter password"></div><div class="remember-row"><input type="checkbox" id="rememberMe"><label for="rememberMe" style="margin:0;text-transform:none;font-size:13px;font-weight:400;color:var(--gray-dark);cursor:pointer;">Remember Me</label></div><button class="btn btn-primary" onclick="handleLogin()">🔐 Login</button><div class="forgot-link" onclick="showForgotPassword()">🔑 Forgot Password?</div><div class="toggle-text">No account? <span onclick="toggleAuth()">📝 Register</span></div></div>
 <div id="registerForm" class="hidden"><div class="form-group"><label>👤 Full Name</label><input type="text" id="regName" placeholder="Your name"></div><div class="form-group"><label>📱 Phone</label><input type="tel" id="regPhone" placeholder="07XX XXX XXX"></div><div class="form-group"><label>📧 Email</label><input type="email" id="regEmail" placeholder="Enter email"></div><div class="form-group"><label>🔒 Password</label><input type="password" id="regPassword" placeholder="Create password"></div><div class="form-group"><label>🔒 Confirm Password</label><input type="password" id="regConfirmPassword" placeholder="Confirm password"></div><button class="btn btn-green" onclick="handleRegister()">✅ Create Account</button><div class="toggle-text">Have an account? <span onclick="toggleAuth()">🔐 Login</span></div></div>
@@ -162,11 +210,18 @@ tr:last-child td{border-bottom:none}
 <div id="adminMessages" class="page hidden"><div class="section-title">💬 Manager Messages</div><div id="managerMsgList"></div></div>
 <div id="agentPanel" class="page hidden"><div class="section-title">📦 My Assigned Orders</div><div id="agentAssignedOrders"></div><div class="section-title">🆓 Available Orders</div><div id="agentAvailableOrders"></div><div class="section-title">💬 My Conversations</div><div id="agentChatList"></div><button class="btn btn-primary" style="margin:15px;" onclick="openAgentToManagerChat()">💬 Message Manager</button></div>
 <div id="userShop" class="page hidden">
+    <!-- SLIDER INSERTED HERE -->
     <div class="hero-slider" id="heroSlider">
         <div class="slider-container">
-            <div class="slider-slide" style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800');"><div class="slide-caption">🏛️ Premium Terrazzo</div></div>
-            <div class="slider-slide" style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1581092160562-40aa08e7882a?w=800');"><div class="slide-caption">🔧 Professional Plumbing</div></div>
-            <div class="slider-slide" style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=800');"><div class="slide-caption">🎨 Expert Painting</div></div>
+            <div class="slider-slide" style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800');">
+                <div class="slide-caption">🏛️ Premium Terrazzo</div>
+            </div>
+            <div class="slider-slide" style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1581092160562-40aa08e7882a?w=800');">
+                <div class="slide-caption">🔧 Professional Plumbing</div>
+            </div>
+            <div class="slider-slide" style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=800');">
+                <div class="slide-caption">🎨 Expert Painting</div>
+            </div>
         </div>
         <div class="slider-dots" id="sliderDots"></div>
     </div>
@@ -184,17 +239,10 @@ tr:last-child td{border-bottom:none}
 <div class="whatsapp-widget hidden" id="whatsappWidget"><a href="https://wa.me/256772123456?text=Hello%20WAMP%20Enterprises%2C%20I%20need%20assistance" class="whatsapp-btn" target="_blank">💬</a></div>
 <div class="bottom-nav" id="bottomNav"></div>
 </div>
-<!-- Modal overlay for auth popup -->
-<div id="modalOverlay" class="modal-overlay hidden" onclick="closeModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <div class="modal-header" id="modalTitle">Title</div>
-        <div id="modalBody"></div>
-        <button class="btn btn-outline" style="margin-top:15px;" onclick="hideModal()">❌ Close</button>
-    </div>
-</div>
+<div id="modalOverlay" class="modal-overlay hidden" onclick="closeModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header" id="modalTitle">Title</div><div id="modalBody"></div><button class="btn btn-outline" style="margin-top:15px;" onclick="hideModal()">❌ Close</button></div></div>
 
 <script>
-// ============ APP STATE ============
+// ======================== APP STATE ========================
 const AppState = {
     user: null,
     products: [],
@@ -203,10 +251,7 @@ const AppState = {
     notifications: [],
     chatOpen: false,
     pollInterval: null,
-    currentPage: '',
-    wishlist: [],
-    reviews: [],
-    pendingAction: null
+    currentPage: ''
 };
 
 // Helper functions
@@ -217,15 +262,15 @@ function showToast(msg, isError) {
     toast.classList.add('show');
     setTimeout(function(){ toast.classList.remove('show'); }, 3000);
 }
-function showModal(title, html, isAuthModal){
+
+function showModal(title, html){
     document.getElementById('modalTitle').textContent = title;
     document.getElementById('modalBody').innerHTML = html;
     document.getElementById('modalOverlay').classList.remove('hidden');
-    if(isAuthModal) document.getElementById('modalOverlay').classList.add('auth-modal-small');
-    else document.getElementById('modalOverlay').classList.remove('auth-modal-small');
 }
 function hideModal(){ document.getElementById('modalOverlay').classList.add('hidden'); }
 function closeModal(e){ if(e.target === document.getElementById('modalOverlay')) hideModal(); }
+
 function escapeHtml(text) { 
     if(!text) return '';
     return String(text).replace(/[&<>]/g, function(m) {
@@ -235,6 +280,7 @@ function escapeHtml(text) {
         return m;
     });
 }
+
 function detectNetwork(phone){ 
     let p = String(phone).replace(/\D/g,''); 
     if(/^(077|078|076|079|039)/.test(p)) return 'MTN'; 
@@ -256,6 +302,7 @@ async function apiCall(endpoint, options = {}) {
     const token = getAccessToken();
     const headers = { 'Content-Type': 'application/json', ...options.headers };
     if(token) headers['Authorization'] = `Bearer ${token}`;
+
     const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers, credentials: 'omit' });
     if(response.status === 401) {
         const refreshed = await refreshToken();
@@ -265,6 +312,7 @@ async function apiCall(endpoint, options = {}) {
     if(!response.ok) throw new Error(await response.text() || `HTTP ${response.status}`);
     return await response.json();
 }
+
 async function refreshToken() {
     const refresh = getRefreshToken();
     if(!refresh) return false;
@@ -278,126 +326,7 @@ async function refreshToken() {
     return false;
 }
 
-// Authentication - MODIFIED to work with modal and continue action
-async function handleLoginFromModal(continueCallback) {
-    const email = document.getElementById('modalLoginEmail').value;
-    const password = document.getElementById('modalLoginPassword').value;
-    if(!email || !password) { showToast('Enter email and password', true); return; }
-    try {
-        const res = await fetch(`${API_BASE_URL}/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
-        const data = await res.json();
-        if(res.ok && data.success) {
-            setAccessToken(data.access_token);
-            setRefreshToken(data.refresh_token);
-            AppState.user = data.user;
-            showToast('Welcome to WAMP Enterprises!');
-            await refreshData();
-            hideModal();
-            if(continueCallback) continueCallback();
-            enterApp();
-        } else showToast(data.error || 'Login failed', true);
-    } catch(e) { showToast('Network error', true); }
-}
-async function handleRegisterFromModal(continueCallback) {
-    const name = document.getElementById('modalRegName').value;
-    const phone = document.getElementById('modalRegPhone').value;
-    const email = document.getElementById('modalRegEmail').value;
-    const password = document.getElementById('modalRegPassword').value;
-    const confirm = document.getElementById('modalRegConfirmPassword').value;
-    if(password !== confirm) { showToast('Passwords mismatch', true); return; }
-    try {
-        const res = await fetch(`${API_BASE_URL}/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, phone, password }) });
-        const data = await res.json();
-        if(res.ok && data.success) { 
-            showToast('Registered! Please login');
-            showModalLoginForm(continueCallback);
-        }
-        else showToast(data.error || 'Registration failed', true);
-    } catch(e) { showToast('Network error', true); }
-}
-
-// Show auth modal with options
-function showAuthModal(callback) {
-    const html = `
-        <div style="text-align:center;">
-            <p style="margin-bottom:20px;color:var(--gray-dark);">Please login or register to continue</p>
-            <div class="auth-buttons">
-                <button class="btn btn-primary" onclick="showModalLoginForm('${callback.name}')">🔐 Login</button>
-                <button class="btn btn-green" onclick="showModalRegisterForm('${callback.name}')">📝 Register</button>
-            </div>
-            <div class="auth-note">✨ Demo: any email/password works</div>
-        </div>
-    `;
-    showModal('🔐 Account Required', html, true);
-    window.pendingActionCallback = callback;
-}
-function showModalLoginForm(callbackName) {
-    const html = `
-        <div id="modalLoginForm">
-            <div class="form-group"><label>📧 Email</label><input type="email" id="modalLoginEmail" placeholder="demo@wamp.com"></div>
-            <div class="form-group"><label>🔒 Password</label><input type="password" id="modalLoginPassword" placeholder="anything"></div>
-            <button class="btn btn-primary" onclick="handleModalLogin()">🔐 Login</button>
-            <div class="toggle-text" style="margin-top:15px;">No account? <span onclick="showModalRegisterForm()">📝 Register</span></div>
-        </div>
-    `;
-    showModal('🔐 Login', html, true);
-}
-function showModalRegisterForm() {
-    const html = `
-        <div id="modalRegisterForm">
-            <div class="form-group"><label>👤 Full Name</label><input type="text" id="modalRegName" placeholder="Your name"></div>
-            <div class="form-group"><label>📱 Phone</label><input type="tel" id="modalRegPhone" placeholder="07XX XXX XXX"></div>
-            <div class="form-group"><label>📧 Email</label><input type="email" id="modalRegEmail" placeholder="Email"></div>
-            <div class="form-group"><label>🔒 Password</label><input type="password" id="modalRegPassword" placeholder="Password"></div>
-            <div class="form-group"><label>🔒 Confirm Password</label><input type="password" id="modalRegConfirmPassword" placeholder="Confirm"></div>
-            <button class="btn btn-green" onclick="handleModalRegister()">✅ Create Account</button>
-            <div class="toggle-text" style="margin-top:15px;">Have an account? <span onclick="showModalLoginForm()">🔐 Login</span></div>
-        </div>
-    `;
-    showModal('📝 Register', html, true);
-}
-async function handleModalLogin() {
-    const email = document.getElementById('modalLoginEmail').value;
-    const password = document.getElementById('modalLoginPassword').value;
-    if(!email || !password) { showToast('Enter email and password', true); return; }
-    try {
-        const res = await fetch(`${API_BASE_URL}/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
-        const data = await res.json();
-        if(res.ok && data.success) {
-            setAccessToken(data.access_token);
-            setRefreshToken(data.refresh_token);
-            AppState.user = data.user;
-            showToast('Welcome!');
-            await refreshData();
-            hideModal();
-            if(window.pendingActionCallback) {
-                const cb = window.pendingActionCallback;
-                window.pendingActionCallback = null;
-                cb();
-            }
-            enterApp();
-        } else showToast(data.error || 'Login failed', true);
-    } catch(e) { showToast('Network error', true); }
-}
-async function handleModalRegister() {
-    const name = document.getElementById('modalRegName').value;
-    const phone = document.getElementById('modalRegPhone').value;
-    const email = document.getElementById('modalRegEmail').value;
-    const password = document.getElementById('modalRegPassword').value;
-    const confirm = document.getElementById('modalRegConfirmPassword').value;
-    if(password !== confirm) { showToast('Passwords mismatch', true); return; }
-    try {
-        const res = await fetch(`${API_BASE_URL}/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, phone, password }) });
-        const data = await res.json();
-        if(res.ok && data.success) { 
-            showToast('Registered! Please login');
-            showModalLoginForm();
-        }
-        else showToast(data.error || 'Registration failed', true);
-    } catch(e) { showToast('Network error', true); }
-}
-
-// Original auth functions (kept for compatibility)
+// Authentication
 async function handleLogin() {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
@@ -415,6 +344,7 @@ async function handleLogin() {
         } else showToast(data.error || 'Login failed', true);
     } catch(e) { showToast('Network error', true); }
 }
+
 async function handleRegister() {
     const name = document.getElementById('regName').value;
     const phone = document.getElementById('regPhone').value;
@@ -429,80 +359,22 @@ async function handleRegister() {
         else showToast(data.error || 'Registration failed', true);
     } catch(e) { showToast('Network error', true); }
 }
-function logout() { clearTokens(); AppState.user = null; AppState.cart = []; AppState.wishlist = []; AppState.reviews = []; updateCartBadge(); document.getElementById('appContainer').classList.add('hidden'); document.getElementById('loginPage').classList.remove('hidden'); showToast('Logged out'); if(AppState.pollInterval) clearInterval(AppState.pollInterval); }
+
+function logout() { clearTokens(); AppState.user = null; document.getElementById('appContainer').classList.add('hidden'); document.getElementById('loginPage').classList.remove('hidden'); showToast('Logged out'); if(AppState.pollInterval) clearInterval(AppState.pollInterval); }
 function toggleAuth(){ let a=document.getElementById('loginForm'), b=document.getElementById('registerForm'), c=document.getElementById('forgotForm'); if(!a.classList.contains('hidden')){ a.classList.add('hidden'); b.classList.remove('hidden'); c.classList.add('hidden'); } else{ a.classList.remove('hidden'); b.classList.add('hidden'); c.classList.add('hidden'); } }
 function showForgotPassword(){ document.getElementById('loginForm').classList.add('hidden'); document.getElementById('registerForm').classList.add('hidden'); document.getElementById('forgotForm').classList.remove('hidden'); }
 function showLoginForm(){ document.getElementById('loginForm').classList.remove('hidden'); document.getElementById('registerForm').classList.add('hidden'); document.getElementById('forgotForm').classList.add('hidden'); }
 
 async function refreshData() {
     if(!AppState.user) return;
-    try { AppState.products = await apiCall('/products'); } catch(e){ AppState.products = sampleProductsFallback; }
+    try { AppState.products = await apiCall('/products'); } catch(e){ AppState.products=[]; }
     try { AppState.cart = await apiCall('/cart'); updateCartBadge(); } catch(e){ AppState.cart=[]; }
     try { AppState.orders = await apiCall('/orders'); } catch(e){ AppState.orders=[]; }
 }
-const sampleProductsFallback = [
-    { id:1, name:"Premium Floor Terrazzo", type:"Floor Terrazzo", price:250000, stock:12, image_url:"https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=400", description:"High-end terrazzo flooring" },
-    { id:2, name:"Copper Plumbing Pipe", type:"Plumbing Pipe", price:45000, stock:30, image_url:"https://images.unsplash.com/photo-1581092160562-40aa08e7882a?w=400", description:"Durable copper pipe" },
-    { id:3, name:"Interior Emulsion Paint", type:"Paint Emulsion", price:120000, stock:8, image_url:"https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=400", description:"Smooth finish" }
-];
 
-// ============ PROTECTED ACTIONS WITH AUTH MODAL ============
-function requireAuth(actionName, callback) {
-    if(AppState.user) {
-        callback();
-    } else {
-        showAuthModal(callback);
-    }
-}
-
-async function addToCart(pid){
-    requireAuth('add to cart', async () => {
-        try{ await apiCall('/cart', { method:'POST', body:JSON.stringify({ product_id:pid, quantity:1 }) }); await refreshData(); showToast('Added to cart'); renderCart(); } catch(e){ showToast('Failed', true); }
-    });
-}
-function toggleWishlist(productId) {
-    requireAuth('add to wishlist', () => {
-        let idx = AppState.wishlist.findIndex(w=>w.productId===productId);
-        if(idx>=0) {
-            AppState.wishlist.splice(idx,1);
-            showToast('Removed from wishlist');
-        } else {
-            let p = AppState.products.find(p=>p.id===productId);
-            AppState.wishlist.push({ productId, productName: p?.name });
-            showToast('Added to wishlist');
-        }
-        renderWishlist();
-        renderShop();
-    });
-}
-function submitRatingAndReview(productId) {
-    requireAuth('submit a review', () => {
-        let rating = document.querySelectorAll('#detailRatingStars .star.active').length;
-        let text = document.getElementById('reviewTextarea').value;
-        if(rating === 0) { showToast('Please select a rating', true); return; }
-        let existing = AppState.reviews.findIndex(r=>r.productId===productId && r.userId===AppState.user.id);
-        let reviewObj = { productId, userId: AppState.user.id, rating, text, productName: AppState.products.find(p=>p.id===productId)?.name };
-        if(existing>=0) AppState.reviews[existing] = reviewObj;
-        else AppState.reviews.push(reviewObj);
-        showToast('Review saved!');
-        renderUserReviews();
-        showProductDetail(productId);
-    });
-}
-function showCheckout() {
-    requireAuth('checkout', () => {
-        if(!AppState.cart.length){ showToast('Cart empty', true); return; }
-        let total = AppState.cart.reduce((s,c)=>{ let p=AppState.products.find(pr=>pr.id===c.product_id); return s+((p?.price||0)*(c.quantity||1)); },0);
-        document.getElementById('checkoutTotal').textContent='UGX '+total.toLocaleString();
-        navigateTo('checkoutPage');
-    });
-}
-
-// ============ REST OF ORIGINAL FUNCTIONS (UNCHANGED) ============
 function renderProductCard(product) {
     let stockClass = (product.stock || 0) < 5 ? 'low' : '';
     let imageUrl = product.image_url && product.image_url.trim() !== '' ? product.image_url : 'https://placehold.co/600x400/1a5276/white?text=WAMP';
-    let inWishlist = AppState.user && AppState.wishlist.some(w => w.productId === product.id);
     return '<div class="product-card" onclick="showProductDetail(' + (product.id || 0) + ')">' +
         '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(product.name) + '" loading="lazy">' +
         '<div class="product-info">' +
@@ -511,25 +383,23 @@ function renderProductCard(product) {
             '<div class="product-price">UGX ' + (product.price || 0).toLocaleString() + '</div>' +
             '<div class="product-stock ' + stockClass + '">' + (product.stock || 0) + ' in stock</div>' +
             '<button class="btn-sm btn-green no-disable" style="margin-top:8px;" onclick="event.stopPropagation();addToCart(' + (product.id || 0) + ')">🛒 Add to Cart</button>' +
-            '<button class="btn-sm btn-outline" style="margin-top:5px;" onclick="event.stopPropagation();toggleWishlist(' + (product.id || 0) + ')">' + (inWishlist ? '❤️ Wishlist' : '🤍 Wishlist') + '</button>' +
         '</div>' +
     '</div>';
 }
+
 async function renderShop(filter = 'all') {
-    if(!AppState.products.length && AppState.user) await refreshData();
-    let products = AppState.products.length ? AppState.products : sampleProductsFallback;
+    if(!AppState.products.length) await refreshData();
+    let products = AppState.products;
     if(filter !== 'all') products = products.filter(p => p.type && p.type.toLowerCase().includes(filter.toLowerCase()));
     document.getElementById('shopGrid').innerHTML = products.map(p => renderProductCard(p)).join('') || '<div class="empty-state">No products found</div>';
 }
+
 function searchProducts(q){ if(!q) renderShop(); else renderShop('all'); }
 function filterProducts(type, btn){ document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active')); if(btn) btn.classList.add('active'); renderShop(type); }
+
 async function showProductDetail(id){
-    let products = AppState.products.length ? AppState.products : sampleProductsFallback;
-    let p = products.find(pr=>pr.id===id);
+    let p = AppState.products.find(pr=>pr.id===id);
     if(!p) return;
-    let existingRating = (AppState.user && AppState.reviews.find(r=>r.productId===id && r.userId===AppState.user.id)) || null;
-    let ratingVal = existingRating ? existingRating.rating : 0;
-    let reviewText = existingRating ? existingRating.text : '';
     let imgUrl = p.image_url && p.image_url.trim() ? p.image_url : 'https://placehold.co/600x400/1a5276/white?text=WAMP';
     document.getElementById('detailContent').innerHTML = 
         '<img src="' + escapeHtml(imgUrl) + '" class="detail-hero" style="width:100%;height:250px;object-fit:cover;">' +
@@ -537,15 +407,15 @@ async function showProductDetail(id){
             '<div class="product-name" style="font-size:22px;">' + escapeHtml(p.name) + '</div>' +
             '<div class="product-price" style="font-size:28px;">UGX ' + (p.price || 0).toLocaleString() + '</div>' +
             '<p>' + escapeHtml(p.description || 'No description') + '</p>' +
-            '<div class="card-title">⭐ Rate this product</div>' +
-            '<div class="star-rating" id="detailRatingStars">' + [1,2,3,4,5].map(s => '<span class="star ' + (s<=ratingVal ? 'active' : '') + '" data-rating="' + s + '">★</span>').join('') + '</div>' +
-            '<textarea id="reviewTextarea" placeholder="Write a review..." rows="2" style="width:100%;margin:8px 0;padding:8px;">' + escapeHtml(reviewText) + '</textarea>' +
-            '<button class="btn btn-sm btn-primary" onclick="submitRatingAndReview(' + p.id + ')">Submit Review</button>' +
-            '<button class="btn btn-green" style="margin-top:10px;" onclick="addToCart(' + p.id + ')">🛒 Add to Cart</button>' +
+            '<button class="btn btn-green" onclick="addToCart(' + p.id + ')">🛒 Add to Cart</button>' +
             '<button class="btn btn-outline" style="margin-top:10px;" onclick="navigateTo(\'userShop\')">⬅️ Back</button>' +
         '</div>';
-    document.querySelectorAll('#detailRatingStars .star').forEach(star => star.onclick = (e) => { let rate=parseInt(star.dataset.rating); document.querySelectorAll('#detailRatingStars .star').forEach(s=>s.classList.toggle('active', parseInt(s.dataset.rating)<=rate)); });
     navigateTo('productDetail');
+}
+
+async function addToCart(pid){
+    if(!AppState.user){ showToast('Please login first', true); return; }
+    try{ await apiCall('/cart', { method:'POST', body:JSON.stringify({ product_id:pid, quantity:1 }) }); await refreshData(); showToast('Added to cart'); renderCart(); } catch(e){ showToast('Failed', true); }
 }
 async function removeFromCart(cid){ try{ await apiCall(`/cart/${cid}`, { method:'DELETE' }); await refreshData(); renderCart(); } catch(e){} }
 async function renderCart(){
@@ -560,8 +430,15 @@ async function renderCart(){
     document.getElementById('cartSummary').classList.remove('hidden');
 }
 function showCart(){ navigateTo('userCart'); renderCart(); }
+function showCheckout(){
+    if(!AppState.cart.length){ showToast('Cart empty', true); return; }
+    let total = AppState.cart.reduce((s,c)=>{ let p=AppState.products.find(pr=>pr.id===c.product_id); return s+((p?.price||0)*(c.quantity||1)); },0);
+    document.getElementById('checkoutTotal').textContent='UGX '+total.toLocaleString();
+    navigateTo('checkoutPage');
+}
+function updateCartBadge(){ let total=AppState.cart.reduce((s,c)=>s+(c.quantity||0),0); let badge=document.getElementById('cartBadge'); if(total>0){ badge.textContent=total; badge.classList.remove('hidden'); } else badge.classList.add('hidden'); }
+
 async function processPayment(){
-    if(!AppState.user){ showToast('Please login first', true); return; }
     let method = document.querySelector('input[name="payMethod"]:checked').value;
     let phone = document.getElementById('payPhone').value;
     if(method!=='card' && (!phone || !validateUgPhone(phone))){ showToast('Valid phone required', true); return; }
@@ -579,8 +456,8 @@ async function processPayment(){
         renderUserOrders();
     } catch(e){ showToast('Order failed', true); }
 }
+
 async function renderUserOrders(){
-    if(!AppState.user) return;
     let myOrders = (AppState.orders || []).filter(o=>o.user_id===AppState.user?.id);
     if(!myOrders.length){ document.getElementById('userOrderList').innerHTML='<div class="empty-state">No orders</div>'; return; }
     document.getElementById('userOrderList').innerHTML = myOrders.map(o=>`<div class="card"><div><strong>Order #${o.id}</strong> - <span class="status-badge status-${o.status}">${o.status}</span></div><div>UGX ${(o.total||0).toLocaleString()}</div><div>Rider: ${escapeHtml(o.rider_name||'Not assigned')}</div></div>`).join('');
@@ -596,91 +473,14 @@ function renderUserDashboard(){
     let myOrders = (AppState.orders||[]).filter(o=>o.user_id===AppState.user.id);
     document.getElementById('userTotalOrders').textContent=myOrders.length;
     document.getElementById('userPendingOrders').textContent=myOrders.filter(o=>o.status==='paid'||o.status==='processing').length;
-    renderWishlist();
-    renderUserReviews();
-}
-function renderWishlist() {
-    let container = document.getElementById('wishlistItems');
-    if(!container) return;
-    if(!AppState.user || !AppState.wishlist.length) { container.innerHTML='<div class="empty-state">No items in wishlist</div>'; return; }
-    container.innerHTML = AppState.wishlist.map(w => `<div class="list-item"><div><strong>${escapeHtml(w.productName)}</strong></div><button class="btn-sm btn-red" onclick="toggleWishlist(${w.productId})">Remove</button></div>`).join('');
-}
-function renderUserReviews() {
-    let container = document.getElementById('userReviews');
-    if(!container) return;
-    if(!AppState.user || !AppState.reviews.length) { container.innerHTML='<div class="empty-state">No reviews yet</div>'; return; }
-    let myReviews = AppState.reviews.filter(r=>r.userId===AppState.user.id);
-    if(!myReviews.length) { container.innerHTML='<div class="empty-state">No reviews yet</div>'; return; }
-    container.innerHTML = myReviews.map(r => `<div class="review-item"><strong>${escapeHtml(r.productName)}</strong> - ${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}<br><em>${escapeHtml(r.text)}</em></div>`).join('');
 }
 function saveUserProfile(){ showToast('Profile update coming soon'); }
-function setupNav(){
-    let nav = document.getElementById('bottomNav');
-    if(!AppState.user) return;
-    if(AppState.user.role==='admin'){
-        nav.innerHTML='<div class="nav-item" onclick="navigateTo(\'adminDashboard\')">📊 Dashboard</div><div class="nav-item" onclick="navigateTo(\'adminProducts\')">📦 Products</div><div class="nav-item" onclick="navigateTo(\'adminOrders\')">📋 Orders</div><div class="nav-item" onclick="logout()">🚪 Exit</div>';
-    } else if(AppState.user.role==='agent'){
-        nav.innerHTML='<div class="nav-item" onclick="navigateTo(\'agentPanel\')">📦 Orders</div><div class="nav-item" onclick="logout()">🚪 Exit</div>';
-    } else {
-        nav.innerHTML='<div class="nav-item" onclick="navigateTo(\'userShop\')">🏪 Shop</div><div class="nav-item" onclick="navigateTo(\'userOrders\')">📦 Orders</div><div class="nav-item" onclick="navigateTo(\'userCart\')">🛒 Cart</div><div class="nav-item" onclick="navigateTo(\'userDashboard\')">👤 Profile</div>';
-    }
-    let chatWidget = document.getElementById('chatWidgetContainer');
-    let whatsapp = document.getElementById('whatsappWidget');
-    if(AppState.user && AppState.user.role==='user'){ if(chatWidget) chatWidget.classList.remove('hidden'); if(whatsapp) whatsapp.classList.remove('hidden'); }
-    else{ if(chatWidget) chatWidget.classList.add('hidden'); if(whatsapp) whatsapp.classList.add('hidden'); }
+
+// Admin stubs
+async function renderAdminProducts(){
+    let html = (AppState.products||[]).map(p=>`<div class="list-item"><div class="list-info" onclick="editProduct(${p.id})"><h4>${escapeHtml(p.name)}</h4><p>${escapeHtml(p.type)} - Stock: ${p.stock||0} - UGX ${(p.price||0).toLocaleString()}</p></div><button class="btn-sm btn-red" onclick="deleteProductItem(${p.id})">Delete</button></div>`).join('');
+    document.getElementById('adminProductList').innerHTML = html || '<div class="empty-state">No products</div>';
 }
-function renderAgentPanel(){ document.getElementById('agentAssignedOrders').innerHTML='<div class="empty-state">Agent panel - Coming soon</div>'; }
-function openAgentToManagerChat(){ showToast('Messaging coming soon'); }
-function toggleChat(){ let box=document.getElementById('chatBox'); AppState.chatOpen=!AppState.chatOpen; if(AppState.chatOpen){ box.classList.remove('hidden'); if(document.getElementById('chatMessages').children.length===0) addChatMessage('bot','Welcome to WAMP Enterprises! Ask about terrazzo, plumbing, or painting.'); } else box.classList.add('hidden'); }
-function addChatMessage(sender,text){ let container=document.getElementById('chatMessages'); let div=document.createElement('div'); div.className='chat-msg '+sender; div.textContent=text; container.appendChild(div); container.scrollTop=container.scrollHeight; }
-async function sendChat(){ let input=document.getElementById('chatInput'); let text=input.value.trim(); if(!text) return; addChatMessage('user',text); input.value=''; try{ let data=await apiCall('/chat/customer',{ method:'POST', body:JSON.stringify({ message:text }) }); addChatMessage('bot',data.response||'Thanks for your message!'); } catch(e){ addChatMessage('bot','Chat service unavailable.'); } }
-let sliderInterval;
-function initSlider(){
-    let slides = document.querySelectorAll('.slider-slide');
-    let dotsContainer = document.getElementById('sliderDots');
-    if(!slides.length || !dotsContainer) return;
-    dotsContainer.innerHTML = '';
-    slides.forEach((_, i) => {
-        let dot = document.createElement('div');
-        dot.className = 'slider-dot' + (i === 0 ? ' active' : '');
-        dot.onclick = () => goToSlide(i);
-        dotsContainer.appendChild(dot);
-    });
-    let current = 0;
-    window.goToSlide = function(index){
-        slides.forEach((s, i) => { s.classList.toggle('active', i === index); if(dotsContainer.children[i]) dotsContainer.children[i].classList.toggle('active', i === index); });
-        current = index;
-    };
-    function nextSlide(){ goToSlide((current + 1) % slides.length); }
-    if(sliderInterval) clearInterval(sliderInterval);
-    sliderInterval = setInterval(nextSlide, 4000);
-    goToSlide(0);
-}
-function enterApp(){
-    document.getElementById('loginPage').classList.add('hidden');
-    document.getElementById('appContainer').classList.remove('hidden');
-    document.getElementById('headerGreeting').textContent = 'Hi, ' + ((AppState.user?.name || 'User').split(' ')[0]);
-    setupNav();
-    refreshData().then(()=>{
-        if(AppState.user?.role === 'admin') navigateTo('adminDashboard');
-        else if(AppState.user?.role === 'agent') navigateTo('agentPanel');
-        else { navigateTo('userShop'); initSlider(); }
-    });
-}
-function navigateTo(pageId){
-    document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));
-    document.getElementById(pageId).classList.remove('hidden');
-    AppState.currentPage=pageId;
-    if(pageId==='userShop') renderShop();
-    if(pageId==='userCart') renderCart();
-    if(pageId==='userOrders') renderUserOrders();
-    if(pageId==='userDashboard') renderUserDashboard();
-    if(pageId==='adminProducts') renderAdminProducts();
-    if(pageId==='adminOrders') renderAdminOrders();
-    if(pageId==='adminDashboard') renderAdminDashboard();
-    if(pageId==='agentPanel') renderAgentPanel();
-}
-function renderAdminProducts(){ let html = (AppState.products||[]).map(p=>`<div class="list-item"><div class="list-info" onclick="editProduct(${p.id})"><h4>${escapeHtml(p.name)}</h4><p>${escapeHtml(p.type)} - Stock: ${p.stock||0} - UGX ${(p.price||0).toLocaleString()}</p></div><button class="btn-sm btn-red" onclick="deleteProductItem(${p.id})">Delete</button></div>`).join(''); document.getElementById('adminProductList').innerHTML = html || '<div class="empty-state">No products</div>'; }
 function resetProductForm(){ document.getElementById('editProductId').value=''; document.getElementById('prodName').value=''; document.getElementById('prodDesc').value=''; document.getElementById('prodPrice').value=''; document.getElementById('prodStock').value=''; document.getElementById('prodImage').value=''; document.getElementById('productFormTitle').innerHTML='📤 Add New Product'; }
 async function saveProduct(){
     let id = document.getElementById('editProductId').value;
@@ -700,10 +500,92 @@ async function deleteProductItem(id){ if(confirm('Delete?')){ try{ await apiCall
 function renderAdminOrders(){ let html=(AppState.orders||[]).map(o=>`<div class="list-item" onclick="viewTransactionDetails(${o.id})"><div><h4>Order #${o.id}</h4><p>UGX ${(o.total||0).toLocaleString()}</p></div><span class="status-badge status-${o.status}">${o.status}</span></div>`).join(''); document.getElementById('adminOrdersList').innerHTML=html||'<div class="empty-state">No orders</div>'; }
 function viewTransactionDetails(id){ let o=AppState.orders.find(o=>o.id===id); if(o) showModal('Order Details',`<strong>Order #${o.id}</strong><br>Total: UGX ${(o.total||0).toLocaleString()}<br>Status: ${o.status}<br>Date: ${o.date||'N/A'}`); }
 function renderAdminDashboard(){ document.getElementById('adminTodaySales').innerHTML='UGX '+(AppState.orders?.filter(o=>o.status==='delivered').reduce((s,o)=>s+(o.total||0),0)||0).toLocaleString(); document.getElementById('adminPendingOrders').textContent=AppState.orders?.filter(o=>o.status==='pending'||o.status==='paid').length||0; document.getElementById('adminTotalProducts').textContent=AppState.products?.length||0; document.getElementById('adminLowStock').textContent=AppState.products?.filter(p=>(p.stock||0)<5).length||0; }
+
 function setupPaymentMethodListener(){
     document.querySelectorAll('input[name="payMethod"]').forEach(r=>r.addEventListener('change',()=>{ document.getElementById('cardFields').classList.toggle('hidden',document.querySelector('input[name="payMethod"]:checked').value!=='card'); }));
     document.getElementById('payPhone')?.addEventListener('input',function(){ let net=detectNetwork(this.value); let badge=document.getElementById('networkBadge'); if(badge){ if(net){ badge.innerHTML=net; badge.classList.remove('hidden'); }else badge.classList.add('hidden'); } });
 }
+
+// Navigation
+function navigateTo(pageId){
+    document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));
+    document.getElementById(pageId).classList.remove('hidden');
+    AppState.currentPage=pageId;
+    if(pageId==='userShop') renderShop();
+    if(pageId==='userCart') renderCart();
+    if(pageId==='userOrders') renderUserOrders();
+    if(pageId==='userDashboard') renderUserDashboard();
+    if(pageId==='adminProducts') renderAdminProducts();
+    if(pageId==='adminOrders') renderAdminOrders();
+    if(pageId==='adminDashboard') renderAdminDashboard();
+    if(pageId==='agentPanel') renderAgentPanel();
+}
+
+function setupNav(){
+    let nav = document.getElementById('bottomNav');
+    if(!AppState.user) return;
+    if(AppState.user.role==='admin'){
+        nav.innerHTML='<div class="nav-item" onclick="navigateTo(\'adminDashboard\')">📊 Dashboard</div><div class="nav-item" onclick="navigateTo(\'adminProducts\')">📦 Products</div><div class="nav-item" onclick="navigateTo(\'adminOrders\')">📋 Orders</div><div class="nav-item" onclick="logout()">🚪 Exit</div>';
+    } else if(AppState.user.role==='agent'){
+        nav.innerHTML='<div class="nav-item" onclick="navigateTo(\'agentPanel\')">📦 Orders</div><div class="nav-item" onclick="logout()">🚪 Exit</div>';
+    } else {
+        nav.innerHTML='<div class="nav-item" onclick="navigateTo(\'userShop\')">🏪 Shop</div><div class="nav-item" onclick="navigateTo(\'userOrders\')">📦 Orders</div><div class="nav-item" onclick="navigateTo(\'userCart\')">🛒 Cart</div><div class="nav-item" onclick="navigateTo(\'userDashboard\')">👤 Profile</div>';
+    }
+    let chatWidget = document.getElementById('chatWidgetContainer');
+    let whatsapp = document.getElementById('whatsappWidget');
+    if(AppState.user.role==='user'){ if(chatWidget) chatWidget.classList.remove('hidden'); if(whatsapp) whatsapp.classList.remove('hidden'); }
+    else{ if(chatWidget) chatWidget.classList.add('hidden'); if(whatsapp) whatsapp.classList.add('hidden'); }
+}
+
+// Agent stubs
+function renderAgentPanel(){ document.getElementById('agentAssignedOrders').innerHTML='<div class="empty-state">Agent panel - Coming soon</div>'; }
+function openAgentToManagerChat(){ showToast('Messaging coming soon'); }
+
+// Chat
+function toggleChat(){ let box=document.getElementById('chatBox'); AppState.chatOpen=!AppState.chatOpen; if(AppState.chatOpen){ box.classList.remove('hidden'); if(document.getElementById('chatMessages').children.length===0) addChatMessage('bot','Welcome to WAMP Enterprises! Ask about terrazzo, plumbing, or painting.'); } else box.classList.add('hidden'); }
+function addChatMessage(sender,text){ let container=document.getElementById('chatMessages'); let div=document.createElement('div'); div.className='chat-msg '+sender; div.textContent=text; container.appendChild(div); container.scrollTop=container.scrollHeight; }
+async function sendChat(){ let input=document.getElementById('chatInput'); let text=input.value.trim(); if(!text) return; addChatMessage('user',text); input.value=''; try{ let data=await apiCall('/chat/customer',{ method:'POST', body:JSON.stringify({ message:text }) }); addChatMessage('bot',data.response||'Thanks for your message!'); } catch(e){ addChatMessage('bot','Chat service unavailable.'); } }
+
+// Slider functionality
+let sliderInterval;
+function initSlider(){
+    let slides = document.querySelectorAll('.slider-slide');
+    let dotsContainer = document.getElementById('sliderDots');
+    if(!slides.length || !dotsContainer) return;
+    dotsContainer.innerHTML = '';
+    slides.forEach((_, i) => {
+        let dot = document.createElement('div');
+        dot.className = 'slider-dot' + (i === 0 ? ' active' : '');
+        dot.onclick = () => goToSlide(i);
+        dotsContainer.appendChild(dot);
+    });
+    let current = 0;
+    function goToSlide(index){
+        slides.forEach((s, i) => {
+            s.classList.toggle('active', i === index);
+            if(dotsContainer.children[i]) dotsContainer.children[i].classList.toggle('active', i === index);
+        });
+        current = index;
+    }
+    window.goToSlide = goToSlide;
+    function nextSlide(){ goToSlide((current + 1) % slides.length); }
+    if(sliderInterval) clearInterval(sliderInterval);
+    sliderInterval = setInterval(nextSlide, 4000);
+    goToSlide(0);
+}
+
+function enterApp(){
+    document.getElementById('loginPage').classList.add('hidden');
+    document.getElementById('appContainer').classList.remove('hidden');
+    document.getElementById('headerGreeting').textContent = 'Hi, ' + ((AppState.user?.name || 'User').split(' ')[0]);
+    setupNav();
+    refreshData().then(()=>{
+        if(AppState.user.role === 'admin') navigateTo('adminDashboard');
+        else if(AppState.user.role === 'agent') navigateTo('agentPanel');
+        else { navigateTo('userShop'); initSlider(); }
+    });
+}
+
 function searchTransactionByPhone(){ showToast('Search feature active'); }
 function resetTransactionSearch(){ renderAdminOrders(); }
 function exportTransactionsCSV(){ showToast('Export - coming soon'); }
@@ -712,23 +594,17 @@ function showPendingDetail(){ showModal('Pending Orders','List pending'); }
 function showProductsDetail(){ showModal('Products','Total: '+(AppState.products?.length||0)); }
 function showLowStockDetail(){ showModal('Low Stock','Products with low stock'); }
 
-// ============ INIT: FREE BROWSING FIRST ============
 async function initApp(){
     setupPaymentMethodListener();
     let splash = document.getElementById('splashPage');
     setTimeout(()=>{
         splash.style.opacity = '0';
-        setTimeout(()=>{ 
-            splash.classList.add('hidden'); 
-            // FREE BROWSING - go directly to shop
-            document.getElementById('appContainer').classList.remove('hidden');
-            AppState.products = sampleProductsFallback;
-            renderShop();
-            initSlider();
-            setupNav();
-            navigateTo('userShop');
-        },600);
+        setTimeout(()=>{ splash.classList.add('hidden'); document.getElementById('loginPage').classList.remove('hidden'); },600);
     },1500);
+    let token = getAccessToken();
+    if(token){
+        try{ await refreshData(); AppState.user = { id:1, name:'User', email:'user@example.com', role:'user' }; enterApp(); } catch(e){ clearTokens(); }
+    }
 }
 
 window.onload = initApp;
@@ -768,13 +644,6 @@ window.renderAgentPanel = renderAgentPanel;
 window.renderAdminProducts = renderAdminProducts;
 window.renderAdminOrders = renderAdminOrders;
 window.renderAdminDashboard = renderAdminDashboard;
-window.toggleWishlist = toggleWishlist;
-window.submitRatingAndReview = submitRatingAndReview;
-window.showModalLoginForm = showModalLoginForm;
-window.showModalRegisterForm = showModalRegisterForm;
-window.handleModalLogin = handleModalLogin;
-window.handleModalRegister = handleModalRegister;
-window.showAuthModal = showAuthModal;
 </script>
 </body>
 </html>
