@@ -1149,39 +1149,67 @@ def send_comms():
     send_notification(rid, 'New Message', f'Message from {User.query.get(uid).name}')
     return jsonify({'success': True})
 
-# ==================== AI CHAT BOT ====================
+# ==================== AI CHAT BOT (FIXED) ====================
 @app.route('/api/chat/customer', methods=['POST'])
 def customer_chat():
     if not request.is_json:
         return jsonify({'error': 'JSON required'}), 400
-    msg = request.get_json().get('message', '').lower().strip()
-    if not msg:
+    
+    data = request.get_json()
+    message = data.get('message', '').strip()
+    
+    if not message:
         return jsonify({'error': 'Message required'}), 400
     
+    # Try Gemini AI first if enabled
     if GEMINI_ENABLED:
         try:
-            prompt = f"""You are a customer service assistant for WAMP Enterprises (Terrazzo, Plumbing, General Merchandise).
-            Customer question: {msg}
-            Respond helpfully and concisely."""
+            # Create a proper prompt
+            prompt = f"""You are a customer service assistant for WAMP Enterprises.
+
+Company info:
+- Sells Terrazzo flooring (UGX 250,000 - 500,000)
+- Sells Plumbing supplies (UGX 45,000 - 150,000)
+- Sells General merchandise (UGX 10,000 - 200,000)
+- Free delivery on orders over UGX 500,000
+- Delivery takes 2-5 days
+- Accepts MTN, Airtel, Card, and Cash on Delivery
+
+Customer question: {message}
+
+Answer concisely and helpfully in 1-2 sentences. Be friendly but professional."""
+
+            # Generate response
             response = gemini_model.generate_content(prompt)
-            return jsonify({'response': response.text, 'ai_used': True})
+            ai_response = response.text if response.text else "I'm here to help! What would you like to know?"
+            
+            print(f"🤖 Gemini AI Response: {ai_response[:100]}...")  # Log for debugging
+            
+            return jsonify({'response': ai_response, 'ai_used': True})
+            
         except Exception as e:
-            logger.error(f"Gemini error: {e}")
+            print(f"❌ Gemini error: {e}")  # This will show in Render logs
+            # Fall through to fallback responses
+            pass
     
-    # Fallback responses
-    if 'price' in msg or 'cost' in msg:
+    # Fallback responses (if Gemini fails or not enabled)
+    msg_lower = message.lower()
+    
+    if any(word in msg_lower for word in ['price', 'cost', 'how much']):
         resp = "💰 Prices: Terrazzo UGX 250k-500k | Plumbing UGX 45k-150k | General UGX 10k-200k"
-    elif 'delivery' in msg or 'shipping' in msg:
+    elif any(word in msg_lower for word in ['delivery', 'shipping']):
         resp = "🚚 Free delivery on orders > UGX 500k. Takes 2-5 days."
-    elif 'payment' in msg or 'pay' in msg:
+    elif any(word in msg_lower for word in ['payment', 'pay', 'mtn', 'airtel']):
         resp = "💳 We accept MTN, Airtel, Card, and Cash on Delivery!"
-    elif 'terrazzo' in msg:
+    elif 'terrazzo' in msg_lower:
         resp = "🏛️ Terrazzo flooring: prices start at UGX 250,000"
-    elif 'plumbing' in msg:
+    elif 'plumbing' in msg_lower:
         resp = "🔧 Plumbing supplies: copper pipes, fittings from UGX 45,000"
     else:
         resp = "Welcome to WAMP! Ask about prices, delivery, or payments."
+    
     return jsonify({'response': resp, 'ai_used': False})
+
 
 # ==================== ERROR HANDLERS ====================
 @app.errorhandler(404)
