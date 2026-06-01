@@ -1,4 +1,4 @@
-# WAMP BACKEND - COMPLETE FINAL VERSION 2 (ALL ENDPOINTS)
+# WAMP BACKEND - VERSION 3 (COMPLETE + WHATSAPP CONTACTS)
 # ================================================================
 
 import os
@@ -124,16 +124,19 @@ except Exception as e:
 
 # ==================== GOOGLE GEMINI AI ====================
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
-GEMINI_ENABLED = bool(GEMINI_API_KEY)
+GEMINI_ENABLED = False
 
-if GEMINI_ENABLED:
+if GEMINI_API_KEY:
     try:
         genai.configure(api_key=GEMINI_API_KEY)
         gemini_model = genai.GenerativeModel('gemini-pro')
+        GEMINI_ENABLED = True
         logger.info("✅ Google Gemini AI configured")
     except Exception as e:
         GEMINI_ENABLED = False
         logger.warning(f"⚠️ Gemini init failed: {e}")
+else:
+    logger.info("ℹ️ Gemini AI not configured")
 
 # ==================== EXTENSIONS ====================
 jwt = JWTManager(app)
@@ -200,7 +203,7 @@ class Product(db.Model):
     image_mime = db.Column(db.String(50))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
+    
     @property
     def available_stock(self):
         return self.stock - self.reserved_stock
@@ -401,7 +404,7 @@ def init_db():
     db.create_all()
     logger.info("✅ Tables created")
     release_expired_reservations()
-
+    
     # Create agent group messages table
     try:
         db.session.execute(text("""
@@ -415,7 +418,7 @@ def init_db():
         db.session.commit()
     except:
         db.session.rollback()
-
+    
     # Admin account
     admin_email = os.environ.get('ADMIN_EMAIL')
     admin_password = os.environ.get('ADMIN_PASSWORD')
@@ -434,7 +437,7 @@ def init_db():
         else:
             admin.password_hash = ph.hash(admin_password)
             admin.role = 'admin'
-
+    
     # Agents
     for i in range(1, 6):
         agent_email = os.environ.get(f'AGENT{i}_EMAIL')
@@ -454,7 +457,7 @@ def init_db():
             else:
                 agent.password_hash = ph.hash(agent_password)
                 agent.role = 'agent'
-
+    
     db.session.commit()
 
 with app.app_context():
@@ -481,12 +484,12 @@ def register():
     email = data.get('email', '').strip()
     password = data.get('password', '').strip()
     phone = data.get('phone', '').strip()
-
+    
     if not name or not email or not password:
         return jsonify({'error': 'Missing fields'}), 400
     if User.query.filter_by(email=email).first():
         return jsonify({'error': 'Email exists'}), 409
-
+    
     user = User(name=name, email=email, phone=phone, password_hash=ph.hash(password), role='user')
     db.session.add(user)
     db.session.commit()
@@ -500,30 +503,30 @@ def login():
     client_ip = request.remote_addr
     if is_ip_blocked(client_ip):
         return jsonify({'error': 'Too many attempts'}), 429
-
+    
     data = request.get_json()
     email = data.get('email', '').strip()
     password = data.get('password', '').strip()
-
+    
     if not email or not password:
         return jsonify({'error': 'Credentials required'}), 400
-
+    
     user = User.query.filter_by(email=email).first()
     if not user:
         record_failed_login(client_ip)
         return jsonify({'error': 'Invalid credentials'}), 401
-
+    
     try:
         ph.verify(user.password_hash, password)
     except VerifyMismatchError:
         record_failed_login(client_ip)
         return jsonify({'error': 'Invalid credentials'}), 401
-
+    
     reset_failed_attempts(client_ip)
     access_token = create_access_token(identity=str(user.id))
     refresh_token = create_refresh_token(identity=str(user.id))
     log_audit(user.id, 'LOGIN')
-
+    
     return jsonify({
         'success': True, 'access_token': access_token, 'refresh_token': refresh_token,
         'user': {'id': user.id, 'name': user.name, 'email': user.email, 'role': user.role, 'phone': user.phone, 'address': user.address}
@@ -549,6 +552,25 @@ def logout():
     db.session.add(TokenBlacklist(jti=get_jwt()['jti'], user_id=int(get_jwt_identity())))
     db.session.commit()
     return jsonify({'success': True})
+
+# ==================== WHATSAPP CONTACTS ENDPOINT ====================
+@app.route('/api/whatsapp/contacts', methods=['GET'])
+def get_whatsapp_contacts():
+    """Get WhatsApp contacts for Manager and Assistant"""
+    return jsonify({
+        'manager': {
+            'name': 'Manager',
+            'number': os.environ.get('MANAGER_WHATSAPP', '256772123456'),
+            'icon': '👑',
+            'message': 'Hello Manager, I need assistance with WAMP Enterprises!'
+        },
+        'assistant': {
+            'name': 'Support Assistant',
+            'number': os.environ.get('ASSISTANT_WHATSAPP', '256770000000'),
+            'icon': '🤖',
+            'message': 'Hello Support, I need help with my order!'
+        }
+    })
 
 # ==================== USER ROUTES ====================
 @app.route('/api/user/profile', methods=['GET', 'PUT'])
@@ -1135,7 +1157,7 @@ def customer_chat():
     msg = request.get_json().get('message', '').lower().strip()
     if not msg:
         return jsonify({'error': 'Message required'}), 400
-
+    
     if GEMINI_ENABLED:
         try:
             prompt = f"""You are a customer service assistant for WAMP Enterprises (Terrazzo, Plumbing, General Merchandise).
@@ -1145,7 +1167,7 @@ def customer_chat():
             return jsonify({'response': response.text, 'ai_used': True})
         except Exception as e:
             logger.error(f"Gemini error: {e}")
-
+    
     # Fallback responses
     if 'price' in msg or 'cost' in msg:
         resp = "💰 Prices: Terrazzo UGX 250k-500k | Plumbing UGX 45k-150k | General UGX 10k-200k"
@@ -1180,19 +1202,22 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
     print(f"""
 ╔═══════════════════════════════════════════════════════════════════════════════╗
-║                    WAMP BACKEND - FINAL VERSION 2 ✅                          ║
+║                    WAMP BACKEND - VERSION 3 ✅                                ║
 ╠═══════════════════════════════════════════════════════════════════════════════╣
 ║  Port:        {port}                                                          ║
 ║  Cloudinary:  {'✅' if CLOUDINARY_ENABLED else '❌'}                            ║
 ║  Gemini AI:   {'✅' if GEMINI_ENABLED else '❌'}                                ║
 ╠═══════════════════════════════════════════════════════════════════════════════╣
+║  ✅ NEW: WhatsApp Contacts API                                                ║
+║     - GET /api/whatsapp/contacts                                             ║
+║     - Returns Manager & Assistant WhatsApp numbers                           ║
+╠═══════════════════════════════════════════════════════════════════════════════╣
 ║  ✅ ALL ENDPOINTS INCLUDED:                                                   ║
-║     - Admin Chat (conversations, send-message, broadcast)                    ║
-║     - Agent Panel (claim orders, update status, send notifications)          ║
-║     - Agent Group Chat (group-messages)                                      ║
+║     - Admin Chat, Agent Panel, Agent Group Chat                              ║
 ║     - Rider Assignment, Delivery Tracking                                    ║
 ║     - User Dashboard Stats, Notifications                                    ║
 ║     - Wishlist, Reviews, Cart, Orders                                        ║
+║     - AI Chat (Gemini + fallback)                                            ║
 ╚═══════════════════════════════════════════════════════════════════════════════╝
     """)
     app.run(host='0.0.0.0', port=port, debug=False)
