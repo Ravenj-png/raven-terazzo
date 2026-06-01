@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
 <title>WAMP Enterprises - Terrazzo, Plumbing & Painting</title>
 
+  <button id="installBtn" class="btn btn-primary" style="display: none; position: fixed; bottom: 80px; right: 20px; z-index: 300; width: auto; padding: 12px 20px;">
+  📱 Install App
+  </button>
+
+  
 <!-- PWA Meta Tags -->
 <link rel="manifest" href="/raven-terazzo/manifest.json">
 <meta name="theme-color" content="#1a5276">
@@ -2378,6 +2383,28 @@ async function initApp() {
   }, 15000);
 }
 
+// PWA Installation
+let deferredPrompt;
+const installBtn = document.getElementById('installBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  installBtn.style.display = 'block';
+  
+  installBtn.addEventListener('click', () => {
+    installBtn.style.display = 'none';
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('User accepted install');
+      }
+      deferredPrompt = null;
+    });
+  });
+});
+
+  
 // Expose globals
 window.navigateTo = navigateTo;
 window.addToCart = addToCart;
