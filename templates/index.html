@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
 <title>WAMP Enterprises - Terrazzo, Plumbing & Painting</title>
+
+<!-- ==================== PWA META TAGS ==================== -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1a5276">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WAMP">
+<link rel="apple-touch-icon" href="/icons/icon-152.png">
+
 <style>
 /* ==================== RESET & VARIABLES ==================== */
 * {
@@ -504,6 +513,92 @@ body {
   border-color: var(--blue);
 }
 
+/* ==================== WHATSAPP DROPDOWN ==================== */
+.whatsapp-widget {
+  position: fixed;
+  bottom: 80px;
+  left: 20px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.whatsapp-main {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #25d366;
+  color: white;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
+}
+
+.whatsapp-main:active {
+  transform: scale(0.95);
+}
+
+.whatsapp-menu {
+  position: absolute;
+  bottom: 70px;
+  left: 0;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  min-width: 180px;
+  display: none;
+  flex-direction: column;
+  z-index: 250;
+}
+
+.whatsapp-menu.show {
+  display: flex;
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.whatsapp-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  text-decoration: none;
+  color: #2c3e50;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.2s;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.whatsapp-option:last-child {
+  border-bottom: none;
+}
+
+.whatsapp-option:hover {
+  background: #f4f6f9;
+}
+
+.whatsapp-icon {
+  font-size: 22px;
+}
+
 /* ==================== CHAT WIDGET ==================== */
 .chat-widget {
   position: fixed;
@@ -659,6 +754,32 @@ body {
   padding-bottom: 10px;
   margin-bottom: 10px;
 }
+
+/* ==================== UPDATE BANNER ==================== */
+.update-banner {
+  position: fixed;
+  bottom: 70px;
+  left: 0;
+  right: 0;
+  background: #1a5276;
+  color: white;
+  padding: 12px;
+  text-align: center;
+  z-index: 1000;
+  font-size: 14px;
+  animation: slideUp 0.3s ease;
+}
+
+.update-banner button {
+  background: white;
+  color: #1a5276;
+  border: none;
+  padding: 5px 15px;
+  border-radius: 20px;
+  margin-left: 10px;
+  cursor: pointer;
+  font-weight: bold;
+}
 </style>
 </head>
 <body>
@@ -804,7 +925,7 @@ body {
     <div id="userOrderList"></div>
   </div>
 
-  <!-- USER DASHBOARD PAGE (FULL FEATURED) -->
+  <!-- USER DASHBOARD PAGE -->
   <div id="userDashboard" class="page hidden">
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-value" id="userTotalOrders">0</div><div class="stat-label">Total Orders</div></div>
@@ -976,6 +1097,21 @@ body {
     </div>
   </div>
 
+  <!-- WHATSAPP DUAL BUTTON -->
+  <div class="whatsapp-widget" id="whatsappWidget">
+    <div class="whatsapp-main" onclick="toggleWhatsAppMenu()">
+      💬
+    </div>
+    <div class="whatsapp-menu" id="whatsappMenu">
+      <a href="https://wa.me/256772123456?text=Hello%20Manager%2C%20I%20need%20assistance!" class="whatsapp-option" target="_blank" id="whatsappManagerLink">
+        <span class="whatsapp-icon">👑</span> Manager
+      </a>
+      <a href="https://wa.me/256770000000?text=Hello%20Support%2C%20I%20need%20help!" class="whatsapp-option" target="_blank" id="whatsappAssistantLink">
+        <span class="whatsapp-icon">🤖</span> Assistant
+      </a>
+    </div>
+  </div>
+
   <!-- BOTTOM NAVIGATION -->
   <div class="bottom-nav" id="bottomNav"></div>
 </div>
@@ -1024,8 +1160,10 @@ async function apiCall(endpoint, opts = {}) {
   const res = await fetch(`${API_BASE}${endpoint}`, { ...opts, headers });
   
   if (res.status === 401) {
-    showToast('Session expired. Please login again.', true);
-    logout();
+    if (endpoint !== '/notifications') {
+      showToast('Session expired. Please login again.', true);
+      logout();
+    }
     throw new Error('Session expired');
   }
   
@@ -1036,6 +1174,43 @@ async function apiCall(endpoint, opts = {}) {
   
   return res.json();
 }
+
+// ==================== WHATSAPP CONTACTS ====================
+async function loadWhatsAppContacts() {
+  try {
+    const res = await fetch(`${API_BASE}/whatsapp/contacts`);
+    const contacts = await res.json();
+    
+    const managerLink = document.getElementById('whatsappManagerLink');
+    const assistantLink = document.getElementById('whatsappAssistantLink');
+    
+    if (managerLink && contacts.manager) {
+      managerLink.href = `https://wa.me/${contacts.manager.number}?text=${encodeURIComponent(contacts.manager.message)}`;
+      managerLink.innerHTML = `<span class="whatsapp-icon">${contacts.manager.icon}</span> ${contacts.manager.name}`;
+    }
+    
+    if (assistantLink && contacts.assistant) {
+      assistantLink.href = `https://wa.me/${contacts.assistant.number}?text=${encodeURIComponent(contacts.assistant.message)}`;
+      assistantLink.innerHTML = `<span class="whatsapp-icon">${contacts.assistant.icon}</span> ${contacts.assistant.name}`;
+    }
+  } catch(e) {
+    console.error('Failed to load WhatsApp contacts:', e);
+  }
+}
+
+function toggleWhatsAppMenu() {
+  const menu = document.getElementById('whatsappMenu');
+  menu.classList.toggle('show');
+}
+
+// Close WhatsApp menu when clicking outside
+document.addEventListener('click', function(event) {
+  const widget = document.getElementById('whatsappWidget');
+  if (widget && !widget.contains(event.target)) {
+    const menu = document.getElementById('whatsappMenu');
+    if (menu) menu.classList.remove('show');
+  }
+});
 
 // ==================== AUTHENTICATION ====================
 function openAuthModal(callback) {
@@ -1174,6 +1349,11 @@ async function refreshAllData() {
 
 // ==================== NOTIFICATIONS ====================
 async function showNotifications() {
+  if (!AppState.user) {
+    openAuthModal(() => showNotifications());
+    return;
+  }
+  
   try {
     const notifData = await apiCall('/notifications');
     const notifications = notifData.notifications || [];
@@ -1195,7 +1375,6 @@ async function showNotifications() {
     
     showModal('🔔 Notifications', html);
     
-    // Mark as read
     for (const n of notifications) {
       if (!n.is_read) {
         await apiCall(`/notifications/${n.id}/read`, { method: 'POST' }).catch(() => {});
@@ -1316,7 +1495,6 @@ function showProductDetail(id) {
     </div>
   `;
   
-  // Setup star rating
   document.querySelectorAll('#detailRatingStars .star').forEach(star => {
     star.onclick = () => {
       const rating = parseInt(star.dataset.rating);
@@ -1651,7 +1829,6 @@ async function renderAdminDashboard() {
     `).join('') || '<div class="empty-state">No products</div>';
   }
   
-  // Load agent conversations for admin chat
   loadAgentConversations();
 }
 
@@ -1942,17 +2119,14 @@ async function renderAgentPanel() {
       `).join('') || '<div class="empty-state">No available orders</div>';
     }
     
-    // Load agent orders for select dropdown
     const orderSelect = document.getElementById('agentOrderSelect');
     if (orderSelect) {
       orderSelect.innerHTML = '<option value="">Select an order</option>' + 
         (data.assigned || []).map(o => `<option value="${o.id}">Order #${o.id} - UGX ${o.total.toLocaleString()}</option>`).join('');
     }
     
-    // Load agent group chat
     loadGroupMessages();
     
-    // Load agent-manager chat
     const messages = await apiCall('/communications');
     const chatContainer = document.getElementById('agentChatMessages');
     if (chatContainer) {
@@ -2010,7 +2184,7 @@ async function sendAgentMessage() {
   try {
     await apiCall('/communications', {
       method: 'POST',
-      body: JSON.stringify({ receiver_id: 1, content }) // 1 is admin
+      body: JSON.stringify({ receiver_id: 1, content })
     });
     input.value = '';
     renderAgentPanel();
@@ -2104,6 +2278,15 @@ async function sendChat() {
   }
 }
 
+// ==================== PWA SERVICE WORKER REGISTRATION ====================
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('Service Worker registered:', reg))
+      .catch(err => console.log('Service Worker error:', err));
+  });
+}
+
 // ==================== INITIALIZATION ====================
 async function initApp() {
   // Load products in background while splash is showing
@@ -2116,6 +2299,9 @@ async function initApp() {
     console.error('Failed to load products:', e);
     AppState.products = [];
   }
+  
+  // Load WhatsApp contacts
+  loadWhatsAppContacts();
   
   setupNavigation();
   
@@ -2228,6 +2414,7 @@ window.showNotifications = showNotifications;
 window.sendBroadcast = sendBroadcast;
 window.loadChatWithAgent = loadChatWithAgent;
 window.sendAdminMessage = sendAdminMessage;
+window.toggleWhatsAppMenu = toggleWhatsAppMenu;
 
 // Start app
 initApp();
