@@ -34,7 +34,10 @@
   --border: #e2e8f0;
   --red: #e74c3c;
   --orange: #f39c12;
+  --purple: #8e44ad;
+  --teal: #008080;
   --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.12);
 }
 
 body {
@@ -92,6 +95,7 @@ body {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -101,18 +105,30 @@ body {
 
 .modal-content {
   background: var(--white);
-  border-radius: 20px;
-  padding: 24px;
+  border-radius: 24px;
+  padding: 28px;
   width: 100%;
   max-width: 400px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-lg);
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .modal-header {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 800;
   color: var(--blue-dark);
-  margin-bottom: 15px;
+  margin-bottom: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -125,7 +141,7 @@ body {
 }
 
 .app-header {
-  background: var(--blue);
+  background: linear-gradient(135deg, var(--blue), var(--blue-dark));
   color: var(--white);
   padding: 15px 20px;
   position: sticky;
@@ -134,18 +150,23 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow);
 }
 
-.app-header h1 { font-size: clamp(16px, 4vw, 20px); letter-spacing: 1px; }
-.header-actions { display: flex; gap: 15px; align-items: center; }
+.app-header h1 {
+  font-size: clamp(16px, 4vw, 20px);
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+
+.header-actions { display: flex; gap: 12px; align-items: center; }
 
 .icon-btn {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
   border: none;
   color: var(--white);
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -153,6 +174,16 @@ body {
   font-size: 18px;
   cursor: pointer;
   position: relative;
+  transition: all 0.2s;
+}
+
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+}
+
+.icon-btn:active {
+  transform: scale(0.95);
 }
 
 .badge {
@@ -171,7 +202,7 @@ body {
   font-weight: 700;
 }
 
-/* ==================== BOTTOM NAVIGATION ==================== */
+/* ==================== BOTTOM NAVIGATION - COLORFUL ==================== */
 .bottom-nav {
   position: fixed;
   bottom: 0;
@@ -180,139 +211,264 @@ body {
   background: var(--white);
   display: flex;
   justify-content: space-around;
-  padding: 10px 0;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  padding: 8px 0 12px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
   z-index: 100;
-  border-top: 1px solid #eee;
+  border-top: none;
+  border-radius: 20px 20px 0 0;
 }
 
 .nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
-  color: var(--gray-dark);
+  gap: 4px;
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  padding: 5px 10px;
-  border-radius: 10px;
+  padding: 8px 12px;
+  border-radius: 30px;
+  transition: all 0.2s;
   flex: 1;
+  margin: 0 5px;
+  color: var(--gray-dark);
 }
 
-.nav-item.active { color: var(--blue); background: rgba(26, 82, 118, 0.1); }
-.nav-icon { font-size: 22px; }
+.nav-item .nav-icon {
+  font-size: 22px;
+  transition: transform 0.2s;
+}
+
+.nav-item:active .nav-icon {
+  transform: scale(0.9);
+}
+
+.nav-item.active {
+  background: linear-gradient(135deg, var(--blue), var(--blue-light));
+  color: white;
+  box-shadow: var(--shadow);
+}
+
+.nav-item.active .nav-icon {
+  transform: scale(1.05);
+}
+
+/* Different colors for different nav items when not active */
+.nav-item[data-nav="shop"]:not(.active) .nav-icon { color: var(--blue); }
+.nav-item[data-nav="orders"]:not(.active) .nav-icon { color: var(--green); }
+.nav-item[data-nav="cart"]:not(.active) .nav-icon { color: var(--orange); }
+.nav-item[data-nav="profile"]:not(.active) .nav-icon { color: var(--purple); }
+.nav-item[data-nav="dashboard"]:not(.active) .nav-icon { color: var(--teal); }
+.nav-item[data-nav="products"]:not(.active) .nav-icon { color: var(--orange); }
+.nav-item[data-nav="login"]:not(.active) .nav-icon { color: var(--green); }
+.nav-item[data-nav="exit"]:not(.active) .nav-icon { color: var(--red); }
 
 /* ==================== CARDS & GRIDS ==================== */
 .card {
   background: var(--white);
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 20px;
-  margin: 15px;
+  margin: 16px;
   box-shadow: var(--shadow);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:active {
+  transform: scale(0.99);
 }
 
 .card-title {
   font-size: 18px;
   font-weight: 700;
   color: var(--blue-dark);
-  margin-bottom: 15px;
+  margin-bottom: 16px;
   display: flex;
   align-items: center;
   gap: 10px;
+  border-left: 4px solid var(--blue);
+  padding-left: 12px;
 }
 
 .section-title {
   font-size: 20px;
   font-weight: 700;
   color: var(--blue-dark);
-  padding: 20px 15px 8px;
+  padding: 20px 16px 8px;
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
-  margin: 15px;
+  margin: 16px;
 }
 
 .stat-card {
   background: var(--white);
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 18px;
   text-align: center;
   box-shadow: var(--shadow);
   border-left: 4px solid var(--blue);
   cursor: pointer;
+  transition: all 0.2s;
 }
 
-.stat-value { font-size: clamp(18px, 5vw, 24px); font-weight: 800; color: var(--blue-dark); }
-.stat-label { font-size: 12px; color: var(--gray-dark); margin-top: 5px; font-weight: 600; }
+.stat-card:active {
+  transform: scale(0.97);
+}
+
+.stat-value {
+  font-size: clamp(20px, 5vw, 28px);
+  font-weight: 800;
+  color: var(--blue-dark);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--gray-dark);
+  margin-top: 8px;
+  font-weight: 600;
+}
 
 /* ==================== PRODUCT GRID ==================== */
 .product-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 12px;
-  padding: 15px;
+  gap: 16px;
+  padding: 16px;
 }
 
 .product-card {
   background: var(--white);
-  border-radius: 16px;
+  border-radius: 20px;
   overflow: hidden;
   box-shadow: var(--shadow);
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: all 0.2s;
 }
 
-.product-card:active { transform: scale(0.98); }
-.product-card img { width: 100%; height: 150px; object-fit: cover; background: #e0e0e0; }
-.product-info { padding: 12px; }
-.product-name { font-size: 14px; font-weight: 700; color: var(--blue-dark); margin-bottom: 5px; }
-.product-category { font-size: 11px; color: var(--green); font-weight: 600; text-transform: uppercase; margin-bottom: 8px; }
-.product-price { font-size: 18px; font-weight: 800; color: var(--blue); }
-.product-stock { font-size: 11px; color: var(--gray-dark); margin-top: 5px; }
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.product-card:active {
+  transform: scale(0.98);
+}
+
+.product-card img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  background: #e0e0e0;
+}
+
+.product-info {
+  padding: 12px;
+}
+
+.product-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--blue-dark);
+  margin-bottom: 5px;
+}
+
+.product-category {
+  font-size: 11px;
+  color: var(--green);
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.product-price {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--blue);
+}
+
+.product-stock {
+  font-size: 11px;
+  color: var(--gray-dark);
+  margin-top: 5px;
+}
 
 /* ==================== FILTERS ==================== */
 .filter-row {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   overflow-x: auto;
-  padding: 0 15px 15px;
+  padding: 0 16px 16px;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
 .filter-btn {
-  padding: 8px 16px;
-  border: 2px solid #ddd;
-  border-radius: 20px;
+  padding: 10px 20px;
+  border: 2px solid var(--border);
+  border-radius: 40px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   background: var(--white);
   color: var(--gray-dark);
+  transition: all 0.2s;
 }
 
-.filter-btn.active { background: var(--blue); color: var(--white); border-color: var(--blue); }
-.search-input { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #ddd; font-size: 15px; outline: none; }
-.search-input:focus { border-color: var(--blue); }
+.filter-btn:active {
+  transform: scale(0.95);
+}
+
+.filter-btn.active {
+  background: var(--blue);
+  color: var(--white);
+  border-color: var(--blue);
+}
+
+.search-input {
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 30px;
+  border: 2px solid var(--border);
+  font-size: 15px;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.search-input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(26, 82, 118, 0.1);
+}
 
 /* ==================== LIST ITEMS ==================== */
 .list-item {
   background: var(--white);
-  margin: 10px 15px;
-  padding: 15px;
-  border-radius: 12px;
+  margin: 10px 16px;
+  padding: 16px;
+  border-radius: 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s;
+}
+
+.list-item:active {
+  background: #f8f9fa;
+  transform: scale(0.99);
 }
 
 /* ==================== STATUS BADGES ==================== */
-.status-badge { padding: 5px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.status-badge {
+  padding: 5px 12px;
+  border-radius: 30px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
 .status-pending { background: #fff3cd; color: #856404; }
 .status-processing { background: #e2e3f3; color: #383d7a; }
 .status-shipped { background: #cce5ff; color: #004085; }
@@ -320,25 +476,55 @@ body {
 .status-completed { background: #d4edda; color: #155724; }
 
 /* ==================== BUTTONS ==================== */
-.btn { width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-transform: uppercase; }
+.btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 40px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
 .btn-primary { background: var(--blue); color: var(--white); }
-.btn-primary:active { transform: scale(0.98); }
+.btn-primary:active { transform: scale(0.97); background: var(--blue-dark); }
 .btn-green { background: var(--green); color: var(--white); }
-.btn-green:active { transform: scale(0.98); }
+.btn-green:active { transform: scale(0.97); background: #219a52; }
 .btn-outline { background: transparent; border: 2px solid var(--blue); color: var(--blue); }
-.btn-sm { padding: 8px 14px; font-size: 12px; border-radius: 8px; width: auto; display: inline-block; cursor: pointer; }
+.btn-outline:active { transform: scale(0.97); background: rgba(26, 82, 118, 0.05); }
+.btn-sm { padding: 8px 16px; font-size: 12px; border-radius: 30px; width: auto; display: inline-block; cursor: pointer; }
 .btn-red { background: var(--red); color: var(--white); }
+.btn-red:active { transform: scale(0.97); }
 
 /* ==================== FORM ELEMENTS ==================== */
-.form-group { margin-bottom: 15px; }
-.form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--gray-dark); margin-bottom: 5px; text-transform: uppercase; }
-.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 14px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 15px; outline: none; }
-.form-group input:focus { border-color: var(--blue); }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--gray-dark); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%;
+  padding: 14px;
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.2s;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(26, 82, 118, 0.1);
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+}
 
 /* ==================== WHATSAPP DROPDOWN ==================== */
 .whatsapp-widget {
   position: fixed;
-  bottom: 80px;
+  bottom: 90px;
   left: 20px;
   z-index: 200;
   display: flex;
@@ -347,8 +533,8 @@ body {
 }
 
 .whatsapp-main {
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   background: #25d366;
   color: white;
@@ -359,18 +545,20 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s;
+  transition: all 0.2s;
 }
 
-.whatsapp-main:active { transform: scale(0.95); }
+.whatsapp-main:active {
+  transform: scale(0.92);
+}
 
 .whatsapp-menu {
   position: absolute;
-  bottom: 70px;
+  bottom: 65px;
   left: 0;
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  border-radius: 20px;
+  box-shadow: var(--shadow-lg);
   overflow: hidden;
   min-width: 180px;
   display: none;
@@ -379,13 +567,17 @@ body {
 }
 
 .whatsapp-menu.show { display: flex; animation: slideUp 0.2s ease; }
-@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 .whatsapp-option {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 14px 18px;
   text-decoration: none;
   color: #2c3e50;
   font-size: 14px;
@@ -401,16 +593,16 @@ body {
 /* ==================== CHAT WIDGET ==================== */
 .chat-widget {
   position: fixed;
-  bottom: 80px;
+  bottom: 90px;
   right: 20px;
   z-index: 200;
 }
 
 .chat-btn {
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
-  background: var(--green);
+  background: linear-gradient(135deg, var(--green), var(--green-light));
   color: var(--white);
   border: none;
   font-size: 24px;
@@ -419,73 +611,192 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s;
+}
+
+.chat-btn:active {
+  transform: scale(0.92);
+}
+
+.chat-box {
+  position: fixed;
+  bottom: 160px;
+  right: 20px;
+  width: calc(100% - 40px);
+  max-width: 360px;
+  height: 480px;
+  background: var(--white);
+  border-radius: 24px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 250;
+  animation: slideUp 0.2s ease;
+}
+
+.chat-header {
+  background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+  color: var(--white);
+  padding: 16px;
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 16px;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #f8f9fa;
+}
+
+.chat-msg {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.chat-msg.user {
+  align-self: flex-end;
+  background: var(--blue);
+  color: var(--white);
+  border-bottom-right-radius: 4px;
+}
+
+.chat-msg.bot {
+  align-self: flex-start;
+  background: var(--white);
+  color: #2c3e50;
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.chat-input-area {
+  display: flex;
+  padding: 12px;
+  border-top: 1px solid var(--border);
+  gap: 10px;
+  background: var(--white);
+}
+
+.chat-input-area input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid var(--border);
+  border-radius: 30px;
+  outline: none;
+  font-size: 14px;
+}
+
+.chat-input-area input:focus {
+  border-color: var(--blue);
 }
 
 /* ==================== UNIFIED CHAT PANEL ==================== */
+.chat-unified-btn {
+  position: fixed;
+  bottom: 160px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--blue-light));
+  color: white;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  z-index: 250;
+  transition: all 0.2s;
+}
+
+.chat-unified-btn:active {
+  transform: scale(0.92);
+}
+
 .chat-panel {
   position: fixed;
-  bottom: 150px;
+  bottom: 160px;
   right: 20px;
-  width: 380px;
-  height: 500px;
-  background: white;
-  border-radius: 20px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  width: calc(100% - 40px);
+  max-width: 380px;
+  height: 520px;
+  background: var(--white);
+  border-radius: 24px;
+  box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   z-index: 300;
+  animation: slideUp 0.2s ease;
 }
 
 .chat-panel-header {
-  background: var(--blue);
+  background: linear-gradient(135deg, var(--blue), var(--blue-dark));
   color: white;
-  padding: 15px;
-  font-weight: bold;
+  padding: 16px;
+  font-weight: 700;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 .chat-rooms-list { flex: 1; overflow-y: auto; }
-.chat-room-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; }
+.chat-room-item { padding: 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.2s; }
 .chat-room-item:hover { background: #f4f6f9; }
 .chat-room-item.unread { background: #e8f4fd; }
-.chat-room-name { font-weight: bold; color: var(--blue-dark); }
-.chat-room-last-msg { font-size: 12px; color: #666; margin-top: 5px; }
-.chat-unread-badge { background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; margin-left: 10px; }
+.chat-room-name { font-weight: 700; color: var(--blue-dark); margin-bottom: 4px; }
+.chat-room-last-msg { font-size: 12px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat-unread-badge { background: var(--red); color: white; border-radius: 50%; padding: 2px 8px; font-size: 10px; margin-left: 10px; }
 
 .chat-messages-area { flex: 1; display: flex; flex-direction: column; }
-.chat-messages-header { padding: 10px 15px; background: #f4f6f9; border-bottom: 1px solid #ddd; font-weight: bold; }
-.chat-messages-container { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+.chat-messages-header { padding: 12px 16px; background: #f4f6f9; border-bottom: 1px solid var(--border); font-weight: 700; }
+.chat-messages-container { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 
-.chat-bubble { max-width: 80%; padding: 10px 14px; border-radius: 18px; font-size: 14px; }
-.chat-bubble.sent { align-self: flex-end; background: var(--blue); color: white; border-bottom-right-radius: 4px; }
-.chat-bubble.received { align-self: flex-start; background: #e9ecef; color: #333; border-bottom-left-radius: 4px; }
-.chat-bubble small { font-size: 10px; opacity: 0.7; display: block; margin-top: 5px; }
+.chat-bubble {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.4;
+}
 
-.chat-unified-btn {
-  position: fixed;
-  bottom: 150px;
-  right: 20px;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
+.chat-bubble.sent {
+  align-self: flex-end;
   background: var(--blue);
   color: white;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  box-shadow: 0 4px 15px rgba(26,82,118,0.4);
-  position: relative;
-  z-index: 250;
+  border-bottom-right-radius: 4px;
+}
+
+.chat-bubble.received {
+  align-self: flex-start;
+  background: #e9ecef;
+  color: #333;
+  border-bottom-left-radius: 4px;
+}
+
+.chat-bubble small {
+  font-size: 10px;
+  opacity: 0.7;
+  display: block;
+  margin-top: 5px;
 }
 
 .chat-badge {
   position: absolute;
   top: -5px;
   right: -5px;
-  background: red;
+  background: var(--red);
   color: white;
   border-radius: 50%;
   padding: 2px 6px;
@@ -495,7 +806,7 @@ body {
 /* ==================== TOAST ==================== */
 .toast {
   position: fixed;
-  top: 70px;
+  top: 80px;
   left: 50%;
   transform: translateX(-50%) translateY(-100px);
   background: var(--blue-dark);
@@ -507,10 +818,21 @@ body {
   transition: all 0.3s;
   opacity: 0;
   white-space: nowrap;
+  max-width: 90vw;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
 }
 
-.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-.empty-state { text-align: center; padding: 40px 20px; color: var(--gray-dark); }
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--gray-dark);
+}
 
 /* ==================== RECEIPT PRINT ==================== */
 @media print {
@@ -520,8 +842,59 @@ body {
   .no-print { display: none !important; }
 }
 
-.receipt-print-area { font-family: monospace; max-width: 300px; margin: 0 auto; padding: 20px; }
-.receipt-print-area h2 { text-align: center; border-bottom: 2px dashed #ccc; padding-bottom: 10px; margin-bottom: 10px; }
+.receipt-print-area {
+  font-family: monospace;
+  max-width: 300px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.receipt-print-area h2 {
+  text-align: center;
+  border-bottom: 2px dashed #ccc;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .product-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; padding: 12px; }
+  .card { margin: 12px; padding: 16px; }
+  .section-title { padding: 16px 12px 4px; font-size: 18px; }
+  .filter-btn { padding: 8px 16px; font-size: 12px; }
+  .btn { padding: 12px; font-size: 14px; }
+  .form-group input, .form-group select, .form-group textarea { padding: 12px; }
+}
+
+@media (min-width: 768px) {
+  .product-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .stats-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (min-width: 1024px) {
+  .stats-grid { grid-template-columns: repeat(6, 1fr); }
+}
+
+/* ==================== SCROLLBAR ==================== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--blue-light);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--blue);
+}
 </style>
 </head>
 <body>
@@ -540,13 +913,21 @@ body {
   <div class="modal-content">
     <div class="modal-header">
       🔐 Account Required
-      <span style="cursor:pointer; font-size:24px;" onclick="closeAuthModal()">×</span>
+      <span style="cursor:pointer; font-size:26px;" onclick="closeAuthModal()">×</span>
     </div>
     <div id="loginFormContent">
-      <div class="form-group"><label>📧 Email</label><input type="email" id="loginEmail" placeholder="admin@tarazo.com"></div>
-      <div class="form-group"><label>🔒 Password</label><input type="password" id="loginPassword" placeholder="Enter password"></div>
+      <div class="form-group">
+        <label>📧 Email</label>
+        <input type="email" id="loginEmail" placeholder="admin@tarazo.com">
+      </div>
+      <div class="form-group">
+        <label>🔒 Password</label>
+        <input type="password" id="loginPassword" placeholder="Enter password">
+      </div>
       <button class="btn btn-primary" onclick="submitLogin()">🔐 Login</button>
-      <div class="toggle-text" style="text-align:center; margin-top:15px;">No account? <span onclick="showRegisterForm()" style="color:var(--blue); font-weight:700; cursor:pointer;">📝 Register</span></div>
+      <div class="toggle-text" style="text-align:center; margin-top:16px;">
+        No account? <span onclick="showRegisterForm()" style="color:var(--blue); font-weight:700; cursor:pointer;">📝 Register</span>
+      </div>
     </div>
     <div id="registerFormContent" class="hidden">
       <div class="form-group"><label>👤 Full Name</label><input type="text" id="regName" placeholder="Your name"></div>
@@ -555,7 +936,7 @@ body {
       <div class="form-group"><label>🔒 Password</label><input type="password" id="regPassword" placeholder="Create password"></div>
       <div class="form-group"><label>🔒 Confirm</label><input type="password" id="regConfirmPassword" placeholder="Confirm password"></div>
       <button class="btn btn-green" onclick="submitRegister()">✅ Create Account</button>
-      <div class="toggle-text" style="text-align:center; margin-top:15px;">Have an account? <span onclick="showLoginForm()" style="color:var(--blue); font-weight:700; cursor:pointer;">🔐 Login</span></div>
+      <div class="toggle-text" style="text-align:center; margin-top:16px;">Have an account? <span onclick="showLoginForm()" style="color:var(--blue); font-weight:700; cursor:pointer;">🔐 Login</span></div>
     </div>
   </div>
 </div>
@@ -573,7 +954,7 @@ body {
 
   <!-- USER SHOP -->
   <div id="userShop" class="page">
-    <div style="padding:15px;"><input type="text" id="searchInput" class="search-input" placeholder="🔍 Search products..." onkeyup="searchProducts(this.value)"></div>
+    <div style="padding:16px;"><input type="text" id="searchInput" class="search-input" placeholder="🔍 Search products..." onkeyup="searchProducts(this.value)"></div>
     <div class="filter-row">
       <button class="filter-btn active" onclick="filterProducts('all', this)">🏠 All</button>
       <button class="filter-btn" onclick="filterProducts('Terrazzo', this)">🏛️ Terrazzo</button>
@@ -592,7 +973,7 @@ body {
     <div id="cartItems"></div>
     <div class="card" id="cartSummary">
       <div style="display:flex; justify-content:space-between; font-size:18px; font-weight:800;"><span>💵 Total:</span><span id="cartTotal" style="color:var(--blue);">UGX 0</span></div>
-      <button class="btn btn-green" style="margin-top:15px;" onclick="showCheckout()">✅ Proceed to Checkout</button>
+      <button class="btn btn-green" style="margin-top:16px;" onclick="showCheckout()">✅ Proceed to Checkout</button>
     </div>
   </div>
 
@@ -611,7 +992,7 @@ body {
       </div>
       <div id="cardPaymentFields" class="hidden">
         <div class="form-group"><label>💳 Card Number</label><input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19"><div id="cardBrand" class="hidden" style="font-size:12px;margin-top:5px;"></div></div>
-        <div class="form-row" style="display:flex;gap:10px;">
+        <div class="form-row">
           <div class="form-group" style="flex:1;"><label>📅 Expiry (MM/YY)</label><input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5"></div>
           <div class="form-group" style="flex:1;"><label>🔒 CVV</label><input type="password" id="cardCvv" placeholder="123" maxlength="4"></div>
         </div>
@@ -619,7 +1000,7 @@ body {
       </div>
       <div class="form-group"><label>📱 Phone Number</label><input type="tel" id="payPhone" placeholder="07XX XXX XXX" value="0770000000"></div>
       <div class="form-group"><label>🏠 Delivery Address</label><textarea id="deliveryAddress" placeholder="Your delivery address" rows="3"></textarea></div>
-      <div style="background:#fff3cd; padding:15px; border-radius:10px; margin:15px 0; font-size:13px; color:#856404;"><strong>⚠️ DEMO MODE:</strong> No real money will be deducted.</div>
+      <div style="background:#fff3cd; padding:15px; border-radius:12px; margin:16px 0; font-size:13px; color:#856404;"><strong>⚠️ DEMO MODE:</strong> No real money will be deducted.</div>
       <div style="display:flex; justify-content:space-between; font-size:20px; font-weight:800; margin:20px 0;"><span>💵 Total:</span><span id="checkoutTotal" style="color:var(--green);">UGX 0</span></div>
       <button class="btn btn-green" onclick="processPayment()">💰 Place Order</button>
       <button class="btn btn-outline" onclick="navigateTo('userCart')">⬅️ Back to Cart</button>
@@ -703,13 +1084,41 @@ body {
     <div class="card"><div class="card-title">🖨️ My Receipts</div><div id="agentReceipts"></div></div>
   </div>
 
-  <!-- CHAT WIDGET -->
-  <div class="chat-widget"><button class="chat-btn" onclick="toggleChat()">💬</button></div>
-  <div id="chatBox" class="chat-box hidden"><div class="chat-header">🤖 WAMP Assistant<span style="cursor:pointer" onclick="toggleChat()">✕</span></div><div class="chat-messages" id="chatMessages"></div><div class="chat-input-area"><input type="text" id="chatInput" placeholder="Ask about prices, delivery..." onkeypress="if(event.key==='Enter')sendChat()"><button class="btn-sm btn-green" onclick="sendChat()">Send</button></div></div>
+  <!-- CHAT WIDGET (AI BOT) -->
+  <div class="chat-widget">
+    <button class="chat-btn" onclick="toggleChat()">💬</button>
+  </div>
+  <div id="chatBox" class="chat-box hidden">
+    <div class="chat-header">
+      🤖 WAMP AI Assistant
+      <span style="cursor:pointer" onclick="toggleChat()">✕</span>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-msg bot">👋 Welcome to WAMP Enterprises! Ask me about our products, prices, or delivery options.</div>
+    </div>
+    <div class="chat-input-area">
+      <input type="text" id="chatInput" placeholder="Type your message..." onkeypress="if(event.key==='Enter') sendChat()">
+      <button class="btn-sm btn-green" onclick="sendChat()">Send</button>
+    </div>
+  </div>
 
   <!-- UNIFIED CHAT PANEL -->
   <button class="chat-unified-btn" id="unifiedChatBtn" onclick="openChatPanel()">💬<span class="chat-badge hidden" id="chatUnreadBadge">0</span></button>
-  <div id="unifiedChatPanel" class="chat-panel hidden"><div class="chat-panel-header"><span>💬 Messages</span><button onclick="closeChatPanel()" style="background:none;border:none;color:white;font-size:18px;cursor:pointer;">✕</button></div><div class="chat-rooms-list" id="chatRoomsList"><div class="empty-state">Loading conversations...</div></div><div class="chat-messages-area hidden" id="chatMessagesArea"><div class="chat-messages-header" id="chatMessagesHeader"></div><div class="chat-messages-container" id="chatMessagesContainer"></div><div class="chat-input-area"><input type="text" id="chatMessageInput" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendChatMessage()"><button class="btn-sm btn-primary" onclick="sendChatMessage()">Send</button></div></div></div>
+  <div id="unifiedChatPanel" class="chat-panel hidden">
+    <div class="chat-panel-header">
+      <span>💬 Messages</span>
+      <button onclick="closeChatPanel()" style="background:none;border:none;color:white;font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    <div class="chat-rooms-list" id="chatRoomsList"><div class="empty-state">Loading conversations...</div></div>
+    <div class="chat-messages-area hidden" id="chatMessagesArea">
+      <div class="chat-messages-header" id="chatMessagesHeader"></div>
+      <div class="chat-messages-container" id="chatMessagesContainer"></div>
+      <div class="chat-input-area">
+        <input type="text" id="chatMessageInput" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+        <button class="btn-sm btn-primary" onclick="sendChatMessage()">Send</button>
+      </div>
+    </div>
+  </div>
 
   <!-- WHATSAPP DUAL BUTTON -->
   <div class="whatsapp-widget" id="whatsappWidget">
@@ -720,7 +1129,7 @@ body {
     </div>
   </div>
 
-  <!-- BOTTOM NAVIGATION -->
+  <!-- BOTTOM NAVIGATION - COLORFUL -->
   <div class="bottom-nav" id="bottomNav"></div>
 </div>
 
@@ -808,14 +1217,33 @@ function navigateTo(pageId) {
   if (pageId === 'adminDashboard') { renderAdminDashboard(); loadReceiptLogs(); }
   if (pageId === 'adminOrders') renderAdminOrders();
   if (pageId === 'agentPanel') { renderAgentPanel(); loadCustomersForAgent(); }
+  updateActiveNav(pageId);
+}
+
+function updateActiveNav(pageId) {
+  const navMap = {
+    'userShop': 'shop', 'userOrders': 'orders', 'userCart': 'cart', 'userDashboard': 'profile',
+    'adminDashboard': 'dashboard', 'adminProducts': 'products', 'adminOrders': 'orders',
+    'agentPanel': 'dashboard'
+  };
+  const activeKey = navMap[pageId] || (pageId === 'adminDashboard' ? 'dashboard' : (pageId === 'agentPanel' ? 'dashboard' : 'shop'));
+  document.querySelectorAll('.nav-item').forEach(nav => {
+    nav.classList.remove('active');
+    if (nav.getAttribute('data-nav') === activeKey) nav.classList.add('active');
+  });
 }
 
 function setupNavigation() {
   const nav = document.getElementById('bottomNav');
-  if (!AppState.user) nav.innerHTML = '<div class="nav-item" onclick="navigateTo(\'userShop\')"><span class="nav-icon">🏪</span>Shop</div><div class="nav-item" onclick="openAuthModal()"><span class="nav-icon">🔐</span>Login</div>';
-  else if (AppState.user.role === 'admin') nav.innerHTML = '<div class="nav-item" onclick="navigateTo(\'adminDashboard\')"><span class="nav-icon">📊</span>Dashboard</div><div class="nav-item" onclick="navigateTo(\'adminOrders\')"><span class="nav-icon">📋</span>Orders</div><div class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span>Exit</div>';
-  else if (AppState.user.role === 'agent') nav.innerHTML = '<div class="nav-item" onclick="navigateTo(\'agentPanel\')"><span class="nav-icon">📦</span>Orders</div><div class="nav-item" onclick="navigateTo(\'userOrders\')"><span class="nav-icon">📜</span>My Orders</div><div class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span>Exit</div>';
-  else nav.innerHTML = '<div class="nav-item" onclick="navigateTo(\'userShop\')"><span class="nav-icon">🏪</span>Shop</div><div class="nav-item" onclick="navigateTo(\'userOrders\')"><span class="nav-icon">📦</span>Orders</div><div class="nav-item" onclick="navigateTo(\'userCart\')"><span class="nav-icon">🛒</span>Cart</div><div class="nav-item" onclick="navigateTo(\'userDashboard\')"><span class="nav-icon">👤</span>Profile</div>';
+  if (!AppState.user) {
+    nav.innerHTML = '<div class="nav-item" data-nav="shop" onclick="navigateTo(\'userShop\')"><span class="nav-icon">🏪</span><span>Shop</span></div><div class="nav-item" data-nav="login" onclick="openAuthModal()"><span class="nav-icon">🔐</span><span>Login</span></div>';
+  } else if (AppState.user.role === 'admin') {
+    nav.innerHTML = '<div class="nav-item" data-nav="dashboard" onclick="navigateTo(\'adminDashboard\')"><span class="nav-icon">📊</span><span>Dashboard</span></div><div class="nav-item" data-nav="products" onclick="navigateTo(\'adminDashboard\')"><span class="nav-icon">📦</span><span>Products</span></div><div class="nav-item" data-nav="orders" onclick="navigateTo(\'adminOrders\')"><span class="nav-icon">📋</span><span>Orders</span></div><div class="nav-item" data-nav="exit" onclick="logout()"><span class="nav-icon">🚪</span><span>Exit</span></div>';
+  } else if (AppState.user.role === 'agent') {
+    nav.innerHTML = '<div class="nav-item" data-nav="dashboard" onclick="navigateTo(\'agentPanel\')"><span class="nav-icon">📦</span><span>Orders</span></div><div class="nav-item" data-nav="orders" onclick="navigateTo(\'userOrders\')"><span class="nav-icon">📜</span><span>My Orders</span></div><div class="nav-item" data-nav="exit" onclick="logout()"><span class="nav-icon">🚪</span><span>Exit</span></div>';
+  } else {
+    nav.innerHTML = '<div class="nav-item" data-nav="shop" onclick="navigateTo(\'userShop\')"><span class="nav-icon">🏪</span><span>Shop</span></div><div class="nav-item" data-nav="orders" onclick="navigateTo(\'userOrders\')"><span class="nav-icon">📦</span><span>Orders</span></div><div class="nav-item" data-nav="cart" onclick="navigateTo(\'userCart\')"><span class="nav-icon">🛒</span><span>Cart</span></div><div class="nav-item" data-nav="profile" onclick="navigateTo(\'userDashboard\')"><span class="nav-icon">👤</span><span>Profile</span></div>';
+  }
 }
 
 // ==================== PRODUCT RENDERING ====================
@@ -869,10 +1297,9 @@ async function processPayment() {
   try { const res = await apiCall('/orders', { method: 'POST', body: JSON.stringify({ items, total, payment_method: method, delivery_location: deliveryAddress }) }); showToast('Order placed successfully!'); await refreshAllData(); navigateTo('userOrders'); renderUserOrders(); const newOrder = { id: res.order_id, total: total, payment_method: method, created_at: new Date().toISOString(), items: AppState.cart.map(c => { const p = AppState.products.find(pr => pr.id === c.product_id); return { name: p?.name, price: p?.price, quantity: c.quantity }; }) }; printReceipt(newOrder); } catch(e) { showToast('Order failed: ' + e.message, true); }
 }
 
-// ==================== RECEIPT PRINTING WITH LOGGING ====================
+// ==================== RECEIPT PRINTING ====================
 async function printReceipt(order) {
   if (!order) return;
-  // Log receipt print to backend
   try { await apiCall(`/orders/${order.id}/receipt`, { method: 'POST' }); } catch(e) { console.log('Receipt logging failed'); }
   const receiptHtml = `<div class="receipt-print-area"><h2>🏗️ WAMP ENTERPRISES LTD</h2><p style="text-align:center;margin-bottom:15px;">Terrazzo • Plumbing • General Merchandise<br>Tel: +256 772 123456</p><div style="margin-bottom:15px;border-bottom:1px solid #ccc;padding-bottom:10px;"><p><strong>Order #:</strong> ${order.id}</p><p><strong>Date:</strong> ${new Date(order.created_at).toLocaleString()}</p><p><strong>Customer:</strong> ${escapeHtml(AppState.user?.name || 'Customer')}</p><p><strong>Payment:</strong> ${order.payment_method || 'N/A'}</p></div><div style="margin:15px 0;"><table style="width:100%;font-size:12px;"><thead><tr><th style="text-align:left;">Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>${(order.items || []).map(item => `<tr><td style="text-align:left;">${escapeHtml(item.name)}</td><td style="text-align:center;">${item.quantity}</td><td style="text-align:right;">UGX ${(item.price || 0).toLocaleString()}</td><td style="text-align:right;">UGX ${((item.price || 0) * (item.quantity || 1)).toLocaleString()}</td></tr>`).join('')}</tbody></table></div><div style="text-align:right;font-size:18px;font-weight:bold;margin:15px 0;border-top:2px dashed #ccc;padding-top:10px;">Total: UGX ${(order.total || 0).toLocaleString()}</div><div style="text-align:center;margin-top:20px;font-size:11px;border-top:2px dashed #ccc;padding-top:10px;"><p>Thank you for shopping with WAMP!</p><p>Delivery within 24-48 hours</p></div></div>`;
   const printWindow = window.open('', '_blank'); printWindow.document.write(`<html><head><title>Receipt #${order.id}</title><style>body{font-family:monospace;margin:0;padding:20px;}@media print{body{margin:0;padding:0;}}</style></head><body>${receiptHtml}</body></html>`); printWindow.document.close(); printWindow.print();
@@ -937,9 +1364,7 @@ async function renderAdminOrders() {
 }
 
 async function updateOrder(orderId) { const newStatus = document.getElementById(`orderStatus_${orderId}`).value; try { await apiCall(`/orders/${orderId}/status`, { method: 'PUT', body: JSON.stringify({ status: newStatus }) }); showToast('Order status updated'); const ordersRes = await apiCall('/orders'); AppState.orders = ordersRes; renderAdminOrders(); } catch(e) { showToast('Update failed', true); } }
-
 async function assignRider(orderId) { const riderName = document.getElementById(`riderName_${orderId}`).value, riderPhone = document.getElementById(`riderPhone_${orderId}`).value; if (!riderName || !riderPhone) { showToast('Enter rider name and phone', true); return; } try { await apiCall(`/admin/orders/${orderId}/assign-rider`, { method: 'PUT', body: JSON.stringify({ rider_name: riderName, rider_phone: riderPhone }) }); showToast('Rider assigned'); const ordersRes = await apiCall('/orders'); AppState.orders = ordersRes; renderAdminOrders(); } catch(e) { showToast('Assignment failed', true); } }
-
 async function exportOrdersCSV() { window.open(`${API_BASE}/admin/orders/export?token=${getToken()}`, '_blank'); }
 async function sendBroadcast() { const message = document.getElementById('broadcastMessage').value; if (!message) { showToast('Enter a message', true); return; } try { await apiCall('/admin/broadcast', { method: 'POST', body: JSON.stringify({ message, title: 'Admin Broadcast' }) }); showToast('Broadcast sent to all agents'); document.getElementById('broadcastMessage').value = ''; } catch(e) { showToast('Broadcast failed', true); } }
 
@@ -973,7 +1398,7 @@ function startGroupChatPolling() { if (groupChatPolling) clearInterval(groupChat
 async function loadCustomersForAgent() {
   try { const customers = await apiCall('/agent/customers'); const select = document.getElementById('customerSelect'); if (select) select.innerHTML = '<option value="">Select a customer...</option>' + customers.map(c => `<option value="${c.id}">${escapeHtml(c.name)} - ${c.order_count} orders</option>`).join(''); } catch(e) { console.error('Load customers error:', e); }
 }
-async function startCustomerChat(customerId) { try { const res = await apiCall('/chat/rooms', { method: 'POST', body: JSON.stringify({ type: 'customer_agent', other_user_id: customerId }) }); document.getElementById('customerChatArea').classList.remove('hidden'); await loadChatRoom(res.room_id, `Chat with Customer`); } catch(e) { showToast('Failed to start chat', true); } }
+async function startCustomerChat(customerId) { try { const res = await apiCall('/chat/rooms', { method: 'POST', body: JSON.stringify({ type: 'customer_agent', other_user_id: customerId }) }); document.getElementById('customerChatArea').classList.remove('hidden'); currentChatRoomId = res.room_id; await loadChatRoom(res.room_id, `Chat with Customer`); } catch(e) { showToast('Failed to start chat', true); } }
 document.getElementById('customerSelect')?.addEventListener('change', (e) => { if (e.target.value) startCustomerChat(parseInt(e.target.value)); });
 async function sendCustomerMessage() { if (!currentChatRoomId) return; const input = document.getElementById('customerChatInput'); const message = input.value.trim(); if (!message) return; try { await apiCall(`/chat/rooms/${currentChatRoomId}/messages`, { method: 'POST', body: JSON.stringify({ message }) }); input.value = ''; await loadChatRoom(currentChatRoomId, document.getElementById('chatMessagesHeader').innerText.replace('💬 ', '')); } catch(e) { showToast('Failed to send message', true); } }
 
@@ -989,9 +1414,34 @@ function startChatPolling() { if (chatPollingInterval) clearInterval(chatPolling
 // ==================== NOTIFICATIONS ====================
 async function showNotifications() { if (!AppState.user) { openAuthModal(() => showNotifications()); return; } try { const notifData = await apiCall('/notifications'); const notifications = notifData.notifications || []; if (!notifications.length) { showModal('🔔 Notifications', '<div class="empty-state">No notifications</div>'); return; } const html = notifications.map(n => `<div class="list-item"><div><strong>${escapeHtml(n.title)}</strong><br><small>${escapeHtml(n.message)}</small><br><small style="color:gray;">${new Date(n.date).toLocaleString()}</small></div></div>`).join(''); showModal('🔔 Notifications', html); for (const n of notifications) { if (!n.is_read) { await apiCall(`/notifications/${n.id}/read`, { method: 'POST' }).catch(() => {}); } } document.getElementById('notificationBadge').classList.add('hidden'); } catch(e) { showToast('Failed to load notifications', true); } }
 
-// ==================== CHAT BOT ====================
+// ==================== AI CHAT BOT ====================
 function toggleChat() { document.getElementById('chatBox').classList.toggle('hidden'); }
-async function sendChat() { const input = document.getElementById('chatInput'); const message = input.value.trim(); if (!message) return; const messagesDiv = document.getElementById('chatMessages'); messagesDiv.innerHTML += `<div class="chat-msg user">${escapeHtml(message)}</div>`; input.value = ''; messagesDiv.scrollTop = messagesDiv.scrollHeight; try { const res = await fetch(`${API_BASE}/chat/customer`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message }) }); const data = await res.json(); const aiBadge = data.ai_used ? ' 🤖' : ''; messagesDiv.innerHTML += `<div class="chat-msg bot">${escapeHtml(data.response)}${aiBadge}</div>`; messagesDiv.scrollTop = messagesDiv.scrollHeight; } catch(e) { messagesDiv.innerHTML += `<div class="chat-msg bot">Sorry, I'm having trouble connecting.</div>`; } }
+
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const message = input.value.trim();
+  if (!message) return;
+  
+  const messagesDiv = document.getElementById('chatMessages');
+  messagesDiv.innerHTML += `<div class="chat-msg user">${escapeHtml(message)}</div>`;
+  input.value = '';
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  
+  try {
+    const res = await fetch(`${API_BASE}/chat/customer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message })
+    });
+    const data = await res.json();
+    const aiBadge = data.ai_used ? ' 🤖' : '';
+    messagesDiv.innerHTML += `<div class="chat-msg bot">${escapeHtml(data.response)}${aiBadge}</div>`;
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  } catch(e) {
+    messagesDiv.innerHTML += `<div class="chat-msg bot">Sorry, I'm having trouble connecting. Please try again later.</div>`;
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+}
 
 // ==================== WHATSAPP CONTACTS ====================
 async function loadWhatsAppContacts() { try { const res = await fetch(`${API_BASE}/whatsapp/contacts`); const contacts = await res.json(); const managerLink = document.getElementById('whatsappManagerLink'); const assistantLink = document.getElementById('whatsappAssistantLink'); if (managerLink && contacts.manager) { managerLink.href = `https://wa.me/${contacts.manager.number}?text=${encodeURIComponent(contacts.manager.message)}`; managerLink.innerHTML = `<span class="whatsapp-icon">${contacts.manager.icon}</span> ${contacts.manager.name}`; } if (assistantLink && contacts.assistant) { assistantLink.href = `https://wa.me/${contacts.assistant.number}?text=${encodeURIComponent(contacts.assistant.message)}`; assistantLink.innerHTML = `<span class="whatsapp-icon">${contacts.assistant.icon}</span> ${contacts.assistant.name}`; } } catch(e) { console.error('Failed to load WhatsApp contacts:', e); } }
