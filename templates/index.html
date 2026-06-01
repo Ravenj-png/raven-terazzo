@@ -1116,17 +1116,7 @@ body {
   <div class="bottom-nav" id="bottomNav"></div>
 </div>
 
-<script>
-
-  <!-- Register Service Worker -->
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/raven-terazzo/sw.js')
-      .then(reg => console.log('Service Worker registered:', reg))
-      .catch(err => console.log('Service Worker error:', err));
-  });
-} 
-  
+<script>  
   // ==================== CONFIGURATION ====================
 const API_BASE = 'https://raven-terazzo.onrender.com/api';
 
@@ -2289,13 +2279,14 @@ async function sendChat() {
 }
 
 // ==================== PWA SERVICE WORKER REGISTRATION ====================
+  <!-- Register Service Worker -->
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker.register('/raven-terazzo/sw.js')
       .then(reg => console.log('Service Worker registered:', reg))
       .catch(err => console.log('Service Worker error:', err));
   });
-}
+} 
 
 // ==================== INITIALIZATION ====================
 async function initApp() {
