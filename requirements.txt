@@ -25,5 +25,5 @@ click==8.1.7
 gunicorn==20.1.0
 setuptools==65.5.0
 greenlet==2.0.2
-gevent==22.10.2
+psycopg2-binary==2.9.9gevent==22.10.2
 psycopg2-binary==2.9.9  # ← ADD THIS for PostgreSQL
