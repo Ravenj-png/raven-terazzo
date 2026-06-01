@@ -129,7 +129,7 @@ GEMINI_ENABLED = False
 if GEMINI_API_KEY:
     try:
         genai.configure(api_key=GEMINI_API_KEY)
-        gemini_model = genai.GenerativeModel('gemini-pro')
+        gemini_model = genai.GenerativeModel('gemini-1.5-pro')
         GEMINI_ENABLED = True
         logger.info("✅ Google Gemini AI configured")
     except Exception as e:
