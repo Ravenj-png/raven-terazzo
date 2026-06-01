@@ -1,2564 +1,1578 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>WAMP Enterprises - Terrazzo, Plumbing & Painting</title>
-  
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
-    :root {
-      --blue: #1a5276;
-      --blue-dark: #0e3a56;
-      --blue-light: #2c7ab1;
-      --green: #27ae60;
-      --green-light: #2ecc71;
-      --white: #fff;
-      --gray: #f4f6f9;
-      --gray-dark: #5a6e7a;
-      --border: #e2e8f0;
-      --red: #e74c3c;
-      --orange: #f39c12;
-      --shadow: 0 4px 20px rgba(0, 0, 0, .08);
-    }
-
-    body {
-      background: var(--gray);
-      color: #2c3e50;
-      font-size: 14px;
-      line-height: 1.5;
-      overflow-x: hidden;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    #splashPage {
-      position: fixed;
-      inset: 0;
-      background: linear-gradient(135deg, var(--blue), var(--blue-dark));
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      transition: opacity .6s;
-    }
-
-    .splash-logo {
-      font-size: clamp(32px, 8vw, 48px);
-      font-weight: 800;
-      color: var(--white);
-      letter-spacing: 4px;
-    }
-
-    .splash-sub {
-      color: var(--green-light);
-      font-size: clamp(11px, 3vw, 13px);
-      margin-top: 8px;
-      text-transform: uppercase;
-      letter-spacing: 3px;
-    }
-
-    .splash-loader {
-      width: 50px;
-      height: 50px;
-      border: 4px solid rgba(255, 255, 255, .2);
-      border-top-color: var(--green-light);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-top: 30px;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    #loginPage {
-      min-height: 100vh;
-      background: linear-gradient(135deg, var(--blue), var(--blue-dark));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .login-box {
-      background: var(--white);
-      width: 100%;
-      max-width: 400px;
-      border-radius: 20px;
-      padding: 30px 20px;
-      box-shadow: var(--shadow);
-    }
-
-    .logo-text {
-      text-align: center;
-      font-size: clamp(24px, 6vw, 32px);
-      font-weight: 800;
-      color: var(--blue);
-      margin-bottom: 5px;
-    }
-
-    .logo-sub {
-      text-align: center;
-      color: var(--green);
-      font-size: 12px;
-      font-weight: 600;
-      margin-bottom: 25px;
-      text-transform: uppercase;
-    }
-
-    .form-group {
-      margin-bottom: 15px;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--gray-dark);
-      margin-bottom: 5px;
-      text-transform: uppercase;
-    }
-
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-      width: 100%;
-      padding: 14px;
-      border: 2px solid #e0e0e0;
-      border-radius: 12px;
-      font-size: 15px;
-      transition: border-color .3s;
-      outline: none;
-    }
-
-    .form-group input:focus {
-      border-color: var(--blue);
-    }
-
-    .btn {
-      width: 100%;
-      padding: 16px;
-      border: none;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all .3s;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .btn-primary {
-      background: var(--blue);
-      color: var(--white);
-    }
-
-    .btn-primary:active {
-      background: var(--blue-dark);
-      transform: scale(.98);
-    }
-
-    .btn-green {
-      background: var(--green);
-      color: var(--white);
-    }
-
-    .btn-green:active {
-      background: #219a52;
-      transform: scale(.98);
-    }
-
-    .btn-outline {
-      background: transparent;
-      border: 2px solid var(--blue);
-      color: var(--blue);
-      margin-top: 10px;
-    }
-
-    .btn-red {
-      background: var(--red);
-      color: var(--white);
-    }
-
-    .btn-sm {
-      padding: 8px 14px;
-      border: none;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      margin-top: 10px;
-      width: auto;
-      display: inline-block;
-    }
-
-    .remember-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin: 10px 0 15px;
-      font-size: 13px;
-      color: var(--gray-dark);
-    }
-
-    .remember-row input {
-      width: 18px;
-      height: 18px;
-      accent-color: var(--blue);
-    }
-
-    .toggle-text {
-      text-align: center;
-      margin-top: 15px;
-      font-size: 14px;
-      color: var(--gray-dark);
-    }
-
-    .toggle-text span {
-      color: var(--blue);
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .forgot-link {
-      text-align: center;
-      margin-top: 10px;
-      font-size: 13px;
-      color: var(--blue);
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    #appContainer {
-      min-height: 100vh;
-      padding-bottom: 80px;
-    }
-
-    .app-header {
-      background: var(--blue);
-      color: var(--white);
-      padding: 15px 20px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, .1);
-    }
-
-    .app-header h1 {
-      font-size: clamp(16px, 4vw, 20px);
-      letter-spacing: 1px;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 15px;
-      align-items: center;
-    }
-
-    .user-greeting {
-      font-size: 13px;
-      font-weight: 600;
-      opacity: .9;
-      margin-right: 5px;
-      display: none;
-    }
-
-    @media(min-width: 400px) {
-      .user-greeting { display: block; }
-    }
-
-    .icon-btn {
-      background: rgba(255, 255, 255, .2);
-      border: none;
-      color: var(--white);
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      cursor: pointer;
-      position: relative;
-    }
-
-    .badge {
-      position: absolute;
-      top: -5px;
-      right: -5px;
-      background: var(--red);
-      color: var(--white);
-      font-size: 10px;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-    }
-
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: var(--white);
-      display: flex;
-      justify-content: space-around;
-      padding: 10px 0;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, .1);
-      z-index: 100;
-      border-top: 1px solid #eee;
-    }
-
-    .nav-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      color: var(--gray-dark);
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      padding: 5px 10px;
-      border-radius: 10px;
-      transition: all .2s;
-      flex: 1;
-    }
-
-    .nav-item.active {
-      color: var(--blue);
-      background: rgba(26, 82, 118, .1);
-    }
-
-    .nav-icon {
-      font-size: 22px;
-    }
-
-    .card {
-      background: var(--white);
-      border-radius: 16px;
-      padding: 20px;
-      margin: 15px;
-      box-shadow: var(--shadow);
-    }
-
-    .card-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--blue-dark);
-      margin-bottom: 15px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      margin: 15px;
-    }
-
-    .stat-card {
-      background: var(--white);
-      border-radius: 16px;
-      padding: 18px;
-      text-align: center;
-      box-shadow: var(--shadow);
-      border-left: 4px solid var(--blue);
-      cursor: pointer;
-      transition: transform .2s;
-    }
-
-    .stat-card:active {
-      transform: scale(.98);
-    }
-
-    .stat-card.green {
-      border-left-color: var(--green);
-    }
-
-    .stat-card.orange {
-      border-left-color: var(--orange);
-    }
-
-    .stat-card.red {
-      border-left-color: var(--red);
-    }
-
-    .stat-value {
-      font-size: clamp(18px, 5vw, 24px);
-      font-weight: 800;
-      color: var(--blue-dark);
-    }
-
-    .stat-label {
-      font-size: 12px;
-      color: var(--gray-dark);
-      margin-top: 5px;
-      font-weight: 600;
-    }
-
-    .product-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 12px;
-      padding: 15px;
-    }
-
-    .product-card {
-      background: var(--white);
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: var(--shadow);
-      cursor: pointer;
-      transition: transform .2s;
-    }
-
-    .product-card:active {
-      transform: scale(.98);
-    }
-
-    .product-card img {
-      width: 100%;
-      height: 150px;
-      object-fit: cover;
-      background: #e0e0e0;
-    }
-
-    .product-info {
-      padding: 12px;
-    }
-
-    .product-name {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--blue-dark);
-      margin-bottom: 5px;
-    }
-
-    .product-type {
-      font-size: 11px;
-      color: var(--green);
-      font-weight: 600;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-
-    .product-price {
-      font-size: 18px;
-      font-weight: 800;
-      color: var(--blue);
-    }
-
-    .product-stock {
-      font-size: 11px;
-      color: var(--gray-dark);
-      margin-top: 5px;
-    }
-
-    .product-stock.low {
-      color: var(--red);
-      font-weight: 700;
-    }
-
-    .list-item {
-      background: var(--white);
-      margin: 10px 15px;
-      padding: 15px;
-      border-radius: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, .05);
-      cursor: pointer;
-      transition: all .2s;
-    }
-
-    .list-item:active {
-      background: #f0f0f0;
-    }
-
-    .list-info h4 {
-      font-size: 15px;
-      color: var(--blue-dark);
-      margin-bottom: 3px;
-    }
-
-    .list-info p {
-      font-size: 12px;
-      color: var(--gray-dark);
-    }
-
-    .status-badge {
-      padding: 5px 10px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-
-    .status-pending {
-      background: #fff3cd;
-      color: #856404;
-    }
-
-    .status-paid {
-      background: #d4edda;
-      color: #155724;
-    }
-
-    .status-processing {
-      background: #e2e3f3;
-      color: #383d7a;
-    }
-
-    .status-shipped {
-      background: #cce5ff;
-      color: #004085;
-    }
-
-    .status-delivered {
-      background: #d1ecf1;
-      color: #0c5460;
-    }
-
-    .status-completed {
-      background: #d4edda;
-      color: #155724;
-    }
-
-    .status-cancelled {
-      background: #f8d7da;
-      color: #721c24;
-    }
-
-    .hero-slider {
-      position: relative;
-      width: 100%;
-      height: 200px;
-      overflow: hidden;
-      margin-bottom: 15px;
-    }
-
-    @media(min-width: 768px) {
-      .hero-slider { height: 300px; }
-    }
-
-    .slider-container {
-      position: relative;
-      width: 100%;
-      height: 100%;
-    }
-
-    .slider-slide {
-      position: absolute;
-      inset: 0;
-      background-size: cover;
-      background-position: center;
-      opacity: 0;
-      transition: opacity .5s ease-in-out;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .slider-slide.active {
-      opacity: 1;
-    }
-
-    .slide-caption {
-      background: rgba(0, 0, 0, .6);
-      color: var(--white);
-      padding: 12px 20px;
-      border-radius: 30px;
-      font-size: clamp(18px, 5vw, 28px);
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-    }
-
-    .slider-dots {
-      position: absolute;
-      bottom: 10px;
-      left: 0;
-      right: 0;
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      z-index: 5;
-    }
-
-    .slider-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, .5);
-      cursor: pointer;
-    }
-
-    .slider-dot.active {
-      background: var(--white);
-      width: 20px;
-      border-radius: 10px;
-    }
-
-    .chat-widget {
-      position: fixed;
-      bottom: 80px;
-      right: 20px;
-      z-index: 200;
-    }
-
-    .chat-btn {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      background: var(--green);
-      color: var(--white);
-      border: none;
-      font-size: 24px;
-      cursor: pointer;
-      box-shadow: 0 4px 15px rgba(39, 174, 96, .4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .chat-box {
-      position: fixed;
-      bottom: 150px;
-      right: 20px;
-      width: calc(100% - 40px);
-      max-width: 350px;
-      height: 450px;
-      background: var(--white);
-      border-radius: 20px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, .2);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      z-index: 250;
-    }
-
-    .chat-header {
-      background: var(--blue);
-      color: var(--white);
-      padding: 15px;
-      font-weight: 700;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .chat-close {
-      background: rgba(255, 255, 255, .2);
-      border: none;
-      color: var(--white);
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    .chat-messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 15px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .chat-msg {
-      max-width: 80%;
-      padding: 10px 14px;
-      border-radius: 14px;
-      font-size: 14px;
-      line-height: 1.4;
-      word-break: break-word;
-    }
-
-    .chat-msg.user {
-      align-self: flex-end;
-      background: var(--blue);
-      color: var(--white);
-      border-bottom-right-radius: 4px;
-    }
-
-    .chat-msg.bot {
-      align-self: flex-start;
-      background: var(--gray);
-      color: #2c3e50;
-      border-bottom-left-radius: 4px;
-    }
-
-    .chat-input-area {
-      display: flex;
-      padding: 10px;
-      border-top: 1px solid #eee;
-      gap: 8px;
-    }
-
-    .chat-input-area input {
-      flex: 1;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 20px;
-      outline: none;
-    }
-
-    .whatsapp-widget {
-      position: fixed;
-      bottom: 80px;
-      left: 20px;
-      z-index: 200;
-    }
-
-    .whatsapp-btn {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      background: #25d366;
-      color: var(--white);
-      border: none;
-      font-size: 28px;
-      cursor: pointer;
-      box-shadow: 0 4px 15px rgba(37, 211, 102, .4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-decoration: none;
-    }
-
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, .5);
-      z-index: 300;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .modal-content {
-      background: var(--white);
-      border-radius: 20px;
-      padding: 25px;
-      width: 100%;
-      max-width: 450px;
-      max-height: 85vh;
-      overflow-y: auto;
-    }
-
-    .modal-header {
-      font-size: 20px;
-      font-weight: 800;
-      color: var(--blue-dark);
-      margin-bottom: 15px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .toast {
-      position: fixed;
-      top: 70px;
-      left: 50%;
-      transform: translateX(-50%) translateY(-100px);
-      background: var(--blue-dark);
-      color: var(--white);
-      padding: 14px 24px;
-      border-radius: 12px;
-      font-weight: 600;
-      z-index: 400;
-      transition: all .3s;
-      opacity: 0;
-      white-space: nowrap;
-    }
-
-    .toast.show {
-      transform: translateX(-50%) translateY(0);
-      opacity: 1;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--gray-dark);
-    }
-
-    .filter-row {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding: 0 15px 15px;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .filter-btn {
-      padding: 8px 16px;
-      border: 2px solid #ddd;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-      background: var(--white);
-      color: var(--gray-dark);
-    }
-
-    .filter-btn.active {
-      background: var(--blue);
-      color: var(--white);
-      border-color: var(--blue);
-    }
-
-    .msg-thread {
-      background: var(--white);
-      margin: 10px 15px;
-      padding: 15px;
-      border-radius: 12px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, .05);
-    }
-
-    .msg-thread-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .msg-thread-title {
-      font-weight: 700;
-      color: var(--blue-dark);
-    }
-
-    .msg-thread-time {
-      font-size: 11px;
-      color: var(--gray-dark);
-    }
-
-    .agent-stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin: 15px 0;
-    }
-
-    .agent-stat-box {
-      background: var(--white);
-      padding: 15px;
-      border-radius: 12px;
-      text-align: center;
-      box-shadow: var(--shadow);
-    }
-
-    .agent-stat-value {
-      font-size: 24px;
-      font-weight: 800;
-      color: var(--blue);
-    }
-
-    .agent-stat-label {
-      font-size: 11px;
-      color: var(--gray-dark);
-      margin-top: 5px;
-    }
-
-    @media print {
-      body * {
-        visibility: hidden;
-      }
-      
-      .receipt-print-area,
-      .receipt-print-area * {
-        visibility: visible;
-      }
-      
-      .receipt-print-area {
-        position: absolute;
-        inset: 0;
-        padding: 20px;
-        background: var(--white);
-      }
-      
-      .no-print {
-        display: none !important;
-      }
-    }
-
-    .receipt-print-area {
-      font-family: monospace;
-      max-width: 300px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    .receipt-print-area h2 {
-      text-align: center;
-      border-bottom: 2px dashed #ccc;
-      padding-bottom: 10px;
-      margin-bottom: 10px;
-    }
-  </style>
-</head>
-
-<body>
-  <div id="toast" class="toast"></div>
-  
-  <div id="splashPage">
-    <div class="splash-logo">🏗️ WAMP</div>
-    <div class="splash-sub">Enterprises Ltd</div>
-    <div class="splash-loader"></div>
-  </div>
-
-  <div id="loginPage" class="hidden">
-    <div class="login-box">
-      <div class="logo-text">🏗️ WAMP</div>
-      <div class="logo-sub">Terrazzo • Plumbing • Painting</div>
-      
-      <div id="loginForm">
-        <div class="form-group">
-          <label>📧 Email</label>
-          <input type="email" id="loginEmail" placeholder="Enter email">
-        </div>
+# WAMP BACKEND - COMPLETE PRODUCTION (NO HARD-CODED CREDENTIALS)
+# ================================================================
+
+import os
+import re
+import json
+import secrets
+import logging
+import hmac
+import hashlib
+import time
+import base64
+import csv
+import io
+from datetime import datetime, timedelta
+from functools import wraps
+
+from flask import Flask, request, jsonify, make_response
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from flask_cors import CORS
+from flask_jwt_extended import (
+    JWTManager, create_access_token, create_refresh_token,
+    jwt_required, get_jwt_identity, get_jwt
+)
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
+from itsdangerous import URLSafeTimedSerializer
+from sqlalchemy import func, text
+from sqlalchemy.exc import SQLAlchemyError
+from dotenv import load_dotenv
+from werkzeug.middleware.proxy_fix import ProxyFix
+
+# Cloudinary for image upload
+import cloudinary
+import cloudinary.uploader
+
+# Redis for rate limiting
+import redis
+
+load_dotenv()
+
+# ==================== APP INITIALIZATION ====================
+app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+app_start_time = datetime.utcnow()
+
+# ==================== LOGGING ====================
+class SensitiveDataFilter(logging.Filter):
+    def filter(self, record):
+        if hasattr(record, 'msg') and isinstance(record.msg, str):
+            record.msg = re.sub(r'(077|078|076|079|075|074|070|073|071)\d{6}', '[PHONE]', record.msg)
+            record.msg = re.sub(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', '[EMAIL]', record.msg)
+        return True
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler()]
+)
+logger = logging.getLogger(__name__)
+logger.addFilter(SensitiveDataFilter())
+
+# ==================== CONFIGURATION ====================
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
+app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=7)
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB
+app.config['JWT_TOKEN_LOCATION'] = ['headers']
+app.config['JWT_HEADER_NAME'] = 'Authorization'
+app.config['JWT_HEADER_TYPE'] = 'Bearer'
+app.config['JWT_IDENTITY_CLAIM'] = 'sub'
+
+# Check required secrets
+if not app.config['SECRET_KEY']:
+    logger.error("❌ SECRET_KEY not set in environment variables!")
+if not app.config['JWT_SECRET_KEY']:
+    logger.error("❌ JWT_SECRET_KEY not set in environment variables!")
+
+# Database
+database_url = os.environ.get('DATABASE_URL')
+if not database_url:
+    logger.error("❌ DATABASE_URL not set in environment variables!")
+
+if database_url and database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_size': 10,
+    'pool_recycle': 300,
+    'pool_pre_ping': True,
+}
+
+# ==================== CLOUDINARY ====================
+cloudinary.config(
+    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
+    api_key=os.environ.get('CLOUDINARY_API_KEY', ''),
+    api_secret=os.environ.get('CLOUDINARY_API_SECRET', '')
+)
+CLOUDINARY_ENABLED = bool(os.environ.get('CLOUDINARY_API_KEY') and os.environ.get('CLOUDINARY_API_SECRET'))
+
+if CLOUDINARY_ENABLED:
+    logger.info("✅ Cloudinary configured")
+else:
+    logger.info("ℹ️ Cloudinary not configured - images stored in database only")
+
+# ==================== CORS ====================
+ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', 'https://ravenj-png.github.io,http://localhost:5500,http://localhost:5000,https://raven-terazzo.onrender.com').split(',')
+
+CORS(app, origins=ALLOWED_ORIGINS, supports_credentials=True,
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+     allow_headers=["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+     expose_headers=["Content-Type", "Authorization"],
+     max_age=3600)
+
+# ==================== REDIS (Rate Limiting) ====================
+try:
+    redis_url = os.environ.get('REDIS_URL')
+    if redis_url:
+        redis_client = redis.from_url(redis_url, socket_timeout=5, decode_responses=True)
+        redis_client.ping()
+        logger.info("✅ Redis connected")
+    else:
+        redis_client = None
+        logger.info("ℹ️ Redis not configured - rate limiting disabled")
+except Exception as e:
+    redis_client = None
+    logger.warning(f"⚠️ Redis connection failed: {e}")
+
+# ==================== EXTENSIONS ====================
+jwt = JWTManager(app)
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+ph = PasswordHasher()
+serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'] or 'fallback-for-serializer')
+
+# ==================== BRUTE FORCE PROTECTION ====================
+def record_failed_login(ip):
+    if not redis_client:
+        return
+    try:
+        key = f"login_attempts:{ip}"
+        redis_client.lpush(key, time.time())
+        redis_client.ltrim(key, 0, 9)
+        redis_client.expire(key, 900)
+    except:
+        pass
+
+def is_ip_blocked(ip):
+    if not redis_client:
+        return False
+    try:
+        key = f"login_attempts:{ip}"
+        attempts = redis_client.lrange(key, 0, -1)
+        now = time.time()
+        recent = [float(a) for a in attempts if float(a) > now - 900]
+        return len(recent) >= 10
+    except:
+        return False
+
+def reset_failed_attempts(ip):
+    if not redis_client:
+        return
+    try:
+        redis_client.delete(f"login_attempts:{ip}")
+    except:
+        pass
+
+# ==================== DATABASE MODELS ====================
+class User(db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(255), unique=True, nullable=False, index=True)
+    phone = db.Column(db.String(20))
+    password_hash = db.Column(db.String(255), nullable=False)
+    role = db.Column(db.String(20), default='user', index=True)
+    status = db.Column(db.String(20), default='online')
+    address = db.Column(db.String(500))
+    email_verified = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class Product(db.Model):
+    __tablename__ = 'products'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    category = db.Column(db.String(50), nullable=False, index=True)  # Terrazzo, Plumbing, General
+    price = db.Column(db.Integer, nullable=False)
+    stock = db.Column(db.Integer, default=0)
+    reserved_stock = db.Column(db.Integer, default=0)
+    description = db.Column(db.Text)
+    image_url = db.Column(db.String(500))
+    image_data = db.Column(db.Text)
+    image_type = db.Column(db.String(20), default='url')  # 'url', 'db', 'cloudinary'
+    image_mime = db.Column(db.String(50))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    @property
+    def available_stock(self):
+        return self.stock - self.reserved_stock
+
+class CartItem(db.Model):
+    __tablename__ = 'cart_items'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'))
+    quantity = db.Column(db.Integer, default=1)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Order(db.Model):
+    __tablename__ = 'orders'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
+    agent_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    items = db.Column(db.Text, nullable=False)
+    total = db.Column(db.Integer, nullable=False)
+    status = db.Column(db.String(50), default='pending', index=True)
+    payment_method = db.Column(db.String(50))
+    payment_status = db.Column(db.String(50), default='pending')
+    transaction_id = db.Column(db.String(100), unique=True)
+    stock_confirmed = db.Column(db.Boolean, default=False)
+    stock_reserved_until = db.Column(db.DateTime, nullable=True)
+    rider_name = db.Column(db.String(100))
+    rider_phone = db.Column(db.String(20))
+    delivery_location = db.Column(db.String(500))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+class Wishlist(db.Model):
+    __tablename__ = 'wishlist'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False, index=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Review(db.Model):
+    __tablename__ = 'reviews'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False, index=True)
+    rating = db.Column(db.Integer, nullable=False)
+    comment = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class PaymentTransaction(db.Model):
+    __tablename__ = 'payment_transactions'
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'))
+    tx_ref = db.Column(db.String(100), unique=True)
+    transaction_id = db.Column(db.String(100), unique=True)
+    amount = db.Column(db.Integer, nullable=False)
+    currency = db.Column(db.String(3), default='UGX')
+    status = db.Column(db.String(50), default='pending')
+    payment_method = db.Column(db.String(50))
+    webhook_data = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class TokenBlacklist(db.Model):
+    __tablename__ = 'token_blacklist'
+    id = db.Column(db.Integer, primary_key=True)
+    jti = db.Column(db.String(36), unique=True, nullable=False, index=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+class AuditLog(db.Model):
+    __tablename__ = 'audit_logs'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    action = db.Column(db.String(100), nullable=False)
+    resource_type = db.Column(db.String(50))
+    resource_id = db.Column(db.Integer)
+    ip_address = db.Column(db.String(45))
+    user_agent = db.Column(db.String(500))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Notification(db.Model):
+    __tablename__ = 'notifications'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Communication(db.Model):
+    __tablename__ = 'communications'
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    receiver_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    content = db.Column(db.Text, nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+# ==================== JWT ERROR HANDLERS ====================
+@jwt.unauthorized_loader
+def custom_unauthorized_response(callback):
+    return jsonify({'error': 'Authorization token is missing or invalid'}), 401
+
+@jwt.invalid_token_loader
+def custom_invalid_token_response(error_string):
+    logger.warning(f"JWT invalid token: {error_string}")
+    return jsonify({'error': f'Invalid token: {error_string}'}), 422
+
+@jwt.expired_token_loader
+def custom_expired_token_response(jwt_header, jwt_payload):
+    return jsonify({'error': 'Token has expired', 'expired': True}), 401
+
+@jwt.revoked_token_loader
+def custom_revoked_token_response(jwt_header, jwt_payload):
+    return jsonify({'error': 'Token has been revoked'}), 401
+
+@jwt.token_in_blocklist_loader
+def check_if_token_revoked(jwt_header, jwt_payload):
+    return TokenBlacklist.query.filter_by(jti=jwt_payload['jti']).first() is not None
+
+# ==================== JWT IDENTITY FIX ====================
+@jwt.user_identity_loader
+def user_identity_lookup(user_id):
+    return str(user_id)
+
+@jwt.user_lookup_loader
+def user_lookup_callback(_jwt_header, jwt_data):
+    identity = jwt_data.get("sub")
+    if not identity:
+        return None
+    try:
+        return User.query.get(int(identity))
+    except (ValueError, TypeError):
+        return None
+
+# ==================== HELPER FUNCTIONS ====================
+def log_audit(user_id, action, resource_type=None, resource_id=None):
+    try:
+        audit = AuditLog(
+            user_id=user_id,
+            action=action,
+            resource_type=resource_type,
+            resource_id=resource_id,
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get('User-Agent', '')[:500]
+        )
+        db.session.add(audit)
+        db.session.commit()
+    except:
+        pass
+
+def send_notification(user_id, title, message):
+    try:
+        notif = Notification(user_id=user_id, title=title, message=message)
+        db.session.add(notif)
+        db.session.commit()
+    except:
+        pass
+
+def get_least_busy_agent():
+    agents = User.query.filter_by(role='agent', status='online').all()
+    if not agents:
+        return None
+    agent_load = []
+    for agent in agents:
+        active_orders = Order.query.filter(
+            Order.agent_id == agent.id,
+            Order.status.in_(['paid', 'processing'])
+        ).count()
+        agent_load.append((agent, active_orders))
+    agent_load.sort(key=lambda x: (x[1], x[0].id))
+    return agent_load[0][0] if agent_load else None
+
+def release_expired_reservations():
+    """Release stock reservations older than 1 hour"""
+    expired_orders = Order.query.filter(
+        Order.stock_reserved_until < datetime.utcnow(),
+        Order.stock_confirmed == False
+    ).all()
+    
+    for order in expired_orders:
+        items = json.loads(order.items) if order.items else []
+        for item in items:
+            product = Product.query.get(item['productId'])
+            if product:
+                product.reserved_stock -= item['quantity']
+        order.stock_reserved_until = None
+    db.session.commit()
+
+# ==================== DATABASE INITIALIZATION (NO HARD-CODED CREDENTIALS) ====================
+def ensure_tables_and_defaults():
+    """Create all tables and default data from ENV variables only - NO HARD-CODED VALUES"""
+    
+    # Create tables
+    db.create_all()
+    logger.info("✅ Tables created/verified")
+    
+    # Release expired reservations on startup
+    release_expired_reservations()
+    
+    # ============================================
+    # IMPORTANT: These values MUST come from .env
+    # No hard-coded fallbacks!
+    # ============================================
+    
+    admin_email = os.environ.get('ADMIN_EMAIL')
+    admin_password = os.environ.get('ADMIN_PASSWORD')
+    admin_name = os.environ.get('ADMIN_NAME', 'System Administrator')
+    admin_phone = os.environ.get('ADMIN_PHONE', '0771000000')
+    
+    # Check if admin credentials are provided
+    if not admin_email or not admin_password:
+        logger.warning("⚠️ ADMIN_EMAIL or ADMIN_PASSWORD not set in environment variables!")
+        logger.warning("⚠️ Admin account will NOT be created automatically!")
+        logger.warning("⚠️ Please set ADMIN_EMAIL and ADMIN_PASSWORD in your .env file")
+    else:
+        admin = User.query.filter_by(email=admin_email).first()
+        if not admin:
+            admin = User(
+                name=admin_name,
+                email=admin_email,
+                phone=admin_phone,
+                password_hash=ph.hash(admin_password),
+                role='admin',
+                status='online',
+                email_verified=True
+            )
+            db.session.add(admin)
+            logger.info(f"✅ Created admin from ENV: {admin_email}")
+        else:
+            admin.password_hash = ph.hash(admin_password)
+            admin.role = 'admin'
+            admin.status = 'online'
+            logger.info(f"✅ Updated admin from ENV: {admin_email}")
+    
+    # Create agents from environment variables (only if provided)
+    for i in range(1, 6):
+        agent_email = os.environ.get(f'AGENT{i}_EMAIL')
+        agent_password = os.environ.get(f'AGENT{i}_PASSWORD')
+        agent_name = os.environ.get(f'AGENT{i}_NAME', f'Agent {i}')
+        agent_phone = os.environ.get(f'AGENT{i}_PHONE', f'077{i}000000')
         
-        <div class="form-group">
-          <label>🔒 Password</label>
-          <input type="password" id="loginPassword" placeholder="Enter password">
-        </div>
-        
-        <div class="remember-row">
-          <input type="checkbox" id="rememberMe">
-          <label for="rememberMe" style="margin:0; text-transform:none; font-size:13px; font-weight:400; cursor:pointer;">Remember Me</label>
-        </div>
-        
-        <button class="btn btn-primary" onclick="handleLogin()">🔐 Login</button>
-        
-        <div class="forgot-link" onclick="showForgotPassword()">🔑 Forgot Password?</div>
-        
-        <div class="toggle-text">
-          No account? <span onclick="toggleAuth()">📝 Register</span>
-        </div>
-      </div>
-      
-      <div id="registerForm" class="hidden">
-        <div class="form-group">
-          <label>👤 Full Name</label>
-          <input type="text" id="regName" placeholder="Your name">
-        </div>
-        
-        <div class="form-group">
-          <label>📱 Phone</label>
-          <input type="tel" id="regPhone" placeholder="07XX XXX XXX">
-        </div>
-        
-        <div class="form-group">
-          <label>📧 Email</label>
-          <input type="email" id="regEmail" placeholder="Enter email">
-        </div>
-        
-        <div class="form-group">
-          <label>🔒 Password</label>
-          <input type="password" id="regPassword" placeholder="Create password">
-        </div>
-        
-        <div class="form-group">
-          <label>🔒 Confirm Password</label>
-          <input type="password" id="regConfirmPassword" placeholder="Confirm password">
-        </div>
-        
-        <button class="btn btn-green" onclick="handleRegister()">✅ Create Account</button>
-        
-        <div class="toggle-text">
-          Have an account? <span onclick="toggleAuth()">🔐 Login</span>
-        </div>
-      </div>
-      
-      <div id="forgotForm" class="hidden">
-        <div class="form-group">
-          <label>📧 Email</label>
-          <input type="email" id="forgotEmail" placeholder="Enter your registered email">
-        </div>
-        
-        <button class="btn btn-primary" onclick="handleForgotPassword()">🔄 Reset Password</button>
-        
-        <div class="toggle-text">
-          Remember your password? <span onclick="showLoginForm()">🔐 Login</span>
-        </div>
-      </div>
-    </div>
-  </div>
+        # Only create agent if email and password are provided
+        if agent_email and agent_password:
+            agent = User.query.filter_by(email=agent_email).first()
+            if not agent:
+                agent = User(
+                    name=agent_name,
+                    email=agent_email,
+                    phone=agent_phone,
+                    password_hash=ph.hash(agent_password),
+                    role='agent',
+                    status='online',
+                    email_verified=True
+                )
+                db.session.add(agent)
+                logger.info(f"✅ Created agent from ENV: {agent_email}")
+            else:
+                agent.password_hash = ph.hash(agent_password)
+                agent.role = 'agent'
+                agent.status = 'online'
+                logger.info(f"✅ Updated agent from ENV: {agent_email}")
+        else:
+            logger.info(f"ℹ️ AGENT{i}_EMAIL or PASSWORD not set - skipping agent {i}")
+    
+    # ============================================
+    # NO HARD-CODED PRODUCTS!
+    # Products should be added via Admin panel only
+    # Categories are: Terrazzo, Plumbing, General
+    # ============================================
+    
+    db.session.commit()
+    logger.info("✅ Database initialization complete from ENV variables")
 
-  <div id="appContainer" class="hidden">
-    <div class="app-header">
-      <h1>🏗️ WAMP ENTERPRISES LTD</h1>
-      
-      <div class="header-actions">
-        <span class="user-greeting" id="headerGreeting"></span>
-        
-        <button class="icon-btn" onclick="showCart()" id="cartBtn">
-          🛒
-          <span class="badge hidden" id="cartBadge">0</span>
-        </button>
-        
-        <button class="icon-btn" onclick="showNotifications()">
-          🔔
-          <span class="badge hidden" id="notificationBadge">0</span>
-        </button>
-        
-        <button class="icon-btn" onclick="logout()" title="Logout">🚪</button>
-      </div>
-    </div>
+# ==================== AUTH ROUTES ====================
+@app.route('/api/health', methods=['GET'])
+def health():
+    return jsonify({
+        'status': 'healthy',
+        'database': 'connected' if database_url else 'not configured',
+        'cloudinary': CLOUDINARY_ENABLED,
+        'redis': redis_client is not None,
+        'timestamp': datetime.utcnow().isoformat()
+    })
 
-    <!-- ADMIN DASHBOARD -->
-    <div id="adminDashboard" class="page hidden">
-      <div class="section-title">📊 Manager Overview</div>
-      
-      <div class="stats-grid">
-        <div class="stat-card" onclick="showSalesDetail()">
-          <div class="stat-value" id="adminTodaySales">UGX 0</div>
-          <div class="stat-label">💰 Today's Sales</div>
-        </div>
+@app.route('/api/register', methods=['POST'])
+def register():
+    try:
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 400
         
-        <div class="stat-card orange" onclick="showPendingDetail()">
-          <div class="stat-value" id="adminPendingOrders">0</div>
-          <div class="stat-label">⏳ Pending Orders</div>
-        </div>
-        
-        <div class="stat-card green" onclick="showProductsDetail()">
-          <div class="stat-value" id="adminTotalProducts">0</div>
-          <div class="stat-label">📦 Products</div>
-        </div>
-        
-        <div class="stat-card red" onclick="showLowStockDetail()">
-          <div class="stat-value" id="adminLowStock">0</div>
-          <div class="stat-label">⚠️ Low Stock</div>
-        </div>
-      </div>
-      
-      <div class="card">
-        <div class="card-title">👥 Agent Status</div>
-        <div id="adminAgentStatus"></div>
-      </div>
-      
-      <div class="card">
-        <div class="card-title">🛒 Recent Orders</div>
-        <div id="adminRecentOrders"></div>
-      </div>
-    </div>
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Invalid request'}), 400
 
-    <!-- ADMIN PRODUCTS -->
-    <div id="adminProducts" class="page hidden">
-      <div class="section-title">📦 Manage Products</div>
-      
-      <button class="btn btn-green" style="margin:0 15px 15px; width:auto;" onclick="resetProductForm()">
-        ➕ Add New Product
-      </button>
-      
-      <div class="card">
-        <div class="card-title" id="productFormTitle">📤 Add New Product</div>
-        
-        <div style="padding:15px;">
-          <input type="hidden" id="editProductId">
-          
-          <div class="form-group">
-            <label>🏷️ Product Name</label>
-            <input type="text" id="prodName" placeholder="e.g. Classic Floor Terrazzo">
-          </div>
-          
-          <div class="form-group">
-            <label>📂 Type</label>
-            <select id="prodType">
-              <option>Floor Terrazzo</option>
-              <option>Wall Terrazzo</option>
-              <option>Plumbing Pipe</option>
-              <option>Plumbing Fittings</option>
-              <option>Paint Emulsion</option>
-              <option>Paint Primer</option>
-            </select>
-          </div>
-          
-          <div class="form-group">
-            <label>📝 Description</label>
-            <textarea id="prodDesc" placeholder="Product description..."></textarea>
-          </div>
-          
-          <div class="form-group">
-            <label>💵 Price (UGX)</label>
-            <input type="number" id="prodPrice" placeholder="e.g. 150000">
-          </div>
-          
-          <div class="form-group">
-            <label>📊 Stock Quantity</label>
-            <input type="number" id="prodStock" placeholder="e.g. 10">
-          </div>
-          
-          <div class="form-group">
-            <label>🖼️ Image URL</label>
-            <input type="text" id="prodImage" placeholder="https://...">
-          </div>
-          
-          <button class="btn btn-primary" onclick="saveProduct()">💾 Save Product</button>
-          <button class="btn btn-outline hidden" id="cancelEditBtn" onclick="resetProductForm()">❌ Cancel</button>
-        </div>
-      </div>
-      
-      <div class="section-title">📋 All Products</div>
-      <div id="adminProductList"></div>
-    </div>
+        name = data.get('name', '').strip()
+        email = data.get('email', '').strip()
+        password = data.get('password', '').strip()
+        phone = data.get('phone', '').strip()
 
-    <!-- ADMIN ORDERS -->
-    <div id="adminOrders" class="page hidden">
-      <div class="section-title">📋 All Orders</div>
-      
-      <div class="card">
-        <input type="text" id="transactionSearchPhone" placeholder="🔍 Search by phone number" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ddd; margin-bottom:10px;">
-        
-        <button class="btn btn-primary" onclick="searchTransactionByPhone()" style="margin-bottom:10px;">Search</button>
-        <button class="btn btn-outline" onclick="resetTransactionSearch()">Show All</button>
-        <button class="btn btn-green" onclick="exportTransactionsCSV()" style="width:auto; margin-left:10px;">📎 Export CSV</button>
-      </div>
-      
-      <div id="adminOrdersList"></div>
-    </div>
+        if not name or not email or not password:
+            return jsonify({'error': 'Missing required fields'}), 400
 
-    <!-- ADMIN BOOKS -->
-    <div id="adminBooks" class="page hidden">
-      <div class="section-title">📚 Balance Books</div>
-      <div id="booksSummary"></div>
-    </div>
+        if User.query.filter_by(email=email).first():
+            return jsonify({'error': 'Email already registered'}), 409
 
-    <!-- ADMIN MONITOR -->
-    <div id="adminMonitor" class="page hidden">
-      <div class="section-title">👁️ Live Agent Monitor</div>
-      <div id="monitorFeed"></div>
-    </div>
+        user = User(
+            name=name,
+            email=email,
+            phone=phone,
+            password_hash=ph.hash(password),
+            role='user',
+            status='online',
+            email_verified=True
+        )
+        db.session.add(user)
+        db.session.commit()
+        log_audit(user.id, 'REGISTER', 'user', user.id)
+        
+        return jsonify({'success': True, 'message': 'Registration successful'}), 201
+    
+    except Exception as e:
+        logger.error(f"Register error: {e}")
+        return jsonify({'error': 'Registration failed'}), 500
 
-    <!-- ADMIN CHATS -->
-    <div id="adminChats" class="page hidden">
-      <div class="section-title">💬 All Conversations</div>
-      <div id="allChatsList"></div>
-    </div>
+@app.route('/api/login', methods=['POST'])
+def login():
+    try:
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 400
+        
+        client_ip = request.remote_addr
+        if is_ip_blocked(client_ip):
+            return jsonify({'error': 'Too many failed attempts. Try again later.'}), 429
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Invalid request'}), 400
 
-    <!-- ADMIN TEAM -->
-    <div id="adminTeam" class="page hidden">
-      <div class="section-title">👥 Support Team</div>
-      <div id="teamList"></div>
-    </div>
+        email = data.get('email', '').strip()
+        password = data.get('password', '').strip()
 
-    <!-- ADMIN DELIVERY -->
-    <div id="adminDelivery" class="page hidden">
-      <div class="section-title">🚚 Delivery Management</div>
-      <div id="adminDeliveryList"></div>
-    </div>
+        if not email or not password:
+            return jsonify({'error': 'Email and password required'}), 400
 
-    <!-- ADMIN MESSAGES -->
-    <div id="adminMessages" class="page hidden">
-      <div class="section-title">💬 Manager Messages</div>
-      <div id="managerMsgList"></div>
-      
-      <div class="card">
-        <div class="card-title">📤 Send Message to Team</div>
-        
-        <div class="form-group">
-          <label>👥 Recipient</label>
-          <select id="msgRecipient">
-            <option value="all">All Agents</option>
-            <option value="agent">Specific Agent</option>
-          </select>
-        </div>
-        
-        <div class="form-group">
-          <label>📝 Message</label>
-          <textarea id="msgContent" placeholder="Type your message..."></textarea>
-        </div>
-        
-        <button class="btn btn-primary" onclick="sendManagerMessage()">📤 Send</button>
-      </div>
-    </div>
+        logger.info(f"Login attempt for: {email}")
 
-    <!-- AGENT PANEL -->
-    <div id="agentPanel" class="page hidden">
-      <div class="section-title">📦 My Assigned Orders</div>
-      
-      <div class="agent-stats">
-        <div class="agent-stat-box">
-          <div class="agent-stat-value" id="agentAssignedCount">0</div>
-          <div class="agent-stat-label">Assigned</div>
-        </div>
-        
-        <div class="agent-stat-box">
-          <div class="agent-stat-value" id="agentCompletedCount">0</div>
-          <div class="agent-stat-label">Completed</div>
-        </div>
-        
-        <div class="agent-stat-box">
-          <div class="agent-stat-value" id="agentPendingCount">0</div>
-          <div class="agent-stat-label">Pending</div>
-        </div>
-      </div>
-      
-      <div id="agentAssignedOrders"></div>
-      
-      <div class="section-title">🆓 Available Orders</div>
-      <div id="agentAvailableOrders"></div>
-      
-      <div class="section-title">💬 My Conversations</div>
-      <div id="agentChatList"></div>
-      
-      <button class="btn btn-primary" style="margin:15px;" onclick="openAgentToManagerChat()">💬 Message Manager</button>
-      
-      <div class="section-title">🖨️ My Receipts</div>
-      <div id="agentReceipts"></div>
-    </div>
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            logger.warning(f"User not found: {email}")
+            record_failed_login(client_ip)
+            return jsonify({'error': 'Invalid credentials'}), 401
 
-    <!-- USER SHOP -->
-    <div id="userShop" class="page hidden">
-      <div class="hero-slider" id="heroSlider">
-        <div class="slider-container">
-          <div class="slider-slide" style="background-image:linear-gradient(rgba(0,0,0,0.4),rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800')">
-            <div class="slide-caption">🏛️ Premium Terrazzo</div>
-          </div>
-          
-          <div class="slider-slide" style="background-image:linear-gradient(rgba(0,0,0,0.4),rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1581092160562-40aa08e7882a?w=800')">
-            <div class="slide-caption">🔧 Professional Plumbing</div>
-          </div>
-          
-          <div class="slider-slide" style="background-image:linear-gradient(rgba(0,0,0,0.4),rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=800')">
-            <div class="slide-caption">🎨 Expert Painting</div>
-          </div>
-        </div>
-        
-        <div class="slider-dots" id="sliderDots"></div>
-      </div>
-      
-      <div style="padding:15px;">
-        <input type="text" id="searchInput" placeholder="🔍 Search products..." style="width:100%; padding:14px; border-radius:12px; border:1px solid #ddd; font-size:15px;" onkeyup="searchProducts(this.value)">
-      </div>
-      
-      <div class="filter-row">
-        <button class="filter-btn active" onclick="filterProducts('all', this)">🏠 All</button>
-        <button class="filter-btn" onclick="filterProducts('Floor', this)">🏠 Terrazzo</button>
-        <button class="filter-btn" onclick="filterProducts('Plumbing', this)">🔧 Plumbing</button>
-        <button class="filter-btn" onclick="filterProducts('Paint', this)">🎨 Painting</button>
-      </div>
-      
-      <div class="product-grid" id="shopGrid"></div>
-    </div>
+        try:
+            ph.verify(user.password_hash, password)
+            logger.info(f"Login successful: {email}")
+        except VerifyMismatchError:
+            logger.warning(f"Password mismatch for: {email}")
+            record_failed_login(client_ip)
+            return jsonify({'error': 'Invalid credentials'}), 401
 
-    <!-- PRODUCT DETAIL -->
-    <div id="productDetail" class="page hidden">
-      <div id="detailContent"></div>
-    </div>
+        reset_failed_attempts(client_ip)
 
-    <!-- USER CART -->
-    <div id="userCart" class="page hidden">
-      <div class="section-title">🛒 My Cart</div>
-      <div id="cartItems"></div>
-      
-      <div class="card" id="cartSummary">
-        <div style="display:flex; justify-content:space-between; font-size:18px; font-weight:800;">
-          <span>💵 Total:</span>
-          <span id="cartTotal" style="color:var(--blue);">UGX 0</span>
-        </div>
-        
-        <button class="btn btn-green" style="margin-top:15px;" onclick="showCheckout()" id="checkoutBtn">
-          ✅ Proceed to Checkout
-        </button>
-      </div>
-    </div>
+        access_token = create_access_token(identity=str(user.id))
+        refresh_token = create_refresh_token(identity=str(user.id))
 
-    <!-- CHECKOUT PAGE -->
-    <div id="checkoutPage" class="page hidden">
-      <div class="section-title">💳 Checkout</div>
-      
-      <div class="card">
-        <div class="card-title">💳 Payment Method</div>
-        
-        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
-          <label style="display:flex; align-items:center; gap:10px; padding:15px; border:2px solid var(--blue); border-radius:12px; cursor:pointer;">
-            <input type="radio" name="payMethod" value="mtn" checked style="width:20px; height:20px;">
-            <span style="font-weight:700;">📱 MTN Mobile Money</span>
-          </label>
-          
-          <label style="display:flex; align-items:center; gap:10px; padding:15px; border:2px solid #ddd; border-radius:12px; cursor:pointer;">
-            <input type="radio" name="payMethod" value="airtel" style="width:20px; height:20px;">
-            <span style="font-weight:700;">📡 Airtel Money</span>
-          </label>
-          
-          <label style="display:flex; align-items:center; gap:10px; padding:15px; border:2px solid #ddd; border-radius:12px; cursor:pointer;">
-            <input type="radio" name="payMethod" value="card" style="width:20px; height:20px;">
-            <span style="font-weight:700;">💳 Bank Card</span>
-          </label>
-          
-          <label style="display:flex; align-items:center; gap:10px; padding:15px; border:2px solid #ddd; border-radius:12px; cursor:pointer;">
-            <input type="radio" name="payMethod" value="cod" style="width:20px; height:20px;">
-            <span style="font-weight:700;">💵 Cash on Delivery</span>
-          </label>
-        </div>
-        
-        <div id="cardFields" class="hidden">
-          <div class="form-group">
-            <label>💳 Card Number</label>
-            <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456">
-          </div>
-          
-          <div class="form-group">
-            <label>📅 Expiry (MM/YY)</label>
-            <input type="text" id="cardExpiry" placeholder="MM/YY">
-          </div>
-          
-          <div class="form-group">
-            <label>🔒 CVV</label>
-            <input type="password" id="cardCvv" placeholder="123">
-          </div>
-        </div>
-        
-        <div class="form-group">
-          <label>📱 Phone Number</label>
-          <input type="tel" id="payPhone" placeholder="07XX XXX XXX" value="0770000000">
-          <div id="networkBadge" class="hidden" style="margin-top:5px; padding:5px 10px; background:var(--blue); color:var(--white); border-radius:15px; display:inline-block; font-size:12px; font-weight:600;"></div>
-        </div>
-        
-        <div style="background:#fff3cd; padding:15px; border-radius:10px; margin:15px 0; font-size:13px; color:#856404;">
-          <strong>⚠️ DEMO MODE:</strong> No real money will be deducted.
-        </div>
-        
-        <div style="display:flex; justify-content:space-between; font-size:20px; font-weight:800; margin:20px 0;">
-          <span>💵 Total:</span>
-          <span id="checkoutTotal" style="color:var(--green);">UGX 0</span>
-        </div>
-        
-        <button class="btn btn-green" onclick="processPayment()">💰 Pay Now</button>
-        <button class="btn btn-outline" onclick="navigateTo('userCart')">⬅️ Back to Cart</button>
-      </div>
-    </div>
+        log_audit(user.id, 'LOGIN', 'user', user.id)
 
-    <!-- USER ORDERS -->
-    <div id="userOrders" class="page hidden">
-      <div class="section-title">📦 My Orders & Delivery Info</div>
-      <div id="userOrderList"></div>
-    </div>
-
-    <!-- USER DASHBOARD -->
-    <div id="userDashboard" class="page hidden">
-      <div class="section-title">👤 My Account</div>
-      
-      <div class="card">
-        <div style="display:flex; align-items:center; gap:15px; margin-bottom:15px;">
-          <div style="width:60px; height:60px; background:var(--blue); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--white); font-size:28px;">👤</div>
-          
-          <div>
-            <div style="font-weight:800; font-size:18px;" id="userNameDisplay">Customer</div>
-            <div style="color:var(--gray-dark); font-size:13px;" id="userEmailDisplay">email@example.com</div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-value" id="userTotalOrders">0</div>
-          <div class="stat-label">📦 Total Orders</div>
-        </div>
-        
-        <div class="stat-card green">
-          <div class="stat-value" id="userPendingOrders">0</div>
-          <div class="stat-label">⏳ Pending</div>
-        </div>
-      </div>
-      
-      <div class="card">
-        <div class="card-title">📝 My Profile</div>
-        
-        <div class="form-group">
-          <label>👤 Full Name</label>
-          <input type="text" id="profileName" placeholder="Your name">
-        </div>
-        
-        <div class="form-group">
-          <label>📧 Email</label>
-          <input type="email" id="profileEmail" placeholder="Your email" style="background:#f0f0f0;" readonly>
-        </div>
-        
-        <div class="form-group">
-          <label>📱 Phone Number</label>
-          <input type="tel" id="profilePhone" placeholder="07XX XXX XXX">
-        </div>
-        
-        <div class="form-group">
-          <label>🏠 Delivery Address</label>
-          <textarea id="profileAddress" placeholder="Enter your full delivery address..."></textarea>
-        </div>
-        
-        <button class="btn btn-primary" onclick="saveUserProfile()">💾 Save Profile</button>
-      </div>
-      
-      <div class="card">
-        <div class="card-title">❤️ My Wishlist</div>
-        <div id="wishlistItems"></div>
-      </div>
-      
-      <div class="card">
-        <div class="card-title">⭐ My Reviews & Ratings</div>
-        <div id="userReviews"></div>
-      </div>
-    </div>
-
-    <!-- CHAT WIDGET -->
-    <div class="chat-widget hidden" id="chatWidgetContainer">
-      <button class="chat-btn" onclick="toggleChat()">💬</button>
-    </div>
-    
-    <div id="chatBox" class="chat-box hidden">
-      <div class="chat-header">
-        <div>
-          🤖 WAMP Assistant
-          <div id="chatStatus"><small>🟢 Online</small></div>
-        </div>
-        <button class="chat-close" onclick="toggleChat()">✕</button>
-      </div>
-      
-      <div class="chat-messages" id="chatMessages"></div>
-      
-      <div class="chat-input-area">
-        <input type="text" id="chatInput" placeholder="Type message..." onkeypress="if(event.key==='Enter') sendChat()">
-        <button class="btn btn-green" style="width:auto; padding:10px 16px;" onclick="sendChat()">📤</button>
-      </div>
-    </div>
-
-    <!-- WHATSAPP WIDGET -->
-    <div class="whatsapp-widget hidden" id="whatsappWidget">
-      <a href="https://wa.me/256772123456?text=Hello%20WAMP%20Enterprises" class="whatsapp-btn" target="_blank">💬</a>
-    </div>
-
-    <!-- BOTTOM NAVIGATION -->
-    <div class="bottom-nav" id="bottomNav"></div>
-  </div>
-
-  <div id="modalOverlay" class="modal-overlay hidden" onclick="closeModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <div class="modal-header" id="modalTitle">Title</div>
-      <div id="modalBody"></div>
-      <button class="btn btn-outline" style="margin-top:15px;" onclick="hideModal()">❌ Close</button>
-    </div>
-  </div>
-
-  <script>
-    const AppState = {
-      user: null,
-      products: [],
-      cart: [],
-      orders: [],
-      notifications: [],
-      chatOpen: false,
-      currentPage: '',
-      pendingAuthCallback: null
-    };
-    
-    const API_BASE = 'https://raven-terazzo.onrender.com/api';
-    
-    // ==================== UTILITIES ====================
-    
-    function showToast(msg, isError) {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.style.background = isError ? '#e74c3c' : '#154360';
-      t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 3000);
-    }
-    
-    function showModal(title, html) {
-      document.getElementById('modalTitle').textContent = title;
-      document.getElementById('modalBody').innerHTML = html;
-      document.getElementById('modalOverlay').classList.remove('hidden');
-    }
-    
-    function hideModal() {
-      document.getElementById('modalOverlay').classList.add('hidden');
-    }
-    
-    function closeModal(e) {
-      if (e.target === document.getElementById('modalOverlay')) hideModal();
-    }
-    
-    function escapeHtml(text) {
-      if (!text) return '';
-      return String(text).replace(/[&<>]/g, m => m === '&' ? '&' : m === '<' ? '<' : '>');
-    }
-    
-    function detectNetwork(phone) {
-      const p = String(phone).replace(/\D/g, '');
-      if (/^(077|078|076|079|039)/.test(p)) return 'MTN';
-      if (/^(075|074|070|071)/.test(p)) return 'Airtel';
-      return null;
-    }
-    
-    function validateUgPhone(phone) {
-      const p = String(phone).replace(/\D/g, '');
-      return p.length >= 9 && p.length <= 12;
-    }
-    
-    // ==================== TOKEN MANAGEMENT ====================
-    
-    function getAccessToken() {
-      return localStorage.getItem('access_token');
-    }
-    
-    function setAccessToken(t) {
-      if (t) localStorage.setItem('access_token', t);
-      else localStorage.removeItem('access_token');
-    }
-    
-    function getRefreshToken() {
-      return localStorage.getItem('refresh_token');
-    }
-    
-    function setRefreshToken(t) {
-      if (t) localStorage.setItem('refresh_token', t);
-      else localStorage.removeItem('refresh_token');
-    }
-    
-    function clearTokens() {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-    }
-    
-    // ==================== API CALLS ====================
-    
-    async function apiCall(endpoint, options = {}) {
-      const token = getAccessToken();
-      const headers = { 'Content-Type': 'application/json', ...options.headers };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-      
-      const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
-      
-      if (res.status === 401) {
-        const r = await refreshToken();
-        if (r) return apiCall(endpoint, options);
-        else {
-          showToast('Session expired', true);
-          logout();
-          throw new Error('Expired');
-        }
-      }
-      
-      if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
-      return await res.json();
-    }
-    
-    async function refreshToken() {
-      const ref = getRefreshToken();
-      if (!ref) return false;
-      
-      try {
-        const r = await fetch(`${API_BASE}/refresh`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${ref}`
-          }
-        });
-        
-        if (r.ok) {
-          const d = await r.json();
-          setAccessToken(d.access_token);
-          return true;
-        }
-      } catch(e) {}
-      
-      return false;
-    }
-    
-    // ==================== AUTHENTICATION ====================
-    
-    async function handleLogin() {
-      const email = document.getElementById('loginEmail').value;
-      const pwd = document.getElementById('loginPassword').value;
-      
-      if (!email || !pwd) {
-        showToast('Enter email and password', true);
-        return;
-      }
-      
-      try {
-        const res = await fetch(`${API_BASE}/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password: pwd })
-        });
-        
-        const data = await res.json();
-        
-        if (res.ok && data.success) {
-          setAccessToken(data.access_token);
-          setRefreshToken(data.refresh_token);
-          AppState.user = data.user;
-          showToast(`Welcome ${data.user.name}!`);
-          
-          document.getElementById('loginPage').classList.add('hidden');
-          document.getElementById('appContainer').classList.remove('hidden');
-          await refreshData();
-          setupNav();
-          
-          if (AppState.user.role === 'admin') navigateTo('adminDashboard');
-          else if (AppState.user.role === 'agent') navigateTo('agentPanel');
-          else navigateTo('userShop');
-          
-          if (window.pendingAuthCallback) {
-            const cb = window.pendingAuthCallback;
-            window.pendingAuthCallback = null;
-            cb();
-          }
-        } else {
-          showToast(data.error || 'Login failed', true);
-        }
-      } catch(e) {
-        showToast('Network error', true);
-      }
-    }
-    
-    async function handleRegister() {
-      const name = document.getElementById('regName').value;
-      const phone = document.getElementById('regPhone').value;
-      const email = document.getElementById('regEmail').value;
-      const pwd = document.getElementById('regPassword').value;
-      const conf = document.getElementById('regConfirmPassword').value;
-      
-      if (pwd !== conf) {
-        showToast('Passwords mismatch', true);
-        return;
-      }
-      
-      try {
-        const res = await fetch(`${API_BASE}/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, phone, password: pwd })
-        });
-        
-        const data = await res.json();
-        
-        if (res.ok && data.success) {
-          showToast('Registered! Please login');
-          toggleAuth();
-        } else {
-          showToast(data.error || 'Registration failed', true);
-        }
-      } catch(e) {
-        showToast('Network error', true);
-      }
-    }
-    
-    function logout() {
-      clearTokens();
-      AppState.user = null;
-      document.getElementById('appContainer').classList.add('hidden');
-      document.getElementById('loginPage').classList.remove('hidden');
-      showToast('Logged out');
-    }
-    
-    function toggleAuth() {
-      const l = document.getElementById('loginForm');
-      const r = document.getElementById('registerForm');
-      const f = document.getElementById('forgotForm');
-      
-      if (!l.classList.contains('hidden')) {
-        l.classList.add('hidden');
-        r.classList.remove('hidden');
-        f.classList.add('hidden');
-      } else {
-        l.classList.remove('hidden');
-        r.classList.add('hidden');
-        f.classList.add('hidden');
-      }
-    }
-    
-    function showForgotPassword() {
-      document.getElementById('loginForm').classList.add('hidden');
-      document.getElementById('registerForm').classList.add('hidden');
-      document.getElementById('forgotForm').classList.remove('hidden');
-    }
-    
-    function showLoginForm() {
-      document.getElementById('loginForm').classList.remove('hidden');
-      document.getElementById('registerForm').classList.add('hidden');
-      document.getElementById('forgotForm').classList.add('hidden');
-    }
-    
-    async function handleForgotPassword() {
-      const email = document.getElementById('forgotEmail').value;
-      if (!email) {
-        showToast('Enter your email', true);
-        return;
-      }
-      showToast('Password reset link sent (Demo)');
-      showLoginForm();
-    }
-    
-    async function refreshData() {
-      if (!AppState.user) return;
-      
-      try { AppState.products = await apiCall('/products'); } catch(e) { AppState.products = []; }
-      try { AppState.cart = await apiCall('/cart'); updateCartBadge(); } catch(e) { AppState.cart = []; }
-      try { AppState.orders = await apiCall('/orders'); } catch(e) { AppState.orders = []; }
-    }
-    
-    function requireAuth(cb) {
-      if (AppState.user) {
-        cb();
-      } else {
-        showModal('🔐 Login Required', `
-          <div style="text-align:center">
-            <p style="margin-bottom:20px">Please login to continue</p>
-            <div style="display:flex; gap:12px; margin-bottom:16px">
-              <button class="btn btn-primary" style="flex:1" onclick="showAuthLoginModal()">🔐 Login</button>
-              <button class="btn btn-green" style="flex:1" onclick="showAuthRegisterModal()">📝 Register</button>
-            </div>
-          </div>
-        `);
-        window.pendingAuthCallback = cb;
-      }
-    }
-    
-    function showAuthLoginModal() {
-      hideModal();
-      document.getElementById('appContainer').classList.add('hidden');
-      document.getElementById('loginPage').classList.remove('hidden');
-    }
-    
-    function showAuthRegisterModal() {
-      hideModal();
-      document.getElementById('appContainer').classList.add('hidden');
-      document.getElementById('loginPage').classList.remove('hidden');
-      toggleAuth();
-    }
-    
-    // ==================== NAVIGATION ====================
-    
-    function navigateTo(pageId) {
-      document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-      document.getElementById(pageId).classList.remove('hidden');
-      AppState.currentPage = pageId;
-      
-      if (pageId === 'userShop') { renderShop(); initSlider(); }
-      if (pageId === 'userCart') renderCart();
-      if (pageId === 'userOrders') renderUserOrders();
-      if (pageId === 'userDashboard') renderUserDashboard();
-      if (pageId === 'adminProducts') renderAdminProducts();
-      if (pageId === 'adminOrders') renderAdminOrders();
-      if (pageId === 'adminDashboard') renderAdminDashboard();
-      if (pageId === 'agentPanel') renderAgentPanel();
-      if (pageId === 'adminBooks') document.getElementById('booksSummary').innerHTML = '<div class="empty-state">Balance books - Backend pending</div>';
-      if (pageId === 'adminChats') document.getElementById('allChatsList').innerHTML = '<div class="empty-state">Conversations - Backend pending</div>';
-      if (pageId === 'adminMessages') document.getElementById('managerMsgList').innerHTML = '<div class="empty-state">Messages - Backend pending</div>';
-    }
-    
-    function setupNav() {
-      const nav = document.getElementById('bottomNav');
-      
-      if (!AppState.user) {
-        nav.innerHTML = '<div class="nav-item" onclick="navigateTo(\'userShop\')"><span class="nav-icon">🏪</span>Shop</div><div class="nav-item" onclick="showCart()"><span class="nav-icon">🛒</span>Cart</div><div class="nav-item" onclick="showAuthModalNav()"><span class="nav-icon">🔐</span>Login</div>';
-      } else if (AppState.user.role === 'admin') {
-        nav.innerHTML = '<div class="nav-item" onclick="navigateTo(\'adminDashboard\')"><span class="nav-icon">📊</span>Dashboard</div><div class="nav-item" onclick="navigateTo(\'adminProducts\')"><span class="nav-icon">📦</span>Products</div><div class="nav-item" onclick="navigateTo(\'adminOrders\')"><span class="nav-icon">📋</span>Orders</div><div class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span>Exit</div>';
-      } else if (AppState.user.role === 'agent') {
-        nav.innerHTML = '<div class="nav-item" onclick="navigateTo(\'agentPanel\')"><span class="nav-icon">📦</span>Orders</div><div class="nav-item" onclick="renderAgentReceipts()"><span class="nav-icon">🖨️</span>Receipts</div><div class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span>Exit</div>';
-      } else {
-        nav.innerHTML = '<div class="nav-item" onclick="navigateTo(\'userShop\')"><span class="nav-icon">🏪</span>Shop</div><div class="nav-item" onclick="navigateTo(\'userOrders\')"><span class="nav-icon">📦</span>Orders</div><div class="nav-item" onclick="navigateTo(\'userCart\')"><span class="nav-icon">🛒</span>Cart</div><div class="nav-item" onclick="navigateTo(\'userDashboard\')"><span class="nav-icon">👤</span>Profile</div>';
-      }
-      
-      const chat = document.getElementById('chatWidgetContainer');
-      const wa = document.getElementById('whatsappWidget');
-      
-      if (!AppState.user || AppState.user.role === 'user') {
-        if (chat) chat.classList.remove('hidden');
-        if (wa) wa.classList.remove('hidden');
-      } else {
-        if (chat) chat.classList.add('hidden');
-        if (wa) wa.classList.add('hidden');
-      }
-    }
-    
-    function showAuthModalNav() {
-      requireAuth(() => {});
-    }
-    
-    // ==================== SLIDER ====================
-    
-    let sliderInterval;
-    
-    function initSlider() {
-      const slides = document.querySelectorAll('.slider-slide');
-      const dots = document.getElementById('sliderDots');
-      if (!slides.length || !dots) return;
-      
-      dots.innerHTML = '';
-      slides.forEach((_, i) => {
-        let d = document.createElement('div');
-        d.className = 'slider-dot' + (i === 0 ? ' active' : '');
-        d.onclick = () => goToSlide(i);
-        dots.appendChild(d);
-      });
-      
-      let cur = 0;
-      
-      window.goToSlide = (idx) => {
-        slides.forEach((s, i) => {
-          s.classList.toggle('active', i === idx);
-          if (dots.children[i]) dots.children[i].classList.toggle('active', i === idx);
-        });
-        cur = idx;
-      };
-      
-      function next() {
-        goToSlide((cur + 1) % slides.length);
-      }
-      
-      if (sliderInterval) clearInterval(sliderInterval);
-      sliderInterval = setInterval(next, 4000);
-      goToSlide(0);
-    }
-    
-    // ==================== PRODUCTS ====================
-    
-    function renderProductCard(p) {
-      const sc = (p.stock || 0) < 5 ? 'low' : '';
-      const img = p.image_url && p.image_url.trim() ? p.image_url : 'https://placehold.co/600x400/1a5276/white?text=WAMP';
-      
-      return `<div class="product-card" onclick="showProductDetail(${p.id || 0})">
-        <img src="${escapeHtml(img)}" loading="lazy">
-        <div class="product-info">
-          <div class="product-name">${escapeHtml(p.name)}</div>
-          <div class="product-type">${escapeHtml(p.type || 'General')}</div>
-          <div class="product-price">UGX ${(p.price || 0).toLocaleString()}</div>
-          <div class="product-stock ${sc}">${p.stock || 0} in stock</div>
-          <button class="btn-sm btn-green" style="margin-top:8px; width:100%;" onclick="event.stopPropagation(); addToCart(${p.id || 0})">
-            🛒 Add to Cart
-          </button>
-        </div>
-      </div>`;
-    }
-    
-    async function renderShop(f = 'all') {
-      if (!AppState.products.length) await refreshData();
-      let prods = AppState.products;
-      if (f !== 'all') prods = prods.filter(p => p.type && p.type.toLowerCase().includes(f.toLowerCase()));
-      document.getElementById('shopGrid').innerHTML = prods.map(p => renderProductCard(p)).join('') || '<div class="empty-state">No products found</div>';
-    }
-    
-    function searchProducts(q) {
-      if (!q) renderShop();
-      else {
-        const f = AppState.products.filter(p => p.name.toLowerCase().includes(q.toLowerCase()));
-        document.getElementById('shopGrid').innerHTML = f.map(p => renderProductCard(p)).join('') || '<div class="empty-state">No products found</div>';
-      }
-    }
-    
-    function filterProducts(t, btn) {
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      if (btn) btn.classList.add('active');
-      renderShop(t);
-    }
-    
-    async function showProductDetail(id) {
-      const p = AppState.products.find(pr => pr.id === id);
-      if (!p) return;
-      
-      const img = p.image_url && p.image_url.trim() ? p.image_url : 'https://placehold.co/600x400/1a5276/white?text=WAMP';
-      
-      document.getElementById('detailContent').innerHTML = `
-        <img src="${escapeHtml(img)}" style="width:100%; height:250px; object-fit:cover;">
-        <div class="card">
-          <div class="product-name" style="font-size:22px;">${escapeHtml(p.name)}</div>
-          <div class="product-price" style="font-size:28px;">UGX ${(p.price || 0).toLocaleString()}</div>
-          <p style="margin:15px 0;">${escapeHtml(p.description || 'No description')}</p>
-          <div style="margin:15px 0;"><strong>Stock:</strong> ${p.stock || 0} units</div>
-          <button class="btn btn-green" onclick="addToCart(${p.id})">🛒 Add to Cart</button>
-          <button class="btn btn-outline" style="margin-top:10px;" onclick="navigateTo('userShop')">⬅️ Back</button>
-        </div>
-      `;
-      
-      navigateTo('productDetail');
-    }
-    
-    // ==================== CART ====================
-    
-    async function addToCart(pid) {
-      requireAuth(async () => {
-        try {
-          await apiCall('/cart', { method: 'POST', body: JSON.stringify({ product_id: pid, quantity: 1 }) });
-          await refreshData();
-          showToast('Added to cart');
-          renderCart();
-        } catch(e) {
-          showToast('Failed', true);
-        }
-      });
-    }
-    
-    async function removeFromCart(cid) {
-      try {
-        await apiCall(`/cart/${cid}`, { method: 'DELETE' });
-        await refreshData();
-        renderCart();
-      } catch(e) {}
-    }
-    
-    async function renderCart() {
-      if (!AppState.cart || !AppState.cart.length) {
-        document.getElementById('cartItems').innerHTML = '<div class="empty-state">Cart is empty</div>';
-        document.getElementById('cartSummary').classList.add('hidden');
-        return;
-      }
-      
-      let total = 0;
-      let html = '';
-      
-      for (let c of AppState.cart) {
-        let p = AppState.products.find(pr => pr.id === c.product_id);
-        if (p) {
-          let it = (p.price || 0) * (c.quantity || 1);
-          total += it;
-          html += `
-            <div class="list-item">
-              <div class="list-info">
-                <h4>${escapeHtml(p.name)}</h4>
-                <p>UGX ${(p.price || 0).toLocaleString()} x ${c.quantity} = UGX ${it.toLocaleString()}</p>
-              </div>
-              <button class="btn-sm btn-red" onclick="removeFromCart(${c.id})">Remove</button>
-            </div>
-          `;
-        }
-      }
-      
-      document.getElementById('cartItems').innerHTML = html;
-      document.getElementById('cartTotal').textContent = 'UGX ' + total.toLocaleString();
-      document.getElementById('cartSummary').classList.remove('hidden');
-    }
-    
-    function showCart() {
-      navigateTo('userCart');
-      renderCart();
-    }
-    
-    function updateCartBadge() {
-      let t = AppState.cart.reduce((s, c) => s + (c.quantity || 0), 0);
-      let b = document.getElementById('cartBadge');
-      if (t > 0) {
-        b.textContent = t;
-        b.classList.remove('hidden');
-      } else {
-        b.classList.add('hidden');
-      }
-    }
-    
-    // ==================== CHECKOUT & PAYMENT ====================
-    
-    function showCheckout() {
-      requireAuth(() => {
-        if (!AppState.cart.length) {
-          showToast('Cart empty', true);
-          return;
-        }
-        
-        let total = AppState.cart.reduce((s, c) => {
-          let p = AppState.products.find(pr => pr.id === c.product_id);
-          return s + ((p?.price || 0) * (c.quantity || 1));
-        }, 0);
-        
-        document.getElementById('checkoutTotal').textContent = 'UGX ' + total.toLocaleString();
-        navigateTo('checkoutPage');
-      });
-    }
-    
-    async function processPayment() {
-      const method = document.querySelector('input[name="payMethod"]:checked').value;
-      const phone = document.getElementById('payPhone').value;
-      
-      if (method !== 'card' && method !== 'cod' && (!phone || !validateUgPhone(phone))) {
-        showToast('Valid phone required', true);
-        return;
-      }
-      
-      if (!AppState.cart.length) {
-        showToast('Cart empty', true);
-        return;
-      }
-      
-      let total = 0;
-      let items = [];
-      
-      for (let c of AppState.cart) {
-        let p = AppState.products.find(pr => pr.id === c.product_id);
-        if (p) {
-          total += (p.price || 0) * (c.quantity || 1);
-          items.push({ productId: c.product_id, quantity: c.quantity || 1 });
-        }
-      }
-      
-      const payMethod = method === 'mtn' ? 'MTN' : (method === 'airtel' ? 'Airtel' : (method === 'cod' ? 'Cash on Delivery' : 'Card'));
-      
-      try {
-        const res = await apiCall('/orders', {
-          method: 'POST',
-          body: JSON.stringify({ items, total, payment_method: payMethod })
-        });
-        
-        showToast(method === 'cod' ? 'Order placed! Pay on delivery.' : 'Order placed successfully!');
-        await refreshData();
-        navigateTo('userOrders');
-        renderUserOrders();
-        
-        const newOrder = {
-          id: res.order_id || Date.now(),
-          user_id: AppState.user.id,
-          total: total,
-          status: 'pending',
-          payment_method: payMethod,
-          date: new Date().toISOString(),
-          customer_name: AppState.user.name,
-          items: AppState.cart.map(c => {
-            const p = AppState.products.find(pr => pr.id === c.product_id);
-            return { name: p?.name || 'Product', price: p?.price || 0, quantity: c.quantity };
-          })
-        };
-        
-        printReceipt(newOrder);
-      } catch(e) {
-        showToast('Order failed', true);
-      }
-    }
-    
-    // ==================== ORDERS ====================
-    
-    async function renderUserOrders() {
-      if (!AppState.user) return;
-      
-      const my = (AppState.orders || []).filter(o => o.user_id === AppState.user.id);
-      
-      if (!my.length) {
-        document.getElementById('userOrderList').innerHTML = '<div class="empty-state">No orders yet</div>';
-        return;
-      }
-      
-      document.getElementById('userOrderList').innerHTML = my.map(o => `
-        <div class="card">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <strong>Order #${o.id}</strong>
-            <span class="status-badge status-${o.status}">${o.status}</span>
-          </div>
-          <div style="margin-bottom:8px;"><strong>Total:</strong> UGX ${(o.total || 0).toLocaleString()}</div>
-          <div style="margin-bottom:8px;"><strong>Payment:</strong> ${o.payment_method || 'N/A'}</div>
-          <div style="margin-bottom:10px;"><strong>Rider:</strong> ${escapeHtml(o.rider_name || 'Not assigned')}</div>
-          <button class="btn-sm btn-primary" onclick='printReceipt(${JSON.stringify(o).replace(/'/g, "'")})'>🖨️ Print Receipt</button>
-        </div>
-      `).join('');
-    }
-    
-    function printReceipt(order) {
-      if (!order) return;
-      
-      const html = `
-        <div class="receipt-print-area">
-          <h2>🏗️ WAMP ENTERPRISES LTD</h2>
-          <p style="text-align:center; margin-bottom:15px;">Terrazzo • Plumbing • Painting<br>Tel: +256 772 123456</p>
-          
-          <div style="margin-bottom:15px; border-bottom:1px solid #ccc; padding-bottom:10px;">
-            <p><strong>Order #:</strong> ${order.id}</p>
-            <p><strong>Date:</strong> ${order.date ? new Date(order.date).toLocaleString() : 'N/A'}</p>
-            <p><strong>Customer:</strong> ${escapeHtml(order.customer_name || AppState.user?.name || 'N/A')}</p>
-            <p><strong>Payment:</strong> ${order.payment_method || 'N/A'}</p>
-          </div>
-          
-          <div style="margin:15px 0;">
-            <table style="width:100%; font-size:12px;">
-              <thead>
-                <tr>
-                  <th style="text-align:left;">Item</th>
-                  <th>Qty</th>
-                  <th>Price</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${(order.items || []).map(item => `
-                  <tr>
-                    <td style="text-align:left;">${escapeHtml(item.name || item.product_name || 'Product')}</td>
-                    <td style="text-align:center;">${item.quantity}</td>
-                    <td style="text-align:right;">UGX ${(item.price || 0).toLocaleString()}</td>
-                    <td style="text-align:right;">UGX ${((item.price || 0) * (item.quantity || 1)).toLocaleString()}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-          
-          <div style="text-align:right; font-size:18px; font-weight:bold; margin:15px 0; border-top:2px dashed #ccc; padding-top:10px;">
-            Total: UGX ${(order.total || 0).toLocaleString()}
-          </div>
-          
-          <div style="text-align:center; margin-top:20px; font-size:11px; border-top:2px dashed #ccc; padding-top:10px;">
-            <p>Thank you for shopping with WAMP!</p>
-            <p>Delivery within 24-48 hours</p>
-          </div>
-        </div>
-      `;
-      
-      const w = window.open('', '_blank');
-      w.document.write(`
-        <html>
-          <head>
-            <title>Receipt #${order.id}</title>
-            <style>
-              body { font-family: monospace; margin: 0; padding: 20px; }
-              @media print { body { margin: 0; padding: 0; } }
-            </style>
-          </head>
-          <body>${html}</body>
-        </html>
-      `);
-      w.document.close();
-      w.print();
-    }
-    
-    // ==================== ADMIN FUNCTIONS ====================
-    
-    async function renderAdminProducts() {
-      let html = (AppState.products || []).map(p => `
-        <div class="list-item">
-          <div class="list-info" onclick="editProduct(${p.id})">
-            <h4>${escapeHtml(p.name)}</h4>
-            <p>${escapeHtml(p.type)} - Stock: ${p.stock || 0} - UGX ${(p.price || 0).toLocaleString()}</p>
-          </div>
-          <button class="btn-sm btn-red" onclick="deleteProductItem(${p.id})">Delete</button>
-        </div>
-      `).join('');
-      
-      document.getElementById('adminProductList').innerHTML = html || '<div class="empty-state">No products</div>';
-    }
-    
-    function resetProductForm() {
-      document.getElementById('editProductId').value = '';
-      document.getElementById('prodName').value = '';
-      document.getElementById('prodDesc').value = '';
-      document.getElementById('prodPrice').value = '';
-      document.getElementById('prodStock').value = '';
-      document.getElementById('prodImage').value = '';
-      document.getElementById('productFormTitle').innerHTML = '📤 Add New Product';
-      document.getElementById('cancelEditBtn').classList.add('hidden');
-    }
-    
-    async function saveProduct() {
-      const id = document.getElementById('editProductId').value;
-      const data = {
-        name: document.getElementById('prodName').value,
-        type: document.getElementById('prodType').value,
-        description: document.getElementById('prodDesc').value,
-        price: parseInt(document.getElementById('prodPrice').value) || 0,
-        stock: parseInt(document.getElementById('prodStock').value) || 0,
-        image_url: document.getElementById('prodImage').value
-      };
-      
-      if (!data.name) {
-        showToast('Name required', true);
-        return;
-      }
-      
-      try {
-        if (id) {
-          await apiCall(`/admin/products/${id}`, { method: 'PUT', body: JSON.stringify(data) });
-          showToast('Updated');
-        } else {
-          await apiCall('/admin/products', { method: 'POST', body: JSON.stringify(data) });
-          showToast('Added');
-        }
-        
-        await refreshData();
-        renderAdminProducts();
-        resetProductForm();
-      } catch(e) {
-        showToast('Failed', true);
-      }
-    }
-    
-    function editProduct(id) {
-      const p = AppState.products.find(pr => pr.id === id);
-      if (p) {
-        document.getElementById('editProductId').value = p.id;
-        document.getElementById('prodName').value = p.name;
-        document.getElementById('prodType').value = p.type;
-        document.getElementById('prodDesc').value = p.description || '';
-        document.getElementById('prodPrice').value = p.price || 0;
-        document.getElementById('prodStock').value = p.stock || 0;
-        document.getElementById('prodImage').value = p.image_url || '';
-        document.getElementById('productFormTitle').innerHTML = '✏️ Edit Product';
-        document.getElementById('cancelEditBtn').classList.remove('hidden');
-        window.scrollTo(0, 0);
-      }
-    }
-    
-    async function deleteProductItem(id) {
-      if (confirm('Delete?')) {
-        try {
-          await apiCall(`/admin/products/${id}`, { method: 'DELETE' });
-          await refreshData();
-          renderAdminProducts();
-          showToast('Deleted');
-        } catch(e) {
-          showToast('Failed', true);
-        }
-      }
-    }
-    
-    async function renderAdminOrders() {
-      let html = (AppState.orders || []).map(o => `
-        <div class="list-item" onclick="viewTransactionDetails(${o.id})">
-          <div>
-            <h4>Order #${o.id}</h4>
-            <p>UGX ${(o.total || 0).toLocaleString()} - ${o.payment_method || 'N/A'}</p>
-          </div>
-          <span class="status-badge status-${o.status}">${o.status}</span>
-        </div>
-      `).join('');
-      
-      document.getElementById('adminOrdersList').innerHTML = html || '<div class="empty-state">No orders</div>';
-    }
-    
-    async function renderAdminDashboard() {
-      const delivered = (AppState.orders || []).filter(o => o.status === 'delivered' || o.status === 'completed').reduce((s, o) => s + (o.total || 0), 0);
-      const pending = (AppState.orders || []).filter(o => o.status === 'pending' || o.status === 'paid').length;
-      const low = (AppState.products || []).filter(p => (p.stock || 0) < 5).length;
-      
-      document.getElementById('adminTodaySales').innerHTML = 'UGX ' + delivered.toLocaleString();
-      document.getElementById('adminPendingOrders').textContent = pending;
-      document.getElementById('adminTotalProducts').textContent = AppState.products?.length || 0;
-      document.getElementById('adminLowStock').textContent = low;
-      
-      document.getElementById('adminAgentStatus').innerHTML = '<div class="empty-state">Agent status - Backend pending</div>';
-      
-      const recent = (AppState.orders || []).slice(0, 5);
-      document.getElementById('adminRecentOrders').innerHTML = recent.map(o => `
-        <div class="list-item">
-          <div>
-            <h4>Order #${o.id}</h4>
-            <p>${o.date ? new Date(o.date).toLocaleDateString() : 'N/A'}</p>
-          </div>
-          <span class="status-badge status-${o.status}">${o.status}</span>
-        </div>
-      `).join('') || '<div class="empty-state">No recent orders</div>';
-    }
-    
-    function viewTransactionDetails(id) {
-      const o = AppState.orders.find(o => o.id === id);
-      if (o) {
-        showModal('Order #' + o.id, `
-          <div style="margin-bottom:10px;"><strong>Total:</strong> UGX ${(o.total || 0).toLocaleString()}</div>
-          <div style="margin-bottom:10px;"><strong>Status:</strong> ${o.status}</div>
-          <div style="margin-bottom:10px;"><strong>Payment:</strong> ${o.payment_method || 'N/A'}</div>
-          <button class="btn-sm btn-primary" onclick='printReceipt(${JSON.stringify(o).replace(/'/g, "'")})'>🖨️ Print Receipt</button>
-        `);
-      }
-    }
-    
-    function searchTransactionByPhone() {
-      showToast('Search by phone (Backend pending)');
-    }
-    
-    function resetTransactionSearch() {
-      renderAdminOrders();
-    }
-    
-    function exportTransactionsCSV() {
-      showToast('Export CSV (Backend pending)');
-    }
-    
-    function showSalesDetail() {
-      showModal('Sales', 'Backend pending');
-    }
-    
-    function showPendingDetail() {
-      const p = (AppState.orders || []).filter(o => o.status === 'pending' || o.status === 'paid');
-      showModal('Pending', p.map(o => `Order #${o.id} - UGX ${(o.total || 0).toLocaleString()}`).join('<br>') || 'None');
-    }
-    
-    function showProductsDetail() {
-      showModal('Products', 'Total: ' + (AppState.products?.length || 0));
-    }
-    
-    function showLowStockDetail() {
-      const l = (AppState.products || []).filter(p => (p.stock || 0) < 5);
-      showModal('Low Stock', l.map(p => `${p.name} - ${p.stock}`).join('<br>') || 'All good');
-    }
-    
-    // ==================== AGENT FUNCTIONS ====================
-    
-    async function renderAgentPanel() {
-      const ao = (AppState.orders || []).filter(o => o.agent_id === AppState.user.id);
-      const assigned = ao.filter(o => o.status === 'pending' || o.status === 'processing').length;
-      const completed = ao.filter(o => o.status === 'delivered' || o.status === 'completed').length;
-      
-      document.getElementById('agentAssignedCount').textContent = assigned;
-      document.getElementById('agentCompletedCount').textContent = completed;
-      document.getElementById('agentPendingCount').textContent = ao.filter(o => o.status === 'assigned').length;
-      
-      document.getElementById('agentAssignedOrders').innerHTML = ao.map(o => `
-        <div class="card">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <strong>Order #${o.id}</strong>
-            <span class="status-badge status-${o.status}">${o.status}</span>
-          </div>
-          <div>UGX ${(o.total || 0).toLocaleString()}</div>
-          <button class="btn-sm btn-primary" style="margin-top:10px;" onclick='printReceipt(${JSON.stringify(o).replace(/'/g, "'")})'>🖨️ Print Receipt</button>
-        </div>
-      `).join('') || '<div class="empty-state">No assigned orders</div>';
-      
-      const avail = (AppState.orders || []).filter(o => !o.agent_id && o.status === 'pending');
-      document.getElementById('agentAvailableOrders').innerHTML = avail.map(o => `
-        <div class="card">
-          <div><strong>Order #${o.id}</strong> - UGX ${(o.total || 0).toLocaleString()}</div>
-          <button class="btn-sm btn-green" style="margin-top:10px;" onclick="claimOrder(${o.id})">✅ Claim Order</button>
-        </div>
-      `).join('') || '<div class="empty-state">No available orders</div>';
-      
-      document.getElementById('agentChatList').innerHTML = '<div class="empty-state">Conversations - Backend pending</div>';
-    }
-    
-    function claimOrder(id) {
-      showToast('Claiming order #' + id + ' (Backend pending)');
-    }
-    
-    async function renderAgentReceipts() {
-      const ao = (AppState.orders || []).filter(o => o.agent_id === AppState.user.id);
-      document.getElementById('agentReceipts').innerHTML = ao.map(o => `
-        <div class="card">
-          <div style="margin-bottom:10px;"><strong>Order #${o.id}</strong> - UGX ${(o.total || 0).toLocaleString()}</div>
-          <button class="btn-sm btn-primary" onclick='printReceipt(${JSON.stringify(o).replace(/'/g, "'")})'>🖨️ Print Receipt</button>
-        </div>
-      `).join('') || '<div class="empty-state">No receipts</div>';
-    }
-    
-    function openAgentToManagerChat() {
-      showToast('Chat with manager (Backend pending)');
-    }
-    
-    // ==================== USER DASHBOARD ====================
-    
-    function renderUserDashboard() {
-      if (!AppState.user) return;
-      
-      document.getElementById('userNameDisplay').textContent = AppState.user.name;
-      document.getElementById('userEmailDisplay').textContent = AppState.user.email;
-      document.getElementById('profileName').value = AppState.user.name || '';
-      document.getElementById('profileEmail').value = AppState.user.email || '';
-      document.getElementById('profilePhone').value = AppState.user.phone || '';
-      document.getElementById('profileAddress').value = AppState.user.address || '';
-      
-      const my = (AppState.orders || []).filter(o => o.user_id === AppState.user.id);
-      document.getElementById('userTotalOrders').textContent = my.length;
-      document.getElementById('userPendingOrders').textContent = my.filter(o => o.status === 'pending' || o.status === 'processing').length;
-      
-      document.getElementById('wishlistItems').innerHTML = '<div class="empty-state">Wishlist - Backend pending</div>';
-      document.getElementById('userReviews').innerHTML = '<div class="empty-state">Reviews - Backend pending</div>';
-    }
-    
-    function saveUserProfile() {
-      showToast('Profile update - Backend pending');
-    }
-    
-    // ==================== NOTIFICATIONS ====================
-    
-    function showNotifications() {
-      const html = AppState.notifications.map(n => `
-        <div class="list-item">
-          <div class="list-info">
-            <h4>${escapeHtml(n.title)}</h4>
-            <p>${escapeHtml(n.message)}</p>
-          </div>
-        </div>
-      `).join('') || '<div class="empty-state">No notifications</div>';
-      
-      showModal('🔔 Notifications', html);
-      AppState.notifications.forEach(n => n.read = true);
-      document.getElementById('notificationBadge').classList.add('hidden');
-    }
-    
-    // ==================== PAYMENT UI ====================
-    
-    function setupPaymentMethodListener() {
-      document.querySelectorAll('input[name="payMethod"]').forEach(r => {
-        r.addEventListener('change', () => {
-          document.getElementById('cardFields').classList.toggle('hidden', document.querySelector('input[name="payMethod"]:checked').value !== 'card');
-        });
-      });
-      
-      const pp = document.getElementById('payPhone');
-      if (pp) {
-        pp.addEventListener('input', function() {
-          const n = detectNetwork(this.value);
-          const b = document.getElementById('networkBadge');
-          if (b) {
-            if (n) {
-              b.textContent = n;
-              b.classList.remove('hidden');
-            } else {
-              b.classList.add('hidden');
+        return jsonify({
+            'success': True,
+            'access_token': access_token,
+            'refresh_token': refresh_token,
+            'user': {
+                'id': user.id,
+                'name': user.name,
+                'email': user.email,
+                'role': user.role,
+                'phone': user.phone,
+                'address': user.address
             }
-          }
-        });
-      }
-    }
+        })
     
-    // ==================== CHAT ====================
+    except Exception as e:
+        logger.error(f"Login error: {e}")
+        return jsonify({'error': 'Login failed'}), 500
+
+@app.route('/api/refresh', methods=['POST'])
+@jwt_required(refresh=True)
+def refresh():
+    user_id = get_jwt_identity()
+    access_token = create_access_token(identity=str(user_id))
+    return jsonify({'success': True, 'access_token': access_token})
+
+@app.route('/api/logout', methods=['POST'])
+@jwt_required()
+def logout():
+    jti = get_jwt()['jti']
+    user_id = get_jwt_identity()
+    blacklist = TokenBlacklist(jti=jti, user_id=int(user_id))
+    db.session.add(blacklist)
+    db.session.commit()
+    log_audit(int(user_id), 'LOGOUT', 'user', int(user_id))
+    return jsonify({'success': True})
+
+# ==================== USER ROUTES ====================
+@app.route('/api/user/profile', methods=['PUT'])
+@jwt_required()
+def update_profile():
+    user_id = int(get_jwt_identity())
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
     
-    function toggleChat() {
-      const b = document.getElementById('chatBox');
-      AppState.chatOpen = !AppState.chatOpen;
-      
-      if (AppState.chatOpen) {
-        b.classList.remove('hidden');
-        if (!document.getElementById('chatMessages').children.length) {
-          addChatMsg('bot', 'Welcome to WAMP! Ask about prices, delivery, or payments.');
+    data = request.get_json()
+    user.name = data.get('name', user.name)
+    user.phone = data.get('phone', user.phone)
+    user.address = data.get('address', user.address)
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'user': {
+            'name': user.name,
+            'phone': user.phone,
+            'address': user.address
         }
-      } else {
-        b.classList.add('hidden');
-      }
-    }
+    })
+
+@app.route('/api/notifications', methods=['GET'])
+@jwt_required()
+def get_notifications():
+    user_id = int(get_jwt_identity())
+    notifs = Notification.query.filter_by(user_id=user_id, is_read=False).order_by(Notification.created_at.desc()).limit(20).all()
     
-    function addChatMsg(s, t) {
-      const c = document.getElementById('chatMessages');
-      const d = document.createElement('div');
-      d.className = 'chat-msg ' + s;
-      d.textContent = t;
-      c.appendChild(d);
-      c.scrollTop = c.scrollHeight;
-    }
+    for n in notifs:
+        n.is_read = True
+    db.session.commit()
     
-    async function sendChat() {
-      const i = document.getElementById('chatInput');
-      const t = i.value.trim();
-      
-      if (!t) return;
-      
-      addChatMsg('user', t);
-      i.value = '';
-      
-      try {
-        const d = await apiCall('/chat/customer', { method: 'POST', body: JSON.stringify({ message: t }) });
-        addChatMsg('bot', d.response || 'Thanks!');
-      } catch(e) {
-        addChatMsg('bot', 'Chat unavailable.');
-      }
-    }
-    
-    // ==================== INITIALIZATION (FIXED) ====================
-    
-    function enterApp() {
-      document.getElementById('loginPage').classList.add('hidden');
-      document.getElementById('appContainer').classList.remove('hidden');
-      document.getElementById('headerGreeting').textContent = 'Hi, ' + ((AppState.user?.name || 'User').split(' ')[0]);
-      
-      setupNav();
-      
-      refreshData().then(() => {
-        if (AppState.user.role === 'admin') navigateTo('adminDashboard');
-        else if (AppState.user.role === 'agent') navigateTo('agentPanel');
-        else { navigateTo('userShop'); initSlider(); }
-      });
-    }
-    
-    async function initApp() {
-      setupPaymentMethodListener();
-      
-      const splash = document.getElementById('splashPage');
-      
-      setTimeout(async () => {
-        splash.style.opacity = '0';
+    return jsonify([{
+        'id': n.id,
+        'title': n.title,
+        'message': n.message,
+        'date': n.created_at.isoformat()
+    } for n in notifs])
+
+# ==================== PRODUCT ROUTES ====================
+@app.route('/api/products', methods=['GET'])
+def get_products():
+    try:
+        release_expired_reservations()
         
-        setTimeout(async () => {
-          splash.classList.add('hidden');
-          document.getElementById('appContainer').classList.remove('hidden');
-          
-          const token = getAccessToken();
-          
-          if (token) {
-            try { 
-              await refreshData(); 
-            } catch(e) { 
-              clearTokens(); 
+        products = Product.query.all()
+        result = []
+        for p in products:
+            product_data = {
+                'id': p.id,
+                'name': p.name,
+                'category': p.category,
+                'price': p.price,
+                'stock': p.available_stock,
+                'description': p.description or '',
+                'image_type': p.image_type
             }
-          }
-          
-          navigateTo('userShop');
-          initSlider();
-          setupNav();
-          
-        }, 600);
+            
+            # HYBRID STORAGE: Priority: Cloudinary URL > Database base64 > External URL
+            if p.image_type == 'cloudinary' and p.image_url:
+                product_data['image_url'] = p.image_url
+            elif p.image_type == 'db' and p.image_data:
+                product_data['image_data'] = p.image_data
+                product_data['image_mime'] = p.image_mime
+            else:
+                product_data['image_url'] = p.image_url or ''
+            
+            result.append(product_data)
         
-      }, 1500);
+        return jsonify(result)
+    
+    except Exception as e:
+        logger.error(f"Get products error: {e}")
+        return jsonify({'error': 'Failed to fetch products'}), 500
+
+@app.route('/api/products/search', methods=['GET'])
+def search_products():
+    try:
+        query = request.args.get('q', '').strip()
+        category = request.args.get('category', '').strip()
+        
+        products_query = Product.query
+        
+        if query:
+            products_query = products_query.filter(
+                Product.name.ilike(f'%{query}%') | 
+                Product.description.ilike(f'%{query}%')
+            )
+        
+        if category and category != 'all':
+            products_query = products_query.filter(Product.category == category)
+        
+        products = products_query.all()
+        
+        result = []
+        for p in products:
+            product_data = {
+                'id': p.id,
+                'name': p.name,
+                'category': p.category,
+                'price': p.price,
+                'stock': p.available_stock,
+                'description': p.description or '',
+                'image_type': p.image_type
+            }
+            
+            if p.image_type == 'cloudinary' and p.image_url:
+                product_data['image_url'] = p.image_url
+            elif p.image_type == 'db' and p.image_data:
+                product_data['image_data'] = p.image_data
+            else:
+                product_data['image_url'] = p.image_url or ''
+            
+            result.append(product_data)
+        
+        return jsonify(result)
+    
+    except Exception as e:
+        logger.error(f"Search products error: {e}")
+        return jsonify({'error': 'Search failed'}), 500
+
+@app.route('/api/admin/products', methods=['POST'])
+@jwt_required()
+def create_product():
+    try:
+        user = User.query.get(int(get_jwt_identity()))
+        if user.role != 'admin':
+            return jsonify({'error': 'Admin access required'}), 403
+        
+        data = request.get_json()
+        category = data.get('category', '').strip()
+        
+        # Validate category
+        valid_categories = ['Terrazzo', 'Plumbing', 'General']
+        if category not in valid_categories:
+            return jsonify({'error': f'Invalid category. Must be one of: {", ".join(valid_categories)}'}), 400
+        
+        product = Product(
+            name=data.get('name'),
+            category=category,
+            price=data.get('price'),
+            stock=data.get('stock', 0),
+            description=data.get('description', ''),
+            image_url=data.get('image_url', ''),
+            image_type='url'
+        )
+        db.session.add(product)
+        db.session.commit()
+        log_audit(user.id, 'CREATE_PRODUCT', 'product', product.id)
+        
+        return jsonify({'success': True, 'id': product.id}), 201
+    
+    except Exception as e:
+        logger.error(f"Create product error: {e}")
+        return jsonify({'error': 'Failed to create product'}), 500
+
+@app.route('/api/admin/products/upload', methods=['POST'])
+@jwt_required()
+def upload_product_image():
+    try:
+        user = User.query.get(int(get_jwt_identity()))
+        if user.role != 'admin':
+            return jsonify({'error': 'Admin access required'}), 403
+        
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image file'}), 400
+
+        file = request.files['image']
+        product_id = request.form.get('product_id')
+
+        if not product_id:
+            return jsonify({'error': 'Product ID required'}), 400
+
+        product = Product.query.get(product_id)
+        if not product:
+            return jsonify({'error': 'Product not found'}), 404
+
+        # Check file size
+        file.seek(0, 2)
+        if file.tell() > 5 * 1024 * 1024:
+            return jsonify({'error': 'Image too large. Max 5MB'}), 400
+        file.seek(0)
+
+        file_content = file.read()
+        
+        # STEP 1: ALWAYS store in database as backup (Hybrid Storage)
+        product.image_data = base64.b64encode(file_content).decode('utf-8')
+        product.image_mime = file.mimetype
+        product.image_type = 'db'
+        product.image_url = None
+        
+        cloudinary_success = False
+        
+        # STEP 2: Try Cloudinary for better performance (if configured)
+        if CLOUDINARY_ENABLED:
+            try:
+                file.seek(0)  # Reset file pointer
+                result = cloudinary.uploader.upload(file, folder='wamp_products')
+                product.image_url = result['secure_url']
+                product.image_type = 'cloudinary'  # Priority to Cloudinary
+                cloudinary_success = True
+                logger.info(f"✅ Image uploaded to Cloudinary for product {product_id}")
+            except Exception as e:
+                logger.error(f"Cloudinary upload failed: {e}")
+                # Keep using DB storage (already set above)
+
+        db.session.commit()
+        log_audit(user.id, 'UPLOAD_IMAGE', 'product', product.id)
+        
+        return jsonify({
+            'success': True,
+            'image_type': product.image_type,
+            'cloudinary_used': cloudinary_success,
+            'message': 'Image stored in database' + (' and Cloudinary' if cloudinary_success else ' only')
+        })
+    
+    except Exception as e:
+        logger.error(f"Upload image error: {e}")
+        return jsonify({'error': 'Upload failed'}), 500
+
+@app.route('/api/admin/products/<int:product_id>', methods=['PUT'])
+@jwt_required()
+def update_product(product_id):
+    try:
+        user = User.query.get(int(get_jwt_identity()))
+        if user.role != 'admin':
+            return jsonify({'error': 'Admin access required'}), 403
+        
+        product = Product.query.get_or_404(product_id)
+        data = request.get_json()
+        
+        product.name = data.get('name', product.name)
+        
+        category = data.get('category', '').strip()
+        valid_categories = ['Terrazzo', 'Plumbing', 'General']
+        if category and category in valid_categories:
+            product.category = category
+        
+        product.price = data.get('price', product.price)
+        product.stock = data.get('stock', product.stock)
+        product.description = data.get('description', product.description)
+        
+        if data.get('image_url') and product.image_type != 'db':
+            product.image_url = data.get('image_url')
+            product.image_type = 'url'
+        
+        db.session.commit()
+        log_audit(user.id, 'UPDATE_PRODUCT', 'product', product.id)
+        
+        return jsonify({'success': True})
+    
+    except Exception as e:
+        logger.error(f"Update product error: {e}")
+        return jsonify({'error': 'Failed to update product'}), 500
+
+@app.route('/api/admin/products/<int:product_id>', methods=['DELETE'])
+@jwt_required()
+def delete_product(product_id):
+    try:
+        user = User.query.get(int(get_jwt_identity()))
+        if user.role != 'admin':
+            return jsonify({'error': 'Admin access required'}), 403
+        
+        product = Product.query.get_or_404(product_id)
+        db.session.delete(product)
+        db.session.commit()
+        log_audit(user.id, 'DELETE_PRODUCT', 'product', product.id)
+        
+        return jsonify({'success': True})
+    
+    except Exception as e:
+        logger.error(f"Delete product error: {e}")
+        return jsonify({'error': 'Failed to delete product'}), 500
+
+@app.route('/api/products/categories', methods=['GET'])
+def get_categories():
+    return jsonify(['Terrazzo', 'Plumbing', 'General'])
+
+# ==================== CART ROUTES ====================
+@app.route('/api/cart', methods=['GET'])
+@jwt_required()
+def get_cart():
+    try:
+        user_id = int(get_jwt_identity())
+        cart_items = CartItem.query.filter_by(user_id=user_id).all()
+        
+        result = []
+        for item in cart_items:
+            product = Product.query.get(item.product_id)
+            if product:
+                result.append({
+                    'id': item.id,
+                    'product_id': item.product_id,
+                    'quantity': item.quantity,
+                    'product_name': product.name,
+                    'product_price': product.price,
+                    'product_image': product.image_url if product.image_type == 'cloudinary' else None
+                })
+        
+        return jsonify(result)
+    
+    except Exception as e:
+        logger.error(f"Get cart error: {e}")
+        return jsonify({'error': 'Failed to fetch cart'}), 500
+
+@app.route('/api/cart', methods=['POST'])
+@jwt_required()
+def add_to_cart():
+    try:
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 400
+        
+        user_id = int(get_jwt_identity())
+        data = request.get_json()
+        product_id = data.get('product_id')
+        quantity = data.get('quantity', 1)
+
+        product = Product.query.get(product_id)
+        if not product:
+            return jsonify({'error': 'Product not found'}), 404
+        
+        if product.available_stock < quantity:
+            return jsonify({'error': 'Insufficient stock'}), 400
+
+        cart_item = CartItem.query.filter_by(user_id=user_id, product_id=product_id).first()
+        if cart_item:
+            cart_item.quantity += quantity
+        else:
+            cart_item = CartItem(user_id=user_id, product_id=product_id, quantity=quantity)
+            db.session.add(cart_item)
+
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Added to cart'}), 201
+    
+    except Exception as e:
+        logger.error(f"Add to cart error: {e}")
+        return jsonify({'error': 'Failed to add to cart'}), 500
+
+@app.route('/api/cart/<int:cart_item_id>', methods=['DELETE'])
+@jwt_required()
+def remove_from_cart(cart_item_id):
+    try:
+        user_id = int(get_jwt_identity())
+        cart_item = CartItem.query.filter_by(id=cart_item_id, user_id=user_id).first()
+        
+        if not cart_item:
+            return jsonify({'error': 'Not found'}), 404
+        
+        db.session.delete(cart_item)
+        db.session.commit()
+        return jsonify({'success': True})
+    
+    except Exception as e:
+        logger.error(f"Remove from cart error: {e}")
+        return jsonify({'error': 'Failed to remove from cart'}), 500
+
+@app.route('/api/cart/clear', methods=['DELETE'])
+@jwt_required()
+def clear_cart():
+    try:
+        user_id = int(get_jwt_identity())
+        CartItem.query.filter_by(user_id=user_id).delete()
+        db.session.commit()
+        return jsonify({'success': True})
+    
+    except Exception as e:
+        logger.error(f"Clear cart error: {e}")
+        return jsonify({'error': 'Failed to clear cart'}), 500
+
+# ==================== WISHLIST ROUTES ====================
+@app.route('/api/wishlist', methods=['GET'])
+@jwt_required()
+def get_wishlist():
+    try:
+        user_id = int(get_jwt_identity())
+        items = Wishlist.query.filter_by(user_id=user_id).all()
+        
+        result = []
+        for item in items:
+            product = Product.query.get(item.product_id)
+            if product:
+                result.append({
+                    'id': item.id,
+                    'product_id': item.product_id,
+                    'name': product.name,
+                    'price': product.price,
+                    'image_url': product.image_url
+                })
+        
+        return jsonify(result)
+    
+    except Exception as e:
+        logger.error(f"Get wishlist error: {e}")
+        return jsonify({'error': 'Failed to fetch wishlist'}), 500
+
+@app.route('/api/wishlist', methods=['POST'])
+@jwt_required()
+def toggle_wishlist():
+    try:
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 400
+        
+        user_id = int(get_jwt_identity())
+        data = request.get_json()
+        product_id = data.get('product_id')
+
+        if not product_id:
+            return jsonify({'error': 'Product ID required'}), 400
+
+        existing = Wishlist.query.filter_by(user_id=user_id, product_id=product_id).first()
+        
+        if existing:
+            db.session.delete(existing)
+            db.session.commit()
+            return jsonify({'success': True, 'action': 'removed', 'message': 'Removed from wishlist'})
+        else:
+            wishlist_item = Wishlist(user_id=user_id, product_id=product_id)
+            db.session.add(wishlist_item)
+            db.session.commit()
+            return jsonify({'success': True, 'action': 'added', 'message': 'Added to wishlist'}), 201
+    
+    except Exception as e:
+        logger.error(f"Toggle wishlist error: {e}")
+        return jsonify({'error': 'Failed to update wishlist'}), 500
+
+# ==================== REVIEWS ROUTES ====================
+@app.route('/api/reviews', methods=['POST'])
+@jwt_required()
+def submit_review():
+    try:
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 400
+        
+        user_id = int(get_jwt_identity())
+        data = request.get_json()
+        product_id = data.get('product_id')
+        rating = data.get('rating')
+        comment = data.get('comment', '').strip()
+
+        if not product_id or not rating:
+            return jsonify({'error': 'Product ID and rating required'}), 400
+        
+        if not (1 <= rating <= 5):
+            return jsonify({'error': 'Rating must be 1-5'}), 400
+
+        product = Product.query.get(product_id)
+        if not product:
+            return jsonify({'error': 'Product not found'}), 404
+
+        existing = Review.query.filter_by(user_id=user_id, product_id=product_id).first()
+        
+        if existing:
+            existing.rating = rating
+            existing.comment = comment
+        else:
+            review = Review(user_id=user_id, product_id=product_id, rating=rating, comment=comment)
+            db.session.add(review)
+
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Review saved'})
+    
+    except Exception as e:
+        logger.error(f"Submit review error: {e}")
+        return jsonify({'error': 'Failed to submit review'}), 500
+
+@app.route('/api/reviews/user', methods=['GET'])
+@jwt_required()
+def get_user_reviews():
+    try:
+        user_id = int(get_jwt_identity())
+        reviews = Review.query.filter_by(user_id=user_id).all()
+        
+        result = []
+        for r in reviews:
+            product = Product.query.get(r.product_id)
+            result.append({
+                'id': r.id,
+                'product_id': r.product_id,
+                'product_name': product.name if product else 'Unknown',
+                'rating': r.rating,
+                'comment': r.comment,
+                'created_at': r.created_at.isoformat()
+            })
+        
+        return jsonify(result)
+    
+    except Exception as e:
+        logger.error(f"Get user reviews error: {e}")
+        return jsonify({'error': 'Failed to fetch reviews'}), 500
+
+@app.route('/api/reviews/product/<int:product_id>', methods=['GET'])
+def get_product_reviews(product_id):
+    try:
+        reviews = db.session.execute(text("""
+            SELECT r.rating, r.comment, r.created_at, u.name as user_name
+            FROM reviews r
+            JOIN users u ON r.user_id = u.id
+            WHERE r.product_id = :product_id
+            ORDER BY r.created_at DESC
+        """), {'product_id': product_id}).fetchall()
+
+        return jsonify([{
+            'rating': row[0],
+            'comment': row[1],
+            'created_at': row[2].isoformat() if row[2] else None,
+            'user_name': row[3]
+        } for row in reviews])
+    
+    except Exception as e:
+        logger.error(f"Get product reviews error: {e}")
+        return jsonify({'error': 'Failed to fetch reviews'}), 500
+
+# ==================== ORDER ROUTES ====================
+def enrich_order(order):
+    items = json.loads(order.items) if order.items else []
+    enriched_items = []
+    
+    for item in items:
+        product = Product.query.get(item.get('productId'))
+        enriched_items.append({
+            'name': product.name if product else 'Product',
+            'price': product.price if product else 0,
+            'quantity': item.get('quantity', 1),
+            'product_id': item.get('productId')
+        })
+    
+    return {
+        'id': order.id,
+        'user_id': order.user_id,
+        'agent_id': order.agent_id,
+        'total': order.total,
+        'status': order.status,
+        'payment_method': order.payment_method,
+        'payment_status': order.payment_status,
+        'rider_name': order.rider_name,
+        'rider_phone': order.rider_phone,
+        'delivery_location': order.delivery_location,
+        'items': enriched_items,
+        'created_at': order.created_at.isoformat()
     }
+
+@app.route('/api/orders', methods=['GET'])
+@jwt_required()
+def get_orders():
+    try:
+        user_id = int(get_jwt_identity())
+        user = User.query.get(user_id)
+
+        if user.role == 'admin':
+            orders = Order.query.order_by(Order.created_at.desc()).all()
+        elif user.role == 'agent':
+            orders = Order.query.filter_by(agent_id=user_id).order_by(Order.created_at.desc()).all()
+        else:
+            orders = Order.query.filter_by(user_id=user_id).order_by(Order.created_at.desc()).all()
+
+        return jsonify([enrich_order(o) for o in orders])
     
-    // ==================== EXPOSE GLOBALS ====================
+    except Exception as e:
+        logger.error(f"Get orders error: {e}")
+        return jsonify({'error': 'Failed to fetch orders'}), 500
+
+@app.route('/api/orders', methods=['POST'])
+@jwt_required()
+def create_order():
+    try:
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 400
+        
+        user_id = int(get_jwt_identity())
+        data = request.get_json()
+        items_data = data.get('items', [])
+        
+        if not items_data:
+            return jsonify({'error': 'No items'}), 400
+
+        validated_items = []
+        total = 0
+
+        for item in items_data:
+            product_id = item.get('productId')
+            quantity = item.get('quantity', 1)
+            product = Product.query.with_for_update().get(product_id)
+            
+            if not product:
+                return jsonify({'error': 'Product not found'}), 404
+            
+            if product.available_stock < quantity:
+                return jsonify({'error': f'Insufficient stock for {product.name}'}), 400
+            
+            total += product.price * quantity
+            validated_items.append({
+                'productId': product.id,
+                'quantity': quantity
+            })
+            product.reserved_stock += quantity
+
+        payment_method = data.get('payment_method', 'MTN')
+        delivery_location = data.get('delivery_location', '')
+        
+        order = Order(
+            user_id=user_id,
+            items=json.dumps(validated_items),
+            total=total,
+            status='pending',
+            payment_status='pending',
+            payment_method=payment_method,
+            delivery_location=delivery_location,
+            stock_reserved_until=datetime.utcnow() + timedelta(hours=1)
+        )
+        db.session.add(order)
+        db.session.commit()
+
+        # Clear cart after order
+        CartItem.query.filter_by(user_id=user_id).delete()
+        db.session.commit()
+
+        # Assign least busy agent
+        agent = get_least_busy_agent()
+        if agent:
+            order.agent_id = agent.id
+            db.session.commit()
+            send_notification(agent.id, 'New Order Assigned', f'Order #{order.id} has been assigned to you')
+
+        # Notify user
+        send_notification(user_id, 'Order Created', f'Your order #{order.id} has been created successfully')
+
+        log_audit(user_id, 'CREATE_ORDER', 'order', order.id)
+        return jsonify({'success': True, 'order_id': order.id}), 201
     
-    window.onload = initApp;
-    window.navigateTo = navigateTo;
-    window.addToCart = addToCart;
-    window.showProductDetail = showProductDetail;
-    window.removeFromCart = removeFromCart;
-    window.processPayment = processPayment;
-    window.saveProduct = saveProduct;
-    window.editProduct = editProduct;
-    window.deleteProductItem = deleteProductItem;
-    window.resetProductForm = resetProductForm;
-    window.renderShop = renderShop;
-    window.searchProducts = searchProducts;
-    window.filterProducts = filterProducts;
-    window.showCart = showCart;
-    window.showCheckout = showCheckout;
-    window.handleLogin = handleLogin;
-    window.handleRegister = handleRegister;
-    window.handleForgotPassword = handleForgotPassword;
-    window.logout = logout;
-    window.toggleAuth = toggleAuth;
-    window.showForgotPassword = showForgotPassword;
-    window.showLoginForm = showLoginForm;
-    window.saveUserProfile = saveUserProfile;
-    window.toggleChat = toggleChat;
-    window.sendChat = sendChat;
-    window.searchTransactionByPhone = searchTransactionByPhone;
-    window.resetTransactionSearch = resetTransactionSearch;
-    window.exportTransactionsCSV = exportTransactionsCSV;
-    window.showSalesDetail = showSalesDetail;
-    window.showPendingDetail = showPendingDetail;
-    window.showProductsDetail = showProductsDetail;
-    window.showLowStockDetail = showLowStockDetail;
-    window.viewTransactionDetails = viewTransactionDetails;
-    window.openAgentToManagerChat = openAgentToManagerChat;
-    window.renderAgentPanel = renderAgentPanel;
-    window.renderAgentReceipts = renderAgentReceipts;
-    window.printReceipt = printReceipt;
-    window.showNotifications = showNotifications;
-    window.sendManagerMessage = () => showToast('Send message (Backend pending)');
-    window.claimOrder = claimOrder;
-  </script>
-</body>
-</html>
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Order failed: {e}")
+        return jsonify({'error': 'Order failed'}), 500
+
+@app.route('/api/orders/<int:order_id>/status', methods=['PUT'])
+@jwt_required()
+def update_order_status(order_id):
+    try:
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 400
+        
+        data = request.get_json()
+        order = Order.query.get_or_404(order_id)
+        user_id = int(get_jwt_identity())
+        user = User.query.get(user_id)
+        
+        if user.role != 'admin' and (user.role == 'agent' and order.agent_id != user_id):
+            return jsonify({'error': 'Permission denied'}), 403
+        
+        old_status = order.status
+        order.status = data.get('status', order.status)
+        db.session.commit()
+        
+        # Notify customer
+        if old_status != order.status:
+            send_notification(order.user_id, 'Order Status Updated', f'Your order #{order_id} is now {order.status}')
+        
+        return jsonify({'success': True})
+    
+    except Exception as e:
+        logger.error(f"Update order status error: {e}")
+        return jsonify({'error': 'Failed to update order'}), 500
+
+# ==================== AGENT ROUTES ====================
+@app.route('/api/agent/orders/<int:order_id>/claim', methods=['POST'])
+@jwt_required()
+def claim_order(order_id):
+    try:
+        user_id = int(get_jwt_identity())
+        user = User.query.get(user_id)
+        
+        if user.role not in ['agent', 'admin']:
+            return jsonify({'error': 'Agent access required'}), 403
+        
+        order = Order.query.get_or_404(order_id)
+        
+        if order.agent_id:
+            return jsonify({'error': 'Order already claimed'}), 409
+        
+        order.agent_id = user_id
+        order.status = 'processing'
+        db.session.commit()
+        
+        send_notification(user_id, 'Order Claimed', f'You have claimed order #{order_id}')
+        send_notification(order.user_id, 'Order Claimed', f'Your order #{order_id} is now being processed')
+        
+        return jsonify({'success': True})
+    
+    except Exception as e:
+        logger.error(f"Claim order error: {e}")
+        return jsonify({'error': 'Failed to claim order'}), 500
+
+@app.route('/api/agent/panel', methods=['GET'])
+@jwt_required()
+def agent_panel():
+    try:
+        user_id = int(get_jwt_identity())
+        user = User.query.get(user_id)
+        
+        if user.role not in ['agent', 'admin']:
+            return jsonify({'error': 'Agent access required'}), 403
+        
+        if user.role == 'admin':
+            assigned = Order.query.filter(Order.agent_id.isnot(None)).order_by(Order.created_at.desc()).all()
+            available = Order.query.filter(Order.agent_id.is_(None), Order.status == 'pending').all()
+        else:
+            assigned = Order.query.filter_by(agent_id=user_id).order_by(Order.created_at.desc()).all()
+            available = Order.query.filter(Order.agent_id.is_(None), Order.status == 'pending').all()
+        
+        return jsonify({
+            'assigned': [enrich_order(o) for o in assigned],
+            'available': [enrich_order(o) for o in available],
+            'stats': {
+                'assigned': len([o for o in assigned if o.status in ['pending', 'processing']]),
+                'completed': len([o for o in assigned if o.status in ['delivered', 'completed']]),
+                'pending': len([o for o in assigned if o.status == 'assigned'])
+            }
+        })
+    
+    except Exception as e:
+        logger.error(f"Agent panel error: {e}")
+        return jsonify({'error': 'Failed to load agent panel'}), 500
+
+# ==================== RIDER ASSIGNMENT ====================
+@app.route('/api/admin/orders/<int:order_id>/assign-rider', methods=['PUT'])
+@jwt_required()
+def assign_rider(order_id):
+    try:
+        user_id = int(get_jwt_identity())
+        user = User.query.get(user_id)
+        
+        if user.role not in ['admin', 'agent']:
+            return jsonify({'error': 'Permission denied'}), 403
+        
+        data = request.get_json()
+        order = Order.query.get_or_404(order_id)
+        
+        order.rider_name = data.get('rider_name')
+        order.rider_phone = data.get('rider_phone')
+        order.status = 'shipped'
+        db.session.commit()
+        
+        send_notification(order.user_id, 'Rider Assigned', f'A rider has been assigned to your order #{order_id}')
+        
+        return jsonify({'success': True})
+    
+    except Exception as e:
+        logger.error(f"Assign rider error: {e}")
+        return jsonify({'error': 'Failed to assign rider'}), 500
+
+# ==================== ADMIN ROUTES ====================
+@app.route('/api/admin/stats', methods=['GET'])
+@jwt_required()
+def admin_stats():
+    try:
+        user = User.query.get(int(get_jwt_identity()))
+        if user.role != 'admin':
+            return jsonify({'error': 'Admin access required'}), 403
+        
+        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_sales = db.session.query(func.sum(Order.total)).filter(
+            Order.created_at >= today_start,
+            Order.status.in_(['delivered', 'completed'])
+        ).scalar() or 0
+        
+        pending_orders = Order.query.filter(Order.status.in_(['pending', 'paid'])).count()
+        total_products = Product.query.count()
+        low_stock = Product.query.filter(Product.stock < 5).count()
+        
+        return jsonify({
+            'today_sales': today_sales,
+            'pending_orders': pending_orders,
+            'total_products': total_products,
+            'low_stock': low_stock
+        })
+    
+    except Exception as e:
+        logger.error(f"Admin stats error: {e}")
+        return jsonify({'error': 'Failed to fetch stats'}), 500
+
+@app.route('/api/admin/orders/export', methods=['GET'])
+@jwt_required()
+def export_orders_csv():
+    try:
+        user = User.query.get(int(get_jwt_identity()))
+        if user.role != 'admin':
+            return jsonify({'error': 'Admin access required'}), 403
+        
+        orders = Order.query.order_by(Order.created_at.desc()).all()
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        writer.writerow(['Order ID', 'User ID', 'Agent ID', 'Total', 'Status', 'Payment Method', 'Rider Name', 'Created At'])
+        for o in orders:
+            writer.writerow([o.id, o.user_id, o.agent_id or '', o.total, o.status, o.payment_method, o.rider_name or '', o.created_at.isoformat()])
+        
+        response = make_response(output.getvalue())
+        response.headers['Content-Type'] = 'text/csv'
+        response.headers['Content-Disposition'] = 'attachment; filename=orders_export.csv'
+        
+        return response
+    
+    except Exception as e:
+        logger.error(f"Export orders error: {e}")
+        return jsonify({'error': 'Failed to export orders'}), 500
+
+# ==================== COMMUNICATIONS / CHAT ====================
+@app.route('/api/communications', methods=['GET'])
+@jwt_required()
+def get_communications():
+    try:
+        user_id = int(get_jwt_identity())
+        messages = Communication.query.filter(
+            (Communication.sender_id == user_id) | (Communication.receiver_id == user_id)
+        ).order_by(Communication.created_at.desc()).limit(50).all()
+        
+        result = []
+        for m in messages:
+            sender = User.query.get(m.sender_id)
+            result.append({
+                'id': m.id,
+                'sender_id': m.sender_id,
+                'sender_name': sender.name if sender else 'Unknown',
+                'receiver_id': m.receiver_id,
+                'content': m.content,
+                'is_read': m.is_read,
+                'created_at': m.created_at.isoformat()
+            })
+        
+        return jsonify(result)
+    
+    except Exception as e:
+        logger.error(f"Get communications error: {e}")
+        return jsonify({'error': 'Failed to fetch messages'}), 500
+
+@app.route('/api/communications', methods=['POST'])
+@jwt_required()
+def send_communication():
+    try:
+        if not request.is_json:
+            return jsonify({'error': 'JSON required'}), 400
+        
+        user_id = int(get_jwt_identity())
+        data = request.get_json()
+        
+        receiver_id = data.get('receiver_id')
+        content = data.get('content')
+        
+        if not receiver_id or not content:
+            return jsonify({'error': 'Receiver ID and content required'}), 400
+        
+        message = Communication(
+            sender_id=user_id,
+            receiver_id=receiver_id,
+            content=content
+        )
+        db.session.add(message)
+        db.session.commit()
+        
+        # Send notification to receiver
+        sender = User.query.get(user_id)
+        send_notification(receiver_id, 'New Message', f'New message from {sender.name}')
+        
+        return jsonify({'success': True, 'id': message.id}), 201
+    
+    except Exception as e:
+        logger.error(f"Send communication error: {e}")
+        return jsonify({'error': 'Failed to send message'}), 500
+
+@app.route('/api/communications/<int:msg_id>/read', methods=['POST'])
+@jwt_required()
+def mark_communication_read(msg_id):
+    try:
+        user_id = int(get_jwt_identity())
+        message = Communication.query.get_or_404(msg_id)
+        
+        if message.receiver_id != user_id:
+            return jsonify({'error': 'Unauthorized'}), 403
+        
+        message.is_read = True
+        db.session.commit()
+        
+        return jsonify({'success': True})
+    
+    except Exception as e:
+        logger.error(f"Mark read error: {e}")
+        return jsonify({'error': 'Failed to mark as read'}), 500
+
+# ==================== CHAT BOT ====================
+@app.route('/api/chat/customer', methods=['POST'])
+def customer_chat():
+    try:
+        if not request.is_json:
+            return jsonify({'error': 'JSON required'}), 400
+        
+        data = request.get_json()
+        message = data.get('message', '').lower()
+        
+        if 'price' in message or 'cost' in message:
+            response = "💰 Here are our prices:\n• Terrazzo: UGX 250,000 - 500,000\n• Plumbing: UGX 45,000 - 150,000\n• General Merchandise: UGX 10,000 - 200,000"
+        elif 'delivery' in message or 'shipping' in message:
+            response = "🚚 Free delivery on orders over UGX 500,000. Standard delivery takes 2-5 business days."
+        elif 'payment' in message or 'pay' in message:
+            response = "💳 We accept MTN Mobile Money, Airtel Money, Bank Cards, and Cash on Delivery!"
+        elif 'terrazzo' in message:
+            response = "🏛️ Our Terrazzo products include floor finishes, wall finishes, and custom designs. Prices start at UGX 250,000."
+        elif 'plumbing' in message:
+            response = "🔧 We offer copper pipes, PVC pipes, fittings, valves, and complete plumbing solutions."
+        elif 'general' in message or 'merchandise' in message:
+            response = "📦 Our General Merchandise includes paints, tools, hardware, and construction supplies."
+        else:
+            response = "Welcome to WAMP Enterprises! 🏗️\nWe specialize in:\n• Terrazzo Flooring\n• Plumbing Services\n• General Merchandise\n\nAsk me about prices, delivery, or payments!"
+        
+        return jsonify({'response': response})
+    
+    except Exception as e:
+        logger.error(f"Chat error: {e}")
+        return jsonify({'error': 'Chat failed'}), 500
+
+# ==================== ERROR HANDLERS ====================
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify({'error': 'Resource not found'}), 404
+
+@app.errorhandler(429)
+def rate_limit_exceeded(e):
+    return jsonify({'error': 'Too many requests'}), 429
+
+@app.errorhandler(500)
+def server_error(e):
+    logger.error(f"Server error: {e}")
+    return jsonify({'error': 'Internal server error'}), 500
+
+@app.errorhandler(Exception)
+def global_error_handler(e):
+    logger.error(f"UNHANDLED ERROR: {type(e).__name__}: {e}", exc_info=True)
+    return jsonify({'error': 'Internal server error'}), 500
+
+# ==================== DATABASE INITIALIZATION ====================
+with app.app_context():
+    try:
+        ensure_tables_and_defaults()
+        logger.info("✅ Database initialization complete")
+    except Exception as e:
+        logger.error(f"Database initialization failed: {e}")
+
+# ==================== MAIN ====================
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 10000))
+    
+    print(f"""
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                    WAMP BACKEND - PRODUCTION READY ✅                         ║
+╠═══════════════════════════════════════════════════════════════════════════════╣
+║  Port:        {port}                                                          ║
+║  Cloudinary:  {'ENABLED' if CLOUDINARY_ENABLED else 'DISABLED'}                ║
+║  Redis:       {'ENABLED' if redis_client else 'DISABLED'}                      ║
+╠═══════════════════════════════════════════════════════════════════════════════╣
+║  ⚠️  IMPORTANT:                                                               ║
+║  - Admin credentials come from .env file                                      ║
+║  - Agent credentials come from .env file                                      ║
+║  - Products are added via Admin panel only                                    ║
+║  - Categories: Terrazzo | Plumbing | General                                  ║
+╠═══════════════════════════════════════════════════════════════════════════════╣
+║  🖼️  Image Storage: HYBRID (Database + Cloudinary)                            ║
+║  🔐 Security:     JWT | Rate Limiting | Brute Force Protection                ║
+╠═══════════════════════════════════════════════════════════════════════════════╣
+║  🚀 Features:     Auth | Products | Cart | Orders | Wishlist | Reviews       ║
+║                 Agent Panel | Rider Assignment | Chat | Notifications        ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+    """)
+    
+    app.run(host='0.0.0.0', port=port, debug=False)
