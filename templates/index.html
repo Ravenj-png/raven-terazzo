@@ -242,6 +242,7 @@ tr:last-child td{border-bottom:none}
 
 <script>
 // ======================== APP STATE ========================
+// ======================== APP STATE ========================
 const AppState = {
     user: null,
     products: [],
@@ -371,6 +372,13 @@ async function refreshData() {
     try { AppState.orders = await apiCall('/orders'); } catch(e){ AppState.orders=[]; }
 }
 
+// Sample products for guest browsing
+const sampleProductsFallback = [
+    { id:1, name:"Premium Floor Terrazzo", type:"Floor Terrazzo", price:250000, stock:12, image_url:"https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=400", description:"High-end terrazzo flooring" },
+    { id:2, name:"Copper Plumbing Pipe", type:"Plumbing Pipe", price:45000, stock:30, image_url:"https://images.unsplash.com/photo-1581092160562-40aa08e7882a?w=400", description:"Durable copper pipe" },
+    { id:3, name:"Interior Emulsion Paint", type:"Paint Emulsion", price:120000, stock:8, image_url:"https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=400", description:"Smooth finish" }
+];
+
 function renderProductCard(product) {
     let stockClass = (product.stock || 0) < 5 ? 'low' : '';
     let imageUrl = product.image_url && product.image_url.trim() !== '' ? product.image_url : 'https://placehold.co/600x400/1a5276/white?text=WAMP';
@@ -387,8 +395,7 @@ function renderProductCard(product) {
 }
 
 async function renderShop(filter = 'all') {
-    if(!AppState.products.length) await refreshData();
-    let products = AppState.products;
+    let products = AppState.products.length ? AppState.products : sampleProductsFallback;
     if(filter !== 'all') products = products.filter(p => p.type && p.type.toLowerCase().includes(filter.toLowerCase()));
     document.getElementById('shopGrid').innerHTML = products.map(p => renderProductCard(p)).join('') || '<div class="empty-state">No products found</div>';
 }
@@ -397,7 +404,8 @@ function searchProducts(q){ if(!q) renderShop(); else renderShop('all'); }
 function filterProducts(type, btn){ document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active')); if(btn) btn.classList.add('active'); renderShop(type); }
 
 async function showProductDetail(id){
-    let p = AppState.products.find(pr=>pr.id===id);
+    let products = AppState.products.length ? AppState.products : sampleProductsFallback;
+    let p = products.find(pr=>pr.id===id);
     if(!p) return;
     let imgUrl = p.image_url && p.image_url.trim() ? p.image_url : 'https://placehold.co/600x400/1a5276/white?text=WAMP';
     document.getElementById('detailContent').innerHTML = 
@@ -438,6 +446,7 @@ function showCheckout(){
 function updateCartBadge(){ let total=AppState.cart.reduce((s,c)=>s+(c.quantity||0),0); let badge=document.getElementById('cartBadge'); if(total>0){ badge.textContent=total; badge.classList.remove('hidden'); } else badge.classList.add('hidden'); }
 
 async function processPayment(){
+    if(!AppState.user){ showToast('Please login first', true); return; }
     let method = document.querySelector('input[name="payMethod"]:checked').value;
     let phone = document.getElementById('payPhone').value;
     if(method!=='card' && (!phone || !validateUgPhone(phone))){ showToast('Valid phone required', true); return; }
@@ -457,6 +466,7 @@ async function processPayment(){
 }
 
 async function renderUserOrders(){
+    if(!AppState.user) return;
     let myOrders = (AppState.orders || []).filter(o=>o.user_id===AppState.user?.id);
     if(!myOrders.length){ document.getElementById('userOrderList').innerHTML='<div class="empty-state">No orders</div>'; return; }
     document.getElementById('userOrderList').innerHTML = myOrders.map(o=>`<div class="card"><div><strong>Order #${o.id}</strong> - <span class="status-badge status-${o.status}">${o.status}</span></div><div>UGX ${(o.total||0).toLocaleString()}</div><div>Rider: ${escapeHtml(o.rider_name||'Not assigned')}</div></div>`).join('');
@@ -532,7 +542,7 @@ function setupNav(){
     }
     let chatWidget = document.getElementById('chatWidgetContainer');
     let whatsapp = document.getElementById('whatsappWidget');
-    if(AppState.user.role==='user'){ if(chatWidget) chatWidget.classList.remove('hidden'); if(whatsapp) whatsapp.classList.remove('hidden'); }
+    if(AppState.user && AppState.user.role==='user'){ if(chatWidget) chatWidget.classList.remove('hidden'); if(whatsapp) whatsapp.classList.remove('hidden'); }
     else{ if(chatWidget) chatWidget.classList.add('hidden'); if(whatsapp) whatsapp.classList.add('hidden'); }
 }
 
@@ -579,8 +589,8 @@ function enterApp(){
     document.getElementById('headerGreeting').textContent = 'Hi, ' + ((AppState.user?.name || 'User').split(' ')[0]);
     setupNav();
     refreshData().then(()=>{
-        if(AppState.user.role === 'admin') navigateTo('adminDashboard');
-        else if(AppState.user.role === 'agent') navigateTo('agentPanel');
+        if(AppState.user && AppState.user.role === 'admin') navigateTo('adminDashboard');
+        else if(AppState.user && AppState.user.role === 'agent') navigateTo('agentPanel');
         else { navigateTo('userShop'); initSlider(); }
     });
 }
@@ -593,16 +603,33 @@ function showPendingDetail(){ showModal('Pending Orders','List pending'); }
 function showProductsDetail(){ showModal('Products','Total: '+(AppState.products?.length||0)); }
 function showLowStockDetail(){ showModal('Low Stock','Products with low stock'); }
 
+// ============ CHANGED: FREE BROWSING FIRST ============
 async function initApp(){
     setupPaymentMethodListener();
     let splash = document.getElementById('splashPage');
     setTimeout(()=>{
         splash.style.opacity = '0';
-        setTimeout(()=>{ splash.classList.add('hidden'); document.getElementById('loginPage').classList.remove('hidden'); },600);
+        setTimeout(()=>{ 
+            splash.classList.add('hidden'); 
+            // FREE BROWSING - go directly to shop
+            document.getElementById('appContainer').classList.remove('hidden');
+            AppState.products = sampleProductsFallback;
+            renderShop();
+            initSlider();
+            setupNav();
+            navigateTo('userShop');
+        },600);
     },1500);
+    // Silent auth check for returning users
     let token = getAccessToken();
     if(token){
-        try{ await refreshData(); AppState.user = { id:1, name:'User', email:'user@example.com', role:'user' }; enterApp(); } catch(e){ clearTokens(); }
+        try{ 
+            await refreshData(); 
+            if(AppState.user) {
+                document.getElementById('headerGreeting').textContent = 'Hi, ' + (AppState.user.name || 'User');
+                setupNav();
+            }
+        } catch(e){ clearTokens(); }
     }
 }
 
