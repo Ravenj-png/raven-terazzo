@@ -1426,7 +1426,7 @@ body {
       💬
     </button>
   </div>
-  
+
   <div id="aiChatWindow" class="chat-window hidden">
     <div class="chat-header">
       <h3>
@@ -1591,7 +1591,7 @@ async function sendAIChatMessage() {
 
   const messagesDiv = document.getElementById('aiChatMessages');
   const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  
+
   messagesDiv.innerHTML += `
     <div class="chat-message user">
       <div class="chat-bubble">${escapeHtml(message)}</div>
@@ -1619,10 +1619,10 @@ async function sendAIChatMessage() {
       body: JSON.stringify({ message })
     });
     const data = await res.json();
-    
+
     // Remove typing indicator
     document.getElementById(typingId)?.remove();
-    
+
     const aiBadge = data.ai_used ? ' 🤖' : '';
     messagesDiv.innerHTML += `
       <div class="chat-message bot">
@@ -1805,7 +1805,7 @@ async function showNotifications() {
     }
 
     const html = notifications.map(n => `
-      <div class="list-item">
+      <div class="list-item" onclick="markNotificationRead(${n.id})">
         <div>
           <strong>${escapeHtml(n.title)}</strong><br>
           <small>${escapeHtml(n.message)}</small><br>
@@ -1815,15 +1815,19 @@ async function showNotifications() {
     `).join('');
 
     showModal('🔔 Notifications', html);
-
-    for (const n of notifications) {
-      if (!n.is_read) {
-        await apiCall(`/notifications/${n.id}/read`, { method: 'POST' }).catch(() => {});
-      }
-    }
-    document.getElementById('notificationBadge').classList.add('hidden');
   } catch(e) {
     showToast('Failed to load notifications', true);
+  }
+}
+
+// NEW FUNCTION: Mark notification as read when clicked
+async function markNotificationRead(notificationId) {
+  try {
+    await apiCall(`/notifications/${notificationId}/read`, { method: 'POST' });
+    // Refresh notifications list
+    showNotifications();
+  } catch(e) {
+    console.log('Failed to mark as read');
   }
 }
 
@@ -2095,7 +2099,7 @@ async function processPayment() {
     });
     showToast('Order placed successfully!');
     await refreshAllData();
-    
+
     const newOrder = {
       id: res.order_id,
       total: total,
@@ -2110,7 +2114,7 @@ async function processPayment() {
       customer_phone: AppState.user?.phone,
       user_id: AppState.user?.id
     };
-    
+
     saveReceiptToIndexedDB(newOrder);
     navigateTo('userOrders');
     renderUserOrders();
@@ -2136,7 +2140,7 @@ function saveReceiptToIndexedDB(order) {
     issued_at: new Date().toISOString(),
     user_id: order.user_id
   };
-  
+
   let request = indexedDB.open('WAMPOfflineDB', 3);
   request.onsuccess = function(event) {
     let db = event.target.result;
@@ -2162,7 +2166,7 @@ function loadReceiptsFromIndexedDB() {
 function printReceipt(order) {
   const qrContainerId = `qrcode-${Date.now()}`;
   const telLink = `TEL:${RECEIPT_PHONE_NUMBERS[0]}`;
-  
+
   const receiptHtml = `
     <div class="receipt-print-area" id="printReceiptArea">
       <div class="receipt-header">
@@ -2196,7 +2200,7 @@ function printReceipt(order) {
             </tr>
           `).join('')}
         </tbody>
-      </table>
+       </table>
       
       <div class="receipt-total">
         <strong>GRAND TOTAL: UGX ${(order.total || 0).toLocaleString()}</strong>
@@ -2261,6 +2265,10 @@ async function renderUserOrders() {
     document.getElementById('userOrderList').innerHTML = '<div class="empty-state">No orders yet</div>';
     return;
   }
+  
+  // Determine if user is admin or agent to show print button
+  const canPrint = AppState.user?.role === 'admin' || AppState.user?.role === 'agent';
+  
   document.getElementById('userOrderList').innerHTML = myOrders.map(o => `
     <div class="card">
       <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
@@ -2271,8 +2279,29 @@ async function renderUserOrders() {
       <div>Payment: ${o.payment_method || 'N/A'}</div>
       ${o.rider_name ? `<div>Rider: ${escapeHtml(o.rider_name)} (${o.rider_phone || ''})</div>` : ''}
       <button class="btn-sm btn-primary" style="margin-top:10px;" onclick="trackOrder(${o.id})">📍 Track Order</button>
+      ${canPrint ? `<button class="btn-sm btn-outline" style="margin-top:10px; margin-left:8px;" onclick="printReceiptFromOrder(${o.id})">🖨️ Print Receipt</button>` : ''}
     </div>
   `).join('');
+}
+
+// NEW FUNCTION: Print receipt from order (admin/agent only)
+function printReceiptFromOrder(orderId) {
+  const order = AppState.orders.find(o => o.id === orderId);
+  if (order) {
+    const receiptData = {
+      id: order.id,
+      order_id: order.id,
+      total: order.total,
+      payment_method: order.payment_method,
+      created_at: order.created_at,
+      items: order.items || [],
+      delivery_address: order.delivery_location,
+      customer_name: `Customer #${order.user_id}`,
+      customer_phone: '',
+      receipt_number: `WAMP-${new Date().getFullYear()}-${order.id}`
+    };
+    printReceipt(receiptData);
+  }
 }
 
 async function trackOrder(orderId) {
@@ -2336,7 +2365,7 @@ async function renderUserDashboard() {
       `).join('');
     }
   }
-  
+
   loadCustomerChatMessages();
 }
 
@@ -2360,7 +2389,7 @@ async function saveProfile() {
 // ==================== CUSTOMER-AGENT CHAT (SHIELDED) ====================
 function loadCustomerChatMessages() {
   if (!AppState.user) return;
-  
+
   const conversationId = `customer_${AppState.user.id}`;
   let request = indexedDB.open('WAMPOfflineDB', 3);
   request.onsuccess = function(event) {
@@ -2389,7 +2418,7 @@ function sendCustomerMessage() {
   const input = document.getElementById('customerChatInput');
   const message = input.value.trim();
   if (!message || !AppState.user) return;
-  
+
   const conversationId = `customer_${AppState.user.id}`;
   const newMessage = {
     sender: 'customer',
@@ -2398,7 +2427,7 @@ function sendCustomerMessage() {
     message: message,
     timestamp: new Date().toISOString()
   };
-  
+
   let request = indexedDB.open('WAMPOfflineDB', 3);
   request.onsuccess = function(event) {
     let db = event.target.result;
@@ -2422,7 +2451,7 @@ function sendCustomerMessage() {
 function loadAgentClients() {
   const customers = [];
   const customerIds = new Set();
-  
+
   AppState.orders.forEach(order => {
     if (order.user_id && !customerIds.has(order.user_id)) {
       customerIds.add(order.user_id);
@@ -2433,15 +2462,15 @@ function loadAgentClients() {
       });
     }
   });
-  
+
   const container = document.getElementById('agentClientsList');
   if (!container) return;
-  
+
   if (!customers.length) {
     container.innerHTML = '<div class="empty-state">No customers yet. When customers place orders, they will appear here.</div>';
     return;
   }
-  
+
   container.innerHTML = customers.map(c => `
     <div class="client-list-item" onclick="openAgentClientChat(${c.user_id}, '${escapeHtml(c.customer_name)}')">
       <div>
@@ -2457,16 +2486,16 @@ let currentChatCustomerId = null;
 
 function openAgentClientChat(customerId, customerName) {
   currentChatCustomerId = customerId;
-  
+
   const conversationId = `customer_${customerId}`;
   const chatArea = document.getElementById('agentClientChatArea');
   const chatHeader = document.getElementById('agentClientChatHeader');
   const messagesContainer = document.getElementById('agentClientChatMessages');
-  
+
   chatHeader.innerHTML = `💬 Chat with ${escapeHtml(customerName)}`;
   chatArea.style.display = 'flex';
   chatArea.style.flexDirection = 'column';
-  
+
   let request = indexedDB.open('WAMPOfflineDB', 3);
   request.onsuccess = function(event) {
     let db = event.target.result;
@@ -2476,14 +2505,14 @@ function openAgentClientChat(customerId, customerName) {
     get.onsuccess = function() {
       const chat = get.result;
       const messages = chat ? chat.messages : [];
-      
+
       messagesContainer.innerHTML = messages.map(m => `
         <div class="chat-message-custom ${m.sender === 'agent' ? 'sent' : 'received'}">
           <div class="chat-bubble-custom">${escapeHtml(m.message)}</div>
           <div class="chat-meta-custom">${new Date(m.timestamp).toLocaleTimeString()} - ${m.sender === 'agent' ? 'You' : escapeHtml(m.sender_name)}</div>
         </div>
       `).join('') || '<div class="empty-state">No messages yet. Start the conversation!</div>';
-      
+
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     };
   };
@@ -2493,7 +2522,7 @@ function sendAgentClientMessage() {
   const input = document.getElementById('agentClientChatInput');
   const message = input.value.trim();
   if (!message || !currentChatCustomerId || !AppState.user) return;
-  
+
   const conversationId = `customer_${currentChatCustomerId}`;
   const newMessage = {
     sender: 'agent',
@@ -2502,7 +2531,7 @@ function sendAgentClientMessage() {
     message: message,
     timestamp: new Date().toISOString()
   };
-  
+
   let request = indexedDB.open('WAMPOfflineDB', 3);
   request.onsuccess = function(event) {
     let db = event.target.result;
@@ -2537,12 +2566,12 @@ async function loadRiders() {
 function renderRidersList() {
   const container = document.getElementById('ridersList');
   if (!container) return;
-  
+
   if (!AppState.riders.length) {
     container.innerHTML = '<div class="empty-state">No riders yet. Add one above.</div>';
     return;
   }
-  
+
   container.innerHTML = AppState.riders.map(r => `
     <div class="rider-card">
       <div>
@@ -2557,7 +2586,7 @@ function renderRidersList() {
 function renderRiderSelect() {
   const select = document.getElementById('riderSelect');
   if (!select) return;
-  
+
   select.innerHTML = '<option value="">Assign a rider (optional)</option>' + 
     AppState.riders.filter(r => r.status === 'available').map(r => `<option value="${r.id}">${escapeHtml(r.name)} - ${r.phone}</option>`).join('');
 }
@@ -2565,12 +2594,12 @@ function renderRiderSelect() {
 async function createRider() {
   const name = document.getElementById('newRiderName').value.trim();
   const phone = document.getElementById('newRiderPhone').value.trim();
-  
+
   if (!name || !phone) {
     showToast('Enter rider name and phone', true);
     return;
   }
-  
+
   try {
     await apiCall('/riders', {
       method: 'POST',
@@ -2587,7 +2616,7 @@ async function createRider() {
 
 async function assignRiderToOrder(orderId, riderId) {
   if (!riderId) return;
-  
+
   try {
     await apiCall(`/orders/${orderId}/assign-rider`, {
       method: 'PUT',
@@ -2612,12 +2641,12 @@ function loadAdminMonitorChats() {
       const chats = getAll.result || [];
       const container = document.getElementById('adminMonitorChats');
       if (!container) return;
-      
+
       if (!chats.length) {
         container.innerHTML = '<div class="empty-state">No agent-client conversations yet</div>';
         return;
       }
-      
+
       container.innerHTML = chats.map(chat => `
         <div class="card" style="margin: 10px 0;">
           <div style="font-weight: bold;">👤 Customer #${chat.customer_id}</div>
@@ -2929,7 +2958,7 @@ async function loadChatWithAgent(agentId) {
 
   try {
     const messages = await apiCall(`/admin/conversations/${agentId}`);
-    
+
     document.getElementById('adminChatHeader').innerHTML = `💬 Chat with Agent #${agentId}`;
 
     const container = document.getElementById('adminChatMessages');
@@ -3075,11 +3104,11 @@ async function sendOrderUpdate() {
       method: 'POST',
       body: JSON.stringify({ order_id: parseInt(orderId), status: newStatus, customer_message: message })
     });
-    
+
     if (riderId) {
       await assignRiderToOrder(orderId, riderId);
     }
-    
+
     showToast(`Update sent! Order #${orderId} is now ${newStatus}`);
     document.getElementById('agentCustomerMessage').value = '';
     renderAgentPanel();
@@ -3164,7 +3193,7 @@ function startGroupChatPolling() {
 // ==================== PWA SERVICE WORKER ====================
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/raven-terazzo/sw.js')
+    navigator.serviceWorker.register('/sw.js')
       .then(reg => console.log('Service Worker registered:', reg))
       .catch(err => console.log('Service Worker error:', err));
   });
@@ -3325,6 +3354,8 @@ window.createRider = createRider;
 window.printAdminReceipt = printAdminReceipt;
 window.printAgentReceipt = printAgentReceipt;
 window.assignRiderToOrderField = assignRiderToOrderField;
+window.markNotificationRead = markNotificationRead;
+window.printReceiptFromOrder = printReceiptFromOrder;
 
 initApp();
 </script>
