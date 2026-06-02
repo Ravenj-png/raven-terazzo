@@ -13,8 +13,12 @@ import base64
 import csv
 import io
 import requests
+import smtplib
 from datetime import datetime, timedelta
 from functools import wraps
+
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 from flask import Flask, request, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
@@ -565,7 +569,12 @@ def login():
         return jsonify({'error': 'Invalid credentials'}), 401
 
     reset_failed_attempts(client_ip)
-    access_token = create_access_token(identity=str(user.id))
+    remember_me = data.get('remember_me', False)
+    if remember_me:
+        access_token = create_access_token(identity=str(user.id), expires_delta=timedelta(days=30))
+    else:
+        access_token = create_access_token(identity=str(user.id))
+        
     refresh_token = create_refresh_token(identity=str(user.id))
     log_audit(user.id, 'LOGIN')
 
@@ -573,6 +582,62 @@ def login():
         'success': True, 'access_token': access_token, 'refresh_token': refresh_token,
         'user': {'id': user.id, 'name': user.name, 'email': user.email, 'role': user.role, 'phone': user.phone, 'address': user.address}
     })
+
+@app.route('/api/forgot-password', methods=['POST'])
+def forgot_password():
+    data = request.get_json()
+    email = data.get('email', '').strip()
+    
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({'success': True, 'message': 'If email exists, reset link sent'})
+    
+    token = serializer.dumps(email, salt='password-reset-salt')
+    reset_link = f"https://{request.host}/reset-password?token={token}"
+    
+    try:
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+        
+        smtp_user = os.environ.get('SMTP_USER')
+        smtp_password = os.environ.get('SMTP_PASS', '').replace(' ', '')
+        
+        msg = MIMEMultipart()
+        msg['From'] = smtp_user
+        msg['To'] = email
+        msg['Subject'] = 'Reset Your WAMP Password'
+        msg.attach(MIMEText(f'Click link to reset: {reset_link}', 'html'))
+        
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_password)
+            server.send_message(msg)
+        
+        return jsonify({'success': True, 'message': 'Reset link sent'})
+    except Exception as e:
+        return jsonify({'success': True, 'message': 'If email exists, reset link sent'})
+        
+@app.route('/api/reset-password', methods=['POST'])
+def reset_password():
+    data = request.get_json()
+    token = data.get('token', '')
+    new_password = data.get('password', '').strip()
+    
+    try:
+        email = serializer.loads(token, salt='password-reset-salt', max_age=3600)
+    except:
+        return jsonify({'error': 'Invalid or expired token'}), 400
+    
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    user.password_hash = ph.hash(new_password)
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'Password reset successful'})
+    
 
 @app.route('/api/verify-token', methods=['GET'])
 @jwt_required()
