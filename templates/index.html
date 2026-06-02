@@ -1100,6 +1100,12 @@ body {
         <label>🔒 Password</label>
         <input type="password" id="loginPassword" placeholder="Enter password">
       </div>
+      <div style="display: flex; justify-content: space-between; margin: 10px 0;">
+  <label style="font-size: 12px;">
+    <input type="checkbox" id="rememberMe"> Remember Me
+  </label>
+  <span onclick="showForgotPassword()" style="color: var(--blue); font-size: 12px; cursor: pointer;">Forgot Password?</span>
+</div>
       <button class="btn btn-primary" onclick="submitLogin()">🔐 Login</button>
       <div class="toggle-text" style="text-align:center; margin-top:15px;">
         No account? <span onclick="showRegisterForm()" style="color:var(--blue); font-weight:700; cursor:pointer;">📝 Register</span>
@@ -1671,6 +1677,7 @@ function showRegisterForm() {
 async function submitLogin() {
   const email = document.getElementById('loginEmail').value;
   const password = document.getElementById('loginPassword').value;
+  const rememberMe = document.getElementById('rememberMe')?.checked || false;
 
   if (!email || !password) {
     showToast('Enter email and password', true);
@@ -1681,7 +1688,7 @@ async function submitLogin() {
     const res = await fetch(`${API_BASE}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password, remember_me: rememberMe })
     });
     const data = await res.json();
 
@@ -1746,7 +1753,19 @@ async function submitRegister() {
     showToast('Network error', true);
   }
 }
-
+  
+//fogot password link
+function showForgotPassword() {
+    const email = prompt("Enter your email address:");
+    if (!email) return;
+    
+    fetch(`${API_BASE}/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+    }).then(() => showToast("Reset link sent if email exists"));
+}
+  
 function logout() {
   clearTokens();
   AppState.user = null;
