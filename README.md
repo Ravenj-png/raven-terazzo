@@ -1,37 +1,37 @@
-# 🚀 Rave Tech Systems – Company Profile & Portfolio
+# 🏗️ WAMP Enterprise Dashboard
 
-A modern, responsive company profile and portfolio website for **Rave Tech Systems** – showcasing services, projects, team members, and client testimonials. Built as a pure static frontend to establish a strong online presence.
+A real‑time enterprise dashboard for managing agents, monitoring client‑agent chats, and broadcasting system‑wide updates. Built with a Flask backend, WebSockets (Socket.IO), and a responsive frontend.
 
 ---
 
 ## 🌟 Features
 
-- **Fully Responsive** – Adapts seamlessly to desktop, tablet, and mobile.
-- **Company Overview** – Clear messaging about vision and expertise.
-- **Services Section** – Highlights core offerings (security, scalability, intelligent systems).
-- **Portfolio Gallery** – Displays past projects with filters (simulated).
-- **Team Showcase** – Introduces key team members with roles.
-- **Testimonials** – Client feedback carousel (static mock data).
-- **Contact Section** – Functional contact form with basic validation (no backend – demo only).
-- **Smooth Animations** – Subtle CSS transitions and scroll effects.
+- **Admin Authentication** – Secure login for administrators.
+- **Agent Management** – Add, view, and monitor all active agents.
+- **Client Management** – View clients with their assigned agents.
+- **Real‑time Chat Monitoring** – See live conversations between agents and clients (via Socket.IO).
+- **Broadcast System** – Send instant updates to all connected agents/clients.
+- **Dashboard Metrics** – Live stats on active agents, total clients, and messages.
+- **Demo Mode** – Environment toggle to prevent accidental production actions.
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
-| Layer        | Technology                         |
-|--------------|------------------------------------|
-| **Frontend** | HTML5, CSS3, Vanilla JavaScript    |
-| **Icons**    | Font Awesome / custom SVGs         |
-| **Hosting**  | GitHub Pages (static deployment)   |
-
-> ⚠️ **This is a static demo** – the contact form does not actually send emails. It is designed for portfolio presentation only.
+| Layer        | Technology                               |
+|--------------|------------------------------------------|
+| **Frontend** | HTML5, CSS3, Vanilla JavaScript          |
+| **Backend**  | Flask (Python 3.8+)                      |
+| **WebSockets**| Flask‑SocketIO (real‑time events)        |
+| **Database** | SQLite (development) / PostgreSQL (prod) |
+| **ORM**      | SQLAlchemy                               |
+| **Hosting**  | Render / PythonAnywhere (backend) + GitHub Pages (frontend, optional) |
 
 ---
 
-## 📦 Installation (local testing)
+##  Installation
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/terazo/rave_tech_cv.git
-   cd rave_tech_cv
+### 1. Clone the repository
+```bash
+git clone https://github.com/ravenj-png/raven-terazzo.git
+cd raven-terazzo
