@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenEdge District — Kampala, Wakiso, Mpigi, Kayunga, Masaka</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f0;color:#1a2a1a;}
+        
+        .topbar{background:#1a3a1a;color:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;}
+        .topbar .logo{font-size:1.4em;font-weight:bold;color:#7cb342;}
+        .topbar .logo span{color:#fff;}
+        .topbar .badge{background:#2e7d32;padding:4px 12px;border-radius:20px;font-size:.7em;border:1px solid #4caf50;}
+        .topbar .net-status{display:flex;align-items:center;gap:8px;font-size:.8em;}
+        .net-dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+        .net-dot.on{background:#4caf50;box-shadow:0 0 8px #4caf50;}
+        .net-dot.off{background:#f44336;box-shadow:0 0 8px #f44336;}
+        
+        .hero{background:linear-gradient(135deg,#1a3a1a,#2e5a2e);color:#fff;padding:40px 20px;text-align:center;}
+        .hero h1{font-size:2.2em;margin-bottom:10px;}
+        .hero h1 .highlight{color:#7cb342;}
+        .hero p{font-size:1.1em;opacity:.9;max-width:700px;margin:0 auto 20px;}
+        .hero .stats{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-top:20px;}
+        .hero .stat{background:rgba(255,255,255,.1);padding:12px 24px;border-radius:12px;backdrop-filter:blur(10px);}
+        .hero .stat .num{font-size:1.8em;font-weight:bold;color:#7cb342;}
+        .hero .stat .label{font-size:.8em;opacity:.8;}
+        
+        .container{max-width:1200px;margin:0 auto;padding:20px;}
+        
+        .search-bar{display:flex;gap:10px;margin-bottom:30px;flex-wrap:wrap;}
+        .search-bar input{flex:1;padding:14px 18px;border:2px solid #c8d6c8;border-radius:12px;font-size:1em;min-width:200px;}
+        .search-bar input:focus{outline:none;border-color:#2e7d32;}
+        .search-bar select{padding:14px 18px;border:2px solid #c8d6c8;border-radius:12px;font-size:1em;background:#fff;min-width:150px;}
+        .search-bar button{padding:14px 24px;background:#2e7d32;color:#fff;border:none;border-radius:12px;font-size:1em;font-weight:bold;cursor:pointer;transition:.3s;}
+        .search-bar button:hover{background:#1a5a1a;}
+        .search-bar button.orange{background:#e67e22;}
+        .search-bar button.orange:hover{background:#d35400;}
+        
+        .school-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;margin-bottom:30px;}
+        .school-card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,.08);border-left:4px solid #2e7d32;transition:.3s;position:relative;}
+        .school-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,.12);}
+        .school-card .district-tag{position:absolute;top:10px;right:10px;font-size:.6em;background:#e8ede8;padding:2px 10px;border-radius:12px;color:#555;}
+        .school-card .name{font-size:1.2em;font-weight:bold;color:#1a3a1a;padding-right:70px;}
+        .school-card .location{color:#666;font-size:.9em;margin:4px 0 8px;}
+        .school-card .details{display:flex;gap:10px;flex-wrap:wrap;font-size:.85em;color:#444;margin:10px 0;}
+        .school-card .details span{background:#f0f4f0;padding:4px 10px;border-radius:20px;}
+        .school-card .eco-score{display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #e8ede8;}
+        .school-card .btn{display:inline-block;margin-top:10px;padding:8px 16px;background:#e8ede8;color:#1a3a1a;border-radius:8px;text-decoration:none;font-size:.85em;cursor:pointer;border:none;transition:.3s;margin-right:6px;}
+        .school-card .btn:hover{background:#2e7d32;color:#fff;}
+        .school-card .btn.primary{background:#2e7d32;color:#fff;}
+        .school-card .btn.primary:hover{background:#1a5a1a;}
+        .school-card .btn.danger{background:#ef5350;color:#fff;}
+        .school-card .btn.danger:hover{background:#c62828;}
+        
+        .dashboard{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin-bottom:30px;}
+        .dash-card{background:#fff;border-radius:16px;padding:18px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.06);}
+        .dash-card .icon{font-size:2em;margin-bottom:4px;}
+        .dash-card .value{font-size:1.6em;font-weight:bold;color:#1a3a1a;}
+        .dash-card .label{color:#666;font-size:.8em;}
+        .dash-card.green .value{color:#2e7d32;}
+        .dash-card.orange .value{color:#e67e22;}
+        .dash-card.blue .value{color:#1976d2;}
+        
+        .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:1000;justify-content:center;align-items:center;padding:20px;}
+        .modal.active{display:flex;}
+        .modal-content{background:#fff;border-radius:20px;max-width:520px;width:100%;padding:30px;max-height:90vh;overflow-y:auto;position:relative;}
+        .modal-content .close{position:absolute;top:15px;right:20px;font-size:1.6em;cursor:pointer;color:#888;background:none;border:none;}
+        .modal-content .close:hover{color:#1a3a1a;}
+        .modal-content h2{color:#1a3a1a;margin-bottom:5px;}
+        .modal-content .sub{color:#666;margin-bottom:20px;}
+        .modal-content .field{margin-bottom:14px;}
+        .modal-content .field label{display:block;font-weight:600;font-size:.9em;color:#444;margin-bottom:4px;}
+        .modal-content .field input,.modal-content .field select,.modal-content .field textarea{width:100%;padding:10px 14px;border:2px solid #dce4dc;border-radius:10px;font-size:1em;font-family:inherit;}
+        .modal-content .field input:focus,.modal-content .field select:focus{outline:none;border-color:#2e7d32;}
+        .modal-content .field textarea{min-height:80px;resize:vertical;}
+        .modal-content .btn-submit{width:100%;padding:14px;background:#2e7d32;color:#fff;border:none;border-radius:12px;font-size:1em;font-weight:bold;cursor:pointer;transition:.3s;}
+        .modal-content .btn-submit:hover{background:#1a5a1a;}
+        
+        .offline-banner{display:none;background:#f44336;color:#fff;text-align:center;padding:10px;font-weight:bold;}
+        .offline-banner.active{display:block;}
+        
+        .district-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+        .district-filter button{padding:8px 16px;border:2px solid #c8d6c8;border-radius:20px;background:#fff;cursor:pointer;font-weight:bold;transition:.3s;font-size:.85em;}
+        .district-filter button:hover{background:#e8ede8;}
+        .district-filter button.active{background:#2e7d32;color:#fff;border-color:#2e7d32;}
+        
+        footer{background:#1a2a1a;color:#889;padding:20px;text-align:center;font-size:.85em;margin-top:40px;}
+        footer .highlight{color:#7cb342;}
+        
+        @media(max-width:600px){
+            .hero h1{font-size:1.5em;}
+            .hero .stats{gap:12px;}
+            .hero .stat{padding:8px 14px;}
+            .hero .stat .num{font-size:1.2em;}
+            .search-bar input,.search-bar select{min-width:100%;}
+            .school-grid{grid-template-columns:1fr;}
+            .dashboard{grid-template-columns:1fr 1fr;}
+            .topbar{flex-direction:column;gap:8px;text-align:center;}
+            .district-filter button{font-size:.75em;padding:6px 12px;}
+        }
+    </style>
+</head>
+<body>
+
+<div class="offline-banner" id="offlineBanner">
+     NETWORK DROPPED — GreenEdge Resilience Layer Active. Data cached locally. Auto-sync on restore.
+</div>
+
+<div class="topbar">
+    <div class="logo">🌿 GreenEdge <span>District</span></div>
+    <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">
+        <span class="badge"> Climate-Resilient Infrastructure</span>
+        <span class="net-status">
+            <span class="net-dot on" id="netDot"></span>
+            <span id="netLabel">4G LTE</span>
+        </span>
+    </div>
+</div>
+
+<div class="hero">
+    <h1>🌱 <span class="highlight">GreenEdge</span> District Platform</h1>
+    <p>Offline-first climate-resilient education infrastructure for <strong>Kampala, Wakiso, Mpigi, Kayunga & Masaka</strong>.<br>Eliminating paper waste, reducing carbon, and protecting data during climate disasters.</p>
+    <div class="stats">
+        <div class="stat"><div class="num" id="schoolCount">0</div><div class="label">Schools</div></div>
+        <div class="stat"><div class="num" id="districtCount">5</div><div class="label">Districts</div></div>
+        <div class="stat"><div class="num" id="paperSaved">0</div><div class="label">Paper Sheets Saved</div></div>
+        <div class="stat"><div class="num" id="co2Saved">0</div><div class="label">CO₂ Saved (kg)</div></div>
+        <div class="stat"><div class="num" id="treesProtected">0</div><div class="label">Trees Protected</div></div>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="dashboard">
+        <div class="dash-card green"><div class="icon">🏫</div><div class="value" id="totalSchools">0</div><div class="label">Total Schools</div></div>
+        <div class="dash-card green"><div class="icon">🌳</div><div class="value" id="ecoSchools">0</div><div class="label">Eco-Schools</div></div>
+        <div class="dash-card orange"><div class="icon">📊</div><div class="value" id="avgPerformance">0%</div><div class="label">Avg Pass Rate</div></div>
+        <div class="dash-card blue"><div class="icon">👨‍🏫</div><div class="value" id="totalTeachers">0</div><div class="label">Teachers</div></div>
+        <div class="dash-card blue"><div class="icon">👨‍🎓</div><div class="value" id="totalStudents">0</div><div class="label">Students</div></div>
+        <div class="dash-card green"><div class="icon">♻️</div><div class="value" id="paperSavedDash">0</div><div class="label">Paper Saved (sheets)</div></div>
+    </div>
+
+    <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="🔍 Search schools by name, location or district..." oninput="filterSchools()">
+        <select id="filterEco" onchange="filterSchools()">
+            <option value="all">All Schools</option>
+            <option value="eco">🌱 Eco-Schools Only</option>
+            <option value="high">📈 High Performance (80%+)</option>
+        </select>
+        <button onclick="openAddSchool()">➕ Add School</button>
+        <button class="orange" onclick="simulateOffline()">📶 Simulate Offline</button>
+    </div>
+
+    <!-- District Filter Buttons -->
+    <div class="district-filter" id="districtFilter">
+        <button class="active" data-district="all" onclick="filterByDistrict('all', this)">🏛️ All Districts</button>
+        <button data-district="Kampala" onclick="filterByDistrict('Kampala', this)">Kampala</button>
+        <button data-district="Wakiso" onclick="filterByDistrict('Wakiso', this)">Wakiso</button>
+        <button data-district="Mpigi" onclick="filterByDistrict('Mpigi', this)">Mpigi</button>
+        <button data-district="Kayunga" onclick="filterByDistrict('Kayunga', this)">Kayunga</button>
+        <button data-district="Masaka" onclick="filterByDistrict('Masaka', this)">Masaka</button>
+    </div>
+
+    <div class="school-grid" id="schoolGrid"></div>
+
+</div>
+
+<!-- Add/Edit School Modal -->
+<div class="modal" id="schoolModal">
+    <div class="modal-content">
+        <button class="close" onclick="closeModal()">✕</button>
+        <h2 id="modalTitle">🏫 Add School</h2>
+        <p class="sub" id="modalSub">Enter school details for the district.</p>
+        <form id="schoolForm" onsubmit="saveSchool(event)">
+            <input type="hidden" id="editIndex" value="-1">
+            <div class="field"><label>School Name</label><input type="text" id="sName" required placeholder="e.g., Kampala High School"></div>
+            <div class="field"><label>District</label>
+                <select id="sDistrict" required>
+                    <option value="Kampala">Kampala</option>
+                    <option value="Wakiso">Wakiso</option>
+                    <option value="Mpigi">Mpigi</option>
+                    <option value="Kayunga">Kayunga</option>
+                    <option value="Masaka">Masaka</option>
+                </select>
+            </div>
+            <div class="field"><label>Location / Village</label><input type="text" id="sLocation" required placeholder="e.g., Central, Kampala"></div>
+            <div class="field"><label>Student Count</label><input type="number" id="sStudents" required placeholder="e.g., 500"></div>
+            <div class="field"><label>Teacher Count</label><input type="number" id="sTeachers" required placeholder="e.g., 25"></div>
+            <div class="field"><label>Pass Rate (%)</label><input type="number" id="sPassRate" required placeholder="e.g., 85" min="0" max="100"></div>
+            <div class="field"><label>🌱 Eco-School?</label>
+                <select id="sEco"><option value="yes">✅ Yes — Participating in tree planting</option><option value="no">❌ No</option></select>
+            </div>
+            <div class="field"><label>📱 Contact Number</label><input type="tel" id="sContact" placeholder="e.g., 0772-123-456"></div>
+            <button type="submit" class="btn-submit">💾 Save School</button>
+        </form>
+    </div>
+</div>
+
+<!-- School Detail Modal -->
+<div class="modal" id="detailModal">
+    <div class="modal-content">
+        <button class="close" onclick="closeDetail()">✕</button>
+        <h2 id="detailName">School Name</h2>
+        <p class="sub" id="detailLocation">📍 Location</p>
+        <div style="margin:15px 0;padding:15px;background:#f0f4f0;border-radius:12px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div><strong>District:</strong> <span id="detailDistrict">-</span></div>
+                <div><strong>Students:</strong> <span id="detailStudents">-</span></div>
+                <div><strong>Teachers:</strong> <span id="detailTeachers">-</span></div>
+                <div><strong>Pass Rate:</strong> <span id="detailPassRate">-</span></div>
+                <div><strong>Eco-School:</strong> <span id="detailEco">-</span></div>
+                <div><strong>Contact:</strong> <span id="detailContact">-</span></div>
+            </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button onclick="generateReceipt()" class="btn-submit" style="background:#2e7d32;flex:1;">🧾 Digital Receipt</button>
+            <button onclick="recordTree()" class="btn-submit" style="background:#e67e22;flex:1;">🌳 Record Tree</button>
+        </div>
+        <div id="receiptOutput" style="margin-top:15px;padding:15px;background:#e8f5e9;border-radius:12px;display:none;font-size:.9em;border-left:4px solid #2e7d32;"></div>
+    </div>
+</div>
+
+<footer>
+    <p>🌿 <span class="highlight">GreenEdge District</span> — Climate-Resilient Education Infrastructure</p>
+    <p style="font-size:.8em;margin-top:4px;">Kampala • Wakiso • Mpigi • Kayunga • Masaka | Powered by RSSA Edge Resilience Architecture</p>
+    <p style="font-size:.7em;margin-top:6px;opacity:.6;">Offline-First • Paperless • Carbon-Reducing • Climate-Resilient</p>
+</footer>
+
+<script>
+// ============================================================
+// DATA — 15 Schools Across 5 Districts
+// ============================================================
+let schools = [
+    // KAMPALA (3 schools)
+    { name: "Kampala High School", district: "Kampala", location: "Central, Kampala", students: 850, teachers: 42, passRate: 92, eco: "yes", contact: "0772-123-456" },
+    { name: "Lubiri Secondary School", district: "Kampala", location: "Mengo, Kampala", students: 720, teachers: 36, passRate: 88, eco: "yes", contact: "0755-789-012" },
+    { name: "Kitante Hill School", district: "Kampala", location: "Wandegeya, Kampala", students: 680, teachers: 34, passRate: 85, eco: "no", contact: "0788-345-678" },
+
+    // WAKISO (3 schools)
+    { name: "Wakiso Secondary School", district: "Wakiso", location: "Wakiso Town", students: 620, teachers: 30, passRate: 76, eco: "yes", contact: "0712-901-234" },
+    { name: "Nansana High School", district: "Wakiso", location: "Nansana, Wakiso", students: 780, teachers: 38, passRate: 82, eco: "yes", contact: "0766-567-890" },
+    { name: "Kira College", district: "Wakiso", location: "Kira, Wakiso", students: 550, teachers: 28, passRate: 71, eco: "no", contact: "0744-123-789" },
+
+    // MPIGI (3 schools)
+    { name: "Mpigi Senior Secondary", district: "Mpigi", location: "Mpigi Town", students: 490, teachers: 24, passRate: 68, eco: "yes", contact: "0778-456-123" },
+    { name: "Kabulasoke High School", district: "Mpigi", location: "Kabulasoke, Mpigi", students: 380, teachers: 18, passRate: 58, eco: "no", contact: "0715-678-901" },
+    { name: "Buwama College", district: "Mpigi", location: "Buwama, Mpigi", students: 420, teachers: 20, passRate: 62, eco: "yes", contact: "0789-234-567" },
+
+    // KAYUNGA (3 schools)
+    { name: "Kayunga High School", district: "Kayunga", location: "Kayunga Town", students: 510, teachers: 26, passRate: 72, eco: "yes", contact: "0751-890-345" },
+    { name: "Busunju Secondary", district: "Kayunga", location: "Busunju, Kayunga", students: 340, teachers: 16, passRate: 55, eco: "no", contact: "0774-567-890" },
+    { name: "Nakasongola College", district: "Kayunga", location: "Nakasongola, Kayunga", students: 370, teachers: 18, passRate: 60, eco: "yes", contact: "0718-901-234" },
+
+    // MASAKA (3 schools)
+    { name: "Masaka High School", district: "Masaka", location: "Masaka Town", students: 580, teachers: 28, passRate: 84, eco: "yes", contact: "0712-901-234" },
+    { name: "Kyesiga Secondary", district: "Masaka", location: "Kyesiga, Masaka", students: 450, teachers: 22, passRate: 70, eco: "no", contact: "0766-111-222" },
+    { name: "Bukomansimbi College", district: "Masaka", location: "Bukomansimbi, Masaka", students: 390, teachers: 20, passRate: 65, eco: "yes", contact: "0788-333-444" },
+];
+
+let ecoActions = { trees: 0, receipts: 0 };
+let offlineMode = false;
+let pendingSync = [];
+let currentDistrictFilter = 'all';
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+    renderStats();
+    renderSchools();
+    checkOfflineStatus();
+    window.addEventListener('online', function() {
+        if (offlineMode) {
+            offlineMode = false;
+            document.getElementById('offlineBanner').classList.remove('active');
+            document.getElementById('netDot').className = 'net-dot on';
+            document.getElementById('netLabel').textContent = '4G LTE';
+            syncPending();
+            renderStats();
+        }
+    });
+}
+
+// ============================================================
+// RENDER SCHOOLS
+// ============================================================
+function renderSchools() {
+    const grid = document.getElementById('schoolGrid');
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const ecoFilter = document.getElementById('filterEco').value;
+    
+    let filtered = schools;
+
+    // District filter
+    if (currentDistrictFilter !== 'all') {
+        filtered = filtered.filter(s => s.district === currentDistrictFilter);
+    }
+
+    // Search filter
+    if (search) {
+        filtered = filtered.filter(s => 
+            s.name.toLowerCase().includes(search) || 
+            s.location.toLowerCase().includes(search) ||
+            s.district.toLowerCase().includes(search)
+        );
+    }
+
+    // Eco filter
+    if (ecoFilter === 'eco') {
+        filtered = filtered.filter(s => s.eco === 'yes');
+    } else if (ecoFilter === 'high') {
+        filtered = filtered.filter(s => s.passRate >= 80);
+    }
+
+    if (filtered.length === 0) {
+        grid.innerHTML = `<p style="grid-column:1/-1;text-align:center;padding:40px;color:#666;">No schools found. Add one!</p>`;
+        return;
+    }
+
+    grid.innerHTML = filtered.map((s, i) => {
+        const realIndex = schools.indexOf(s);
+        const ecoBadge = s.eco === 'yes' ? '🌱' : '';
+        const passColor = s.passRate >= 80 ? '#2e7d32' : s.passRate >= 60 ? '#e67e22' : '#c62828';
+        const paperSaved = s.students * 3;
+        return `
+            <div class="school-card">
+                <span class="district-tag">${s.district}</span>
+                <div class="name">${s.name} ${ecoBadge}</div>
+                <div class="location">📍 ${s.location}</div>
+                <div class="details">
+                    <span>👨‍🎓 ${s.students}</span>
+                    <span>👨‍🏫 ${s.teachers}</span>
+                    <span style="color:${passColor};font-weight:bold;">📊 ${s.passRate}%</span>
+                    ${s.eco === 'yes' ? '<span style="background:#c8e6c9;">🌱 Eco</span>' : ''}
+                </div>
+                <div class="eco-score">
+                    <span style="font-size:.8em;">📄 Paper Saved: ${paperSaved.toLocaleString()} sheets</span>
+                </div>
+                <div>
+                    <button class="btn primary" onclick="viewSchool(${realIndex})">📋 View</button>
+                    <button class="btn" onclick="editSchool(${realIndex})">✏️ Edit</button>
+                    <button class="btn danger" onclick="deleteSchool(${realIndex})">🗑️</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// ============================================================
+// STATS
+// ============================================================
+function renderStats() {
+    const total = schools.length;
+    const eco = schools.filter(s => s.eco === 'yes').length;
+    const avgPass = Math.round(schools.reduce((sum, s) => sum + s.passRate, 0) / total);
+    const teachers = schools.reduce((sum, s) => sum + s.teachers, 0);
+    const students = schools.reduce((sum, s) => sum + s.students, 0);
+    const paper = students * 3;
+    const co2 = Math.round(paper * 0.02);
+    const trees = Math.round(paper / 1000);
+
+    document.getElementById('totalSchools').textContent = total;
+    document.getElementById('ecoSchools').textContent = eco;
+    document.getElementById('avgPerformance').textContent = avgPass + '%';
+    document.getElementById('totalTeachers').textContent = teachers;
+    document.getElementById('totalStudents').textContent = students.toLocaleString();
+    document.getElementById('paperSavedDash').textContent = paper.toLocaleString();
+    document.getElementById('schoolCount').textContent = total;
+    document.getElementById('paperSaved').textContent = paper.toLocaleString();
+    document.getElementById('co2Saved').textContent = co2.toLocaleString();
+    document.getElementById('treesProtected').textContent = trees;
+}
+
+// ============================================================
+// FILTERS
+// ============================================================
+function filterSchools() { renderSchools(); }
+
+function filterByDistrict(district, btn) {
+    currentDistrictFilter = district;
+    document.querySelectorAll('.district-filter button').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderSchools();
+}
+
+// ============================================================
+// VIEW SCHOOL
+// ============================================================
+function viewSchool(index) {
+    const s = schools[index];
+    document.getElementById('detailName').textContent = s.name;
+    document.getElementById('detailLocation').textContent = '📍 ' + s.location;
+    document.getElementById('detailDistrict').textContent = s.district;
+    document.getElementById('detailStudents').textContent = s.students;
+    document.getElementById('detailTeachers').textContent = s.teachers;
+    document.getElementById('detailPassRate').textContent = s.passRate + '%';
+    document.getElementById('detailEco').textContent = s.eco === 'yes' ? '✅ Yes' : '❌ No';
+    document.getElementById('detailContact').textContent = s.contact || 'Not provided';
+    document.getElementById('detailModal').classList.add('active');
+    window._viewIndex = index;
+}
+
+function closeDetail() {
+    document.getElementById('detailModal').classList.remove('active');
+    document.getElementById('receiptOutput').style.display = 'none';
+}
+
+// ============================================================
+// GENERATE RECEIPT
+// ============================================================
+function generateReceipt() {
+    const s = schools[window._viewIndex];
+    const receipt = document.getElementById('receiptOutput');
+    const ref = 'GE-' + Date.now().toString().slice(-6);
+    const paperSaved = s.students * 3;
+    const co2Saved = Math.round(paperSaved * 0.02);
+    receipt.innerHTML = `
+        <div style="font-weight:bold;color:#1a3a1a;">🧾 DIGITAL RECEIPT</div>
+        <div style="margin:8px 0;padding:8px 0;border-top:1px dashed #a5d6a7;border-bottom:1px dashed #a5d6a7;">
+            <div><strong>School:</strong> ${s.name}</div>
+            <div><strong>District:</strong> ${s.district}</div>
+            <div><strong>Location:</strong> ${s.location}</div>
+            <div><strong>Students:</strong> ${s.students}</div>
+            <div><strong>Paper Saved:</strong> ${paperSaved.toLocaleString()} sheets</div>
+            <div><strong>CO₂ Saved:</strong> ${co2Saved.toLocaleString()} kg</div>
+        </div>
+        <div style="font-size:.8em;color:#666;">
+            Ref: ${ref} | 🌱 GreenEdge Climate-Resilient
+        </div>
+        <div style="margin-top:8px;color:#2e7d32;font-size:.8em;">
+            ✅ This receipt is digitally verified. No paper was used.
+        </div>
+    `;
+    receipt.style.display = 'block';
+    ecoActions.receipts += 1;
+    renderStats();
+}
+
+// ============================================================
+// RECORD TREE
+// ============================================================
+function recordTree() {
+    const s = schools[window._viewIndex];
+    if (s.eco === 'yes') {
+        ecoActions.trees += 1;
+        document.getElementById('receiptOutput').innerHTML = `
+            <div style="color:#2e7d32;font-weight:bold;">🌳 TREE PLANTED!</div>
+            <div>${s.name} (${s.district}) has planted a tree. Eco-Points +10</div>
+            <div style="margin-top:8px;font-size:.8em;color:#666;">Total trees recorded: ${ecoActions.trees}</div>
+        `;
+        document.getElementById('receiptOutput').style.display = 'block';
+        renderStats();
+    } else {
+        alert('⚠️ This school is not an Eco-School. Mark it as Eco-School first!');
+    }
+}
+
+// ============================================================
+// ADD / EDIT SCHOOL
+// ============================================================
+function openAddSchool() {
+    document.getElementById('modalTitle').textContent = '🏫 Add School';
+    document.getElementById('modalSub').textContent = 'Enter school details to add to the district.';
+    document.getElementById('editIndex').value = -1;
+    document.getElementById('sName').value = '';
+    document.getElementById('sDistrict').value = 'Kampala';
+    document.getElementById('sLocation').value = '';
+    document.getElementById('sStudents').value = '';
+    document.getElementById('sTeachers').value = '';
+    document.getElementById('sPassRate').value = '';
+    document.getElementById('sEco').value = 'yes';
+    document.getElementById('sContact').value = '';
+    document.getElementById('schoolModal').classList.add('active');
+}
+
+function editSchool(index) {
+    const s = schools[index];
+    document.getElementById('modalTitle').textContent = '✏️ Edit School';
+    document.getElementById('modalSub').textContent = 'Update school details.';
+    document.getElementById('editIndex').value = index;
+    document.getElementById('sName').value = s.name;
+    document.getElementById('sDistrict').value = s.district;
+    document.getElementById('sLocation').value = s.location;
+    document.getElementById('sStudents').value = s.students;
+    document.getElementById('sTeachers').value = s.teachers;
+    document.getElementById('sPassRate').value = s.passRate;
+    document.getElementById('sEco').value = s.eco;
+    document.getElementById('sContact').value = s.contact || '';
+    document.getElementById('schoolModal').classList.add('active');
+}
+
+function closeModal() {
+    document.getElementById('schoolModal').classList.remove('active');
+}
+
+function saveSchool(e) {
+    e.preventDefault();
+    const index = parseInt(document.getElementById('editIndex').value);
+    const data = {
+        name: document.getElementById('sName').value,
+        district: document.getElementById('sDistrict').value,
+        location: document.getElementById('sLocation').value,
+        students: parseInt(document.getElementById('sStudents').value),
+        teachers: parseInt(document.getElementById('sTeachers').value),
+        passRate: parseInt(document.getElementById('sPassRate').value),
+        eco: document.getElementById('sEco').value,
+        contact: document.getElementById('sContact').value,
+    };
+
+    if (index === -1) {
+        schools.push(data);
+    } else {
+        schools[index] = data;
+    }
+    closeModal();
+    renderSchools();
+    renderStats();
+}
+
+function deleteSchool(index) {
+    if (confirm('Delete ' + schools[index].name + ' from ' + schools[index].district + '?')) {
+        schools.splice(index, 1);
+        renderSchools();
+        renderStats();
+    }
+}
+
+// ============================================================
+// OFFLINE SIMULATION
+// ============================================================
+function simulateOffline() {
+    offlineMode = true;
+    document.getElementById('offlineBanner').classList.add('active');
+    document.getElementById('netDot').className = 'net-dot off';
+    document.getElementById('netLabel').textContent = 'NO SERVICE';
+    
+    pendingSync.push({ action: 'view', time: new Date().toISOString() });
+    
+    setTimeout(function() {
+        if (offlineMode) {
+            offlineMode = false;
+            document.getElementById('offlineBanner').classList.remove('active');
+            document.getElementById('netDot').className = 'net-dot on';
+            document.getElementById('netLabel').textContent = '4G LTE';
+            syncPending();
+            renderStats();
+            alert('📶 Network restored! All data synced successfully.');
+        }
+    }, 5000);
+}
+
+function syncPending() {
+    pendingSync = [];
+}
+
+function checkOfflineStatus() {
+    if (!navigator.onLine) {
+        offlineMode = true;
+        document.getElementById('offlineBanner').classList.add('active');
+        document.getElementById('netDot').className = 'net-dot off';
+        document.getElementById('netLabel').textContent = 'NO SERVICE';
+    }
+}
+
+init();
+</script>
+</body>
+</html>
